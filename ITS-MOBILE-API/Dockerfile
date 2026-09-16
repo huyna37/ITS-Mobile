@@ -1,7 +1,7 @@
 # ==========================================================
 # Dockerfile cho ITS Mobile VEC API (.NET 10.0)
-# Vị trí: Ngoài cùng thư mục gốc dự án
-# Cách build: docker build -f Dockerfile.api -t its-mobile-api .
+# Vị trí: Bên trong thư mục ITS-MOBILE-API
+# Cách build: cd ITS-MOBILE-API && docker build -t its-mobile-api .
 # Cách chạy : docker run -d -p 32281:32281 --name its-mobile-api its-mobile-api
 # ==========================================================
 
@@ -9,18 +9,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy file .csproj để restore cache dependencies
-COPY ["ITS-MOBILE-API/ITS-MOBILE-API.csproj", "ITS-MOBILE-API/"]
-RUN dotnet restore "ITS-MOBILE-API/ITS-MOBILE-API.csproj"
+# Copy file .csproj và restore
+COPY ["ITS-MOBILE-API.csproj", "./"]
+RUN dotnet restore "ITS-MOBILE-API.csproj"
 
-# Copy toàn bộ mã nguồn của ITS-MOBILE-API
-COPY ITS-MOBILE-API/ ITS-MOBILE-API/
-WORKDIR "/src/ITS-MOBILE-API"
+# Copy toàn bộ mã nguồn
+COPY . .
 
-# Publish bản Release tối ưu hiệu năng
+# Publish bản Release
 RUN dotnet publish "ITS-MOBILE-API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 2: Runtime Image nhẹ với .NET 10 ASP.NET Core
+# Stage 2: Runtime Image với .NET 10 ASP.NET Core
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 

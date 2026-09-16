@@ -1,12 +1,13 @@
-import { Linking, Alert } from 'react-native';
+import { Linking } from 'react-native';
 import { APP_CONFIG } from '../config';
+import { showAppDialog, showAppToast } from '../store/useToastStore';
 
 /**
  * Kích hoạt cuộc gọi khẩn cấp SOS qua mạng viễn thông GSM
  * Hoạt động độc lập không phụ thuộc Internet hay 4G
  */
 export function triggerSOSCall(hotline = APP_CONFIG.sosHotline): void {
-  Alert.alert(
+  showAppDialog(
     'GỌI CỨU HỘ KHẨN CẤP SOS',
     `Bạn có chắc chắn muốn gọi đến số điện thoại khẩn cấp ${hotline} qua mạng viễn thông GSM không?`,
     [
@@ -24,7 +25,7 @@ export function triggerSOSCall(hotline = APP_CONFIG.sosHotline): void {
               if (supported) {
                 Linking.openURL(url);
               } else {
-                Alert.alert('Lỗi', 'Thiết bị không hỗ trợ cuộc gọi viễn thông');
+                showAppToast('error', 'Lỗi', 'Thiết bị không hỗ trợ cuộc gọi viễn thông');
               }
             })
             .catch((err) => {
@@ -33,7 +34,7 @@ export function triggerSOSCall(hotline = APP_CONFIG.sosHotline): void {
         },
       },
     ],
-    { cancelable: true }
+    'warning'
   );
 }
 
@@ -41,7 +42,7 @@ export function triggerSOSCall(hotline = APP_CONFIG.sosHotline): void {
  * Kích hoạt cuộc gọi nội bộ tổng đài PBX tới đồng nghiệp
  */
 export function triggerPBXCall(extension: string, contactName: string): void {
-  Alert.alert(
+  showAppDialog(
     'GỌI NỘI BỘ PBX',
     `Kết nối đàm thoại tới đồng nghiệp ${contactName} (Ext: ${extension})?`,
     [
@@ -49,13 +50,13 @@ export function triggerPBXCall(extension: string, contactName: string): void {
       {
         text: 'Kết nối',
         onPress: () => {
-          // Trong phiên bản thử nghiệm hỗ trợ tel: hoặc SIP client
           const url = `tel:${extension}`;
           Linking.openURL(url).catch(() => {
-            Alert.alert('Thông báo', `Đang kết nối đàm thoại tới Ext ${extension}...`);
+            showAppToast('info', 'Thông báo', `Đang kết nối đàm thoại tới Ext ${extension}...`);
           });
         },
       },
-    ]
+    ],
+    'info'
   );
 }

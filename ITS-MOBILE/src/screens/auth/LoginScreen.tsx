@@ -13,22 +13,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PaperPlaneIcon } from '../../components/icons/SvgIcons';
 import { useAuthStore } from '../../store/useAuthStore';
+import { showAppToast } from '../../store/useToastStore';
+import { APP_CONFIG } from '../../config';
 
 export const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState('hoangnm');
   const [extension, setExtension] = useState('1001');
   const [password, setPassword] = useState('123456');
 
-  const { login, isLoading, error } = useAuthStore();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      Alert.alert('Thông báo', 'Vui lòng nhập đầy đủ tài khoản và mật khẩu');
+      showAppToast('warning', 'Yêu cầu thông tin', 'Vui lòng nhập đầy đủ tài khoản và mật khẩu');
       return;
     }
 
     if (!/^\d{4}$/.test(extension.trim())) {
-      Alert.alert('Lỗi Extension', 'Số Extension tổng đài PBX phải đúng 4 chữ số (Ví dụ: 1001)');
+      showAppToast('warning', 'Định dạng Extension', 'Số Extension tổng đài PBX phải đúng 4 chữ số (Ví dụ: 1001)');
       return;
     }
 
@@ -40,7 +42,8 @@ export const LoginScreen: React.FC = () => {
 
     if (!success) {
       const err = useAuthStore.getState().error;
-      Alert.alert('Đăng nhập thất bại', err ? err : 'Không thể kết nối đến máy chủ ITS TMC (10.0.229.55:32281)');
+      const errorMsg = err ? err : `Không thể kết nối đến máy chủ ITS TMC (${APP_CONFIG.apiBaseUrl}). Vui lòng kiểm tra địa chỉ máy chủ hoặc kết nối mạng.`;
+      showAppToast('error', 'Đăng nhập thất bại', errorMsg);
     }
   };
 
@@ -68,6 +71,14 @@ export const LoginScreen: React.FC = () => {
 
           {/* Form đăng nhập */}
           <View style={styles.formContainer}>
+            {/* Banner hiển thị lỗi đăng nhập trực quan */}
+            {error ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorIcon}>⚠️</Text>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
             {/* Input 1: Tài khoản nội bộ */}
             <Text style={styles.inputLabel}>TÀI KHOẢN NỘI BỘ</Text>
             <TextInput
@@ -75,7 +86,10 @@ export const LoginScreen: React.FC = () => {
               placeholder="Nhập username"
               placeholderTextColor="#94a3b8"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(val) => {
+                setUsername(val);
+                if (error) clearError();
+              }}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -87,7 +101,10 @@ export const LoginScreen: React.FC = () => {
               placeholder="Ví dụ: 8011"
               placeholderTextColor="#94a3b8"
               value={extension}
-              onChangeText={setExtension}
+              onChangeText={(val) => {
+                setExtension(val);
+                if (error) clearError();
+              }}
               keyboardType="number-pad"
               maxLength={4}
             />
@@ -99,19 +116,22 @@ export const LoginScreen: React.FC = () => {
               placeholder="••••••••"
               placeholderTextColor="#94a3b8"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(val) => {
+                setPassword(val);
+                if (error) clearError();
+              }}
               secureTextEntry
             />
 
             {/* Nút Đăng nhập */}
             <TouchableOpacity
-              style={styles.loginButton}
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               activeOpacity={0.85}
               onPress={handleLogin}
               disabled={isLoading}
             >
               <Text style={styles.loginButtonText}>
-                {isLoading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP'}
+                {isLoading ? 'ĐANG KẾT NỐI MÁY CHỦ...' : 'ĐĂNG NHẬP'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -211,10 +231,36 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
+  loginButtonDisabled: {
+    backgroundColor: '#94a3b8',
+    shadowOpacity: 0.1,
+  },
   loginButtonText: {
     fontSize: 16,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: 1,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  errorIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#b91c1c',
+    lineHeight: 18,
   },
 });

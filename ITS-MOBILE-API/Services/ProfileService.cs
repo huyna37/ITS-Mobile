@@ -58,12 +58,13 @@ public class ProfileService
         var userGuid = new Guid(user.Id.ToString("D32"));
         var prefs = new Dictionary<string, string>();
         var extensions = await _db.ExtensionDetails
-            .Where(e => e.GuiId == userGuid && e.Key.StartsWith("pref_"))
+            .Where(e => e.GuiId == userGuid && e.Key != null && e.Key.StartsWith("pref_"))
             .ToListAsync();
 
         foreach (var ext in extensions)
         {
-            prefs[ext.Key.Replace("pref_", "", StringComparison.Ordinal)] = ext.Value ?? "";
+            if (ext.Key != null)
+                prefs[ext.Key.Replace("pref_", "", StringComparison.Ordinal)] = ext.Value ?? "";
         }
 
         return new ProfileService.PreferencesResponse(
@@ -82,7 +83,7 @@ public class ProfileService
 
         // Store preferences as ExtensionDetails
         var existing = await _db.ExtensionDetails
-            .Where(e => e.GuiId == userGuid && e.Key.StartsWith("pref_"))
+            .Where(e => e.GuiId == userGuid && e.Key != null && e.Key.StartsWith("pref_"))
             .ToListAsync();
 
         foreach (var ext in existing)

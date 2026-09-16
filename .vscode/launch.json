@@ -1,35 +1,56 @@
 {
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "🚀 [Fullstack] Chạy CẢ HAI: Backend API + Frontend Web",
+      "configurations": [
+        "🔹 [Backend] Chạy .NET 10 API (Port 32281)",
+        "🔸 [Frontend] Chạy Web (Vite Dev Server)"
+      ],
+      "stopAll": true
+    }
+  ],
   "configurations": [
     {
-      "name": "F5: Chạy Mobile React Native (Start Metro)",
+      "name": "🔹 [Backend] Chạy .NET 10 API (Port 32281)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dotnet run --project ITS-MOBILE-API/ITS-MOBILE-API.csproj --launch-profile ITS-MOBILE-API",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔸 [Frontend] Chạy Web (Vite Dev Server)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run web",
+      "cwd": "${workspaceFolder}/ITS-MOBILE"
+    },
+    {
+      "name": "📱 [Frontend] Chạy Mobile Metro (React Native)",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm start",
       "cwd": "${workspaceFolder}/ITS-MOBILE"
     },
     {
-      "name": "F5: Chạy Mobile Android (React Native)",
+      "name": "🤖 [Frontend] Chạy Android App (run-android)",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run android",
       "cwd": "${workspaceFolder}/ITS-MOBILE"
     },
     {
-      "name": "F5: Chạy Backend .NET API",
+      "name": "🐞 [Debug C#] .NET Core Attach/Launch",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "API: Build .NET",
-      "program": "${workspaceFolder}/ITS-MOBILE-API/bin/Debug/net9.0/ITS-MOBILE-API.dll",
+      "program": "${workspaceFolder}/ITS-MOBILE-API/bin/Debug/net10.0/ITS-MOBILE-API.dll",
       "args": [],
       "cwd": "${workspaceFolder}/ITS-MOBILE-API",
       "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-      },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://0.0.0.0:32281;http://localhost:5000"
       }
     }
   ]

@@ -21,6 +21,16 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "Frontend: Run Web (Vite)",
+      "type": "shell",
+      "command": "npm run web",
+      "options": {
+        "cwd": "${workspaceFolder}/ITS-MOBILE"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "Mobile: Start Metro",
       "type": "shell",
       "command": "npm start",

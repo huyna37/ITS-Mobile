@@ -6,7 +6,7 @@ services:
     container_name: its-mobile-api
     restart: unless-stopped
     ports:
-      - "32281:8080"
+      - "32281:32281"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTP_PORTS=32281

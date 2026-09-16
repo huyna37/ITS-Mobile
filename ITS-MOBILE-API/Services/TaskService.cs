@@ -70,7 +70,7 @@ public class TaskService
 
         if (task == null) return null;
 
-        var logs = task.IncidentProfile!.IncidentLogs
+        var logs = (task.IncidentProfile?.IncidentLogs ?? new List<IncidentLog>())
             .OrderByDescending(l => l.CreationTime)
             .Select(l => new StatusLogEntry(
                 Time: l.CreationTime.ToString("HH:mm dd/MM"),

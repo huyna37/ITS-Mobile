@@ -27,6 +27,7 @@ import {
 } from '../../components/icons/SvgIcons';
 import { triggerPBXCall } from '../../utils/dialer';
 import { capturePhoto, captureVideo, pickDocument } from '../../utils/mediaPicker';
+import { showAppToast, showAppDialog } from '../../store/useToastStore';
 
 export const TaskDetailScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
@@ -43,7 +44,7 @@ export const TaskDetailScreen: React.FC = () => {
   const handleStepPress = async (targetStep: 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED') => {
     if (targetStep === task.step) return;
 
-    Alert.alert(
+    showAppDialog(
       'CẬP NHẬT TRẠNG THÁI',
       `Xác nhận chuyển trạng thái sang bước "${targetStep}"?`,
       [
@@ -52,10 +53,11 @@ export const TaskDetailScreen: React.FC = () => {
           text: 'Xác nhận',
           onPress: async () => {
             await advanceTaskStep(task.id);
-            Alert.alert('Thành công', 'Đã cập nhật trạng thái nhiệm vụ!');
+            showAppToast('success', 'Thành công', 'Đã cập nhật trạng thái nhiệm vụ!');
           },
         },
-      ]
+      ],
+      'info'
     );
   };
 
@@ -70,7 +72,7 @@ export const TaskDetailScreen: React.FC = () => {
         sizeBytes: photo.size,
         uploadedAt: new Date().toISOString(),
       });
-      Alert.alert('Thành công', `Đã chụp và lưu ảnh hiện trường (${Math.round(photo.size / 1024)} KB)`);
+      showAppToast('success', 'Thành công', `Đã chụp và lưu ảnh hiện trường (${Math.round(photo.size / 1024)} KB)`);
     }
   };
 
@@ -85,7 +87,7 @@ export const TaskDetailScreen: React.FC = () => {
         sizeBytes: video.size,
         uploadedAt: new Date().toISOString(),
       });
-      Alert.alert('Thành công', `Đã ghi lại clip video hiện trường (${Math.round(video.size / 1024)} KB)`);
+      showAppToast('success', 'Thành công', `Đã ghi lại clip video hiện trường (${Math.round(video.size / 1024)} KB)`);
     }
   };
 
@@ -100,12 +102,12 @@ export const TaskDetailScreen: React.FC = () => {
         sizeBytes: media.size,
         uploadedAt: new Date().toISOString(),
       });
-      Alert.alert('Thành công', `Đã đính kèm tệp (${Math.round(media.size / 1024)} KB)`);
+      showAppToast('success', 'Thành công', `Đã đính kèm tệp (${Math.round(media.size / 1024)} KB)`);
     }
   };
 
   const handleDeleteAttachment = (attId: string, name: string) => {
-    Alert.alert(
+    showAppDialog(
       'XÓA TỆP ĐÍNH KÈM',
       `Bạn có chắc chắn muốn xóa "${name}" khỏi báo cáo hiện trường?`,
       [
@@ -115,16 +117,17 @@ export const TaskDetailScreen: React.FC = () => {
           style: 'destructive',
           onPress: () => removeAttachment(task.id, attId),
         },
-      ]
+      ],
+      'warning'
     );
   };
 
   const handleSendReport = () => {
     const attCount = task.attachments ? task.attachments.length : 0;
-    Alert.alert(
+    showAppToast(
+      'success',
       'GỬI BÁO CÁO VỀ TMC',
-      `Đã đồng bộ toàn bộ ghi nhận hiện trường (${attCount} tệp đính kèm) về Trung tâm điều hành ITS TMC.`,
-      [{ text: 'Đóng' }]
+      `Đã đồng bộ toàn bộ ghi nhận hiện trường (${attCount} tệp đính kèm) về Trung tâm điều hành ITS TMC.`
     );
   };
 

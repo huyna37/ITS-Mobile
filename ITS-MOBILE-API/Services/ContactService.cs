@@ -21,10 +21,11 @@ public class ContactService
             .ToListAsync();
 
         // Check online status from IpPhones
-        var onlinePhoneNumbers = await _db.IpPhones
+        var onlinePhoneNumbers = (await _db.IpPhones
             .Where(p => !p.IsDeleted && p.Status == 1 && !string.IsNullOrEmpty(p.PhoneNumber))
             .Select(p => p.PhoneNumber!)
-            .ToHashSetAsync();
+            .ToListAsync())
+            .ToHashSet();
 
         return extensions.Select(e => new ContactResponse(
             Id: e.Id.ToString(),

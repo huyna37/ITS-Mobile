@@ -1,12 +1,12 @@
 # ==========================================================
-# Dockerfile cho ITS Mobile VEC API (.NET 9.0)
+# Dockerfile cho ITS Mobile VEC API (.NET 10.0)
 # Vị trí: Ngoài cùng thư mục gốc dự án
 # Cách build: docker build -t its-mobile-api .
-# Cách chạy : docker run -d -p 32281:8080 --name its-mobile-api its-mobile-api
+# Cách chạy : docker run -d -p 32281:32281 --name its-mobile-api its-mobile-api
 # ==========================================================
 
-# Stage 1: Build mã nguồn với .NET 9 SDK
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# Stage 1: Build mã nguồn với .NET 10 SDK
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy file .csproj để restore cache dependencies
@@ -20,16 +20,16 @@ WORKDIR "/src/ITS-MOBILE-API"
 # Publish bản Release tối ưu hiệu năng
 RUN dotnet publish "ITS-MOBILE-API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 2: Runtime Image nhẹ với .NET 9 ASP.NET Core
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+# Stage 2: Runtime Image nhẹ với .NET 10 ASP.NET Core
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Cấu hình môi trường và cổng lắng nghe HTTP
-ENV ASPNETCORE_HTTP_PORTS=8080
+# Cấu hình môi trường và cổng lắng nghe HTTP (lắng nghe cả 32281 và 8080)
+ENV ASPNETCORE_HTTP_PORTS=32281;8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-EXPOSE 8080
 EXPOSE 32281
+EXPOSE 8080
 
 # Copy sản phẩm đã publish từ stage build
 COPY --from=build /app/publish .

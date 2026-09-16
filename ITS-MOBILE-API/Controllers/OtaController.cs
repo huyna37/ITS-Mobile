@@ -69,9 +69,9 @@ public class OtaController : ControllerBase
         return Ok(new OtaCheckResponse
         {
             HasUpdate = hasUpdate,
-            LatestVersion = latestVersion,
+            LatestVersion = latestVersion ?? "1.0.1",
             BundleUrl = bundleUrl,
-            ChangeLog = changeLog,
+            ChangeLog = changeLog ?? "",
             Mandatory = mandatory,
             ReleaseDate = releaseDate
         });

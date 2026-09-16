@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { User, LoginCredentials } from '../types/auth';
 import { loginApi, logoutApi } from '../api/authApi';
 import { storage } from '../utils/storage';
+import { parseApiError } from '../utils/apiError';
 
 interface AuthState {
   user: User | null;
@@ -14,6 +15,7 @@ interface AuthState {
   logout: () => Promise<void>;
   restoreSession: () => void;
   handleSessionExpired: () => void;
+  clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -34,13 +36,18 @@ export const useAuthStore = create<AuthState>((set) => ({
         token: res.token,
         isAuthenticated: true,
         isLoading: false,
+        error: null,
       });
       return true;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công';
+      const msg = parseApiError(err);
       set({ error: msg, isLoading: false, isAuthenticated: false });
       return false;
     }
+  },
+
+  clearError: () => {
+    set({ error: null });
   },
 
   logout: async () => {

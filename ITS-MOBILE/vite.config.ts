@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
@@ -13,33 +13,43 @@ const extensions = [
   '.js',
 ];
 
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@react-native/assets-registry/registry': path.resolve(__dirname, './src/shims/assetsRegistry.ts'),
-      '@react-native/assets-registry': path.resolve(__dirname, './src/shims/assetsRegistry.ts'),
-      'react-native/Libraries/Utilities/codegenNativeComponent': 'react-native-web',
-      'react-native/Libraries/ReactNative/AppContainer': 'react-native-web',
-      'react-native': 'react-native-web',
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    plugins: [react()],
+    envPrefix: ['VITE_', 'API_', 'SOS_', 'HIGHWAY_'],
+    resolve: {
+      alias: {
+        '@react-native/assets-registry/registry': path.resolve(__dirname, './src/shims/assetsRegistry.ts'),
+        '@react-native/assets-registry': path.resolve(__dirname, './src/shims/assetsRegistry.ts'),
+        'react-native/Libraries/Utilities/codegenNativeComponent': 'react-native-web',
+        'react-native/Libraries/ReactNative/AppContainer': 'react-native-web',
+        'react-native': 'react-native-web',
+        '@': path.resolve(__dirname, './src'),
+      },
+      extensions,
     },
-    extensions,
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      resolveExtensions: extensions,
-      loader: { '.js': 'jsx' },
+    optimizeDeps: {
+      esbuildOptions: {
+        resolveExtensions: extensions,
+        loader: { '.js': 'jsx' },
+      },
     },
-  },
-  define: {
-    global: 'window',
-    __DEV__: JSON.stringify(true),
-  },
-  server: {
-    port: 5173,
-    open: false,
-  },
+    define: {
+      global: 'window',
+      __DEV__: JSON.stringify(mode !== 'production'),
+      'process.env.API_BASE_URL': JSON.stringify(env.API_BASE_URL || env.VITE_API_BASE_URL || ''),
+      'process.env.API_TIMEOUT_MS': JSON.stringify(env.API_TIMEOUT_MS || '8000'),
+      'process.env.SOS_HOTLINE': JSON.stringify(env.SOS_HOTLINE || '113'),
+      'process.env.HIGHWAY_TITLE': JSON.stringify(env.HIGHWAY_TITLE || 'VẬN HÀNH CAO TỐC NỘI BÀI - LÀO CAI'),
+      'process.env.HIGHWAY_SUBTITLE': JSON.stringify(env.HIGHWAY_SUBTITLE || 'Hệ thống điều hành ITS'),
+    },
+    server: {
+      port: 5173,
+      open: false,
+    },
+  };
 });
 
 

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HighwayHeader } from '../../components/shared/HighwayHeader';
 import { LogoutIcon } from '../../components/icons/SvgIcons';
 import { useAuthStore } from '../../store/useAuthStore';
+import { showAppToast, showAppDialog } from '../../store/useToastStore';
 import {
   checkOtaUpdate,
   getCurrentBundleInfo,
@@ -45,21 +46,21 @@ export const ProfileScreen: React.FC = () => {
       if (result.hasUpdate) {
         setShowOtaModal(true);
       } else {
-        Alert.alert(
+        showAppToast(
+          'info',
           'ĐÃ LÀ BẢN MỚI NHẤT',
-          `Ứng dụng đang hoạt động với mã nguồn mới nhất (Phiên bản: ${bundleInfo?.bundleVersion || '1.0.0-base'}).`,
-          [{ text: 'Đóng', style: 'default' }]
+          `Ứng dụng đang hoạt động với mã nguồn mới nhất (Phiên bản: ${bundleInfo?.bundleVersion || '1.0.0-base'}).`
         );
       }
     } catch {
-      Alert.alert('THÔNG BÁO', 'Không thể kiểm tra bản cập nhật vào lúc này.');
+      showAppToast('warning', 'THÔNG BÁO', 'Không thể kiểm tra bản cập nhật vào lúc này.');
     } finally {
       setCheckingUpdate(false);
     }
   };
 
   const handleResetFactory = () => {
-    Alert.alert(
+    showAppDialog(
       'KHÔI PHỤC BẢN GỐC',
       'Bạn có muốn xóa toàn bộ bản cập nhật OTA và quay về mã nguồn gốc được đóng gói trong file APK không?',
       [
@@ -71,12 +72,13 @@ export const ProfileScreen: React.FC = () => {
             await resetOtaToFactory();
           },
         },
-      ]
+      ],
+      'warning'
     );
   };
 
   const handleLogout = () => {
-    Alert.alert(
+    showAppDialog(
       'ĐĂNG XUẤT HỆ THỐNG',
       'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng tác nghiệp không?',
       [
@@ -86,7 +88,8 @@ export const ProfileScreen: React.FC = () => {
           style: 'destructive',
           onPress: () => logout(),
         },
-      ]
+      ],
+      'warning'
     );
   };
 

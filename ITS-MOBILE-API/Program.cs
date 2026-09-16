@@ -18,11 +18,9 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddCors(options =>
 {
-    var corsOrigins = builder.Configuration.GetValue<string>("CorsPolicy") ?? "http://localhost:5173";
-    var origins = corsOrigins.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     options.AddPolicy("AllowMobile", policy =>
     {
-        policy.WithOrigins(origins)
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -96,7 +94,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowMobile");
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

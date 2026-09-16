@@ -1,4 +1,5 @@
-import { Platform, NativeModules, Alert } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
+import { showAppToast } from '../store/useToastStore';
 
 export interface PickedMedia {
   uri: string;
@@ -75,13 +76,14 @@ export async function capturePhoto(): Promise<PickedMedia | null> {
         return null;
       }
       console.error('Android capturePhoto error:', err);
-      Alert.alert('Lỗi máy ảnh', err?.message || 'Không thể khởi động máy ảnh trên thiết bị');
+      showAppToast('error', 'Lỗi máy ảnh', err?.message || 'Không thể khởi động máy ảnh trên thiết bị');
       return null;
     }
   }
 
   // 3. Trường hợp đang dùng bản APK cũ chưa có NativeModule Camera
-  Alert.alert(
+  showAppToast(
+    'warning',
     'Cập nhật ứng dụng',
     'Chức năng máy ảnh yêu cầu bản cài đặt APK v1.0.4 có quyền Camera. Vui lòng tải bản APK mới nhất từ TMC VEC.'
   );
@@ -148,12 +150,13 @@ export async function captureVideo(): Promise<PickedMedia | null> {
         return null;
       }
       console.error('Android captureVideo error:', err);
-      Alert.alert('Lỗi quay video', err?.message || 'Không thể khởi động quay video trên thiết bị');
+      showAppToast('error', 'Lỗi quay video', err?.message || 'Không thể khởi động quay video trên thiết bị');
       return null;
     }
   }
 
-  Alert.alert(
+  showAppToast(
+    'warning',
     'Cập nhật ứng dụng',
     'Chức năng quay video yêu cầu bản cài đặt APK v1.0.4 có quyền Camera. Vui lòng tải bản APK mới nhất.'
   );
@@ -239,12 +242,13 @@ export async function pickDocument(mediaType: 'image' | 'video' | 'all' = 'all')
         return null;
       }
       console.error('Android pickMedia error:', err);
-      Alert.alert('Lỗi chọn tệp', err?.message || 'Không thể truy cập thư viện tệp');
+      showAppToast('error', 'Lỗi chọn tệp', err?.message || 'Không thể truy cập thư viện tệp');
       return null;
     }
   }
 
-  Alert.alert(
+  showAppToast(
+    'warning',
     'Cập nhật ứng dụng',
     'Chức năng đính kèm tệp yêu cầu bản cài đặt APK v1.0.4. Vui lòng tải bản APK mới nhất.'
   );
