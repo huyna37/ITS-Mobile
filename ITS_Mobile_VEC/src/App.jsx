@@ -1664,6 +1664,51 @@ export default function App() {
     );
   };
 
+  // ---- Load profile API khi vào tab "Tôi" ----
+  useEffect(() => {
+    if (!isLoggedIn || currentView !== 'list' || activeTab !== 'profile') return;
+    let cancelled = false;
+    async function loadProfile() {
+      setProfileErr('');
+      try {
+        const data = await getProfile(session?.profile?.extension || '');
+        if (!cancelled) {
+          setProfile(data);
+          saveSession({ ...session, profile: data });
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setProfileErr(`Không tải được hồ sơ: ${e?.message || e}`);
+          setProfile(session?.profile || {});
+        }
+      }
+    }
+    loadProfile();
+    return () => { cancelled = true; };
+  }, [activeTab, currentView, isLoggedIn, session]);
+
+  const profileFallback = session?.profile || {};
+  const profileDisplay = profile || profileFallback;
+
+  // ---- Load preferences khi vào tab "Tôi" ----
+  useEffect(() => {
+    if (!isLoggedIn || currentView !== 'list' || activeTab !== 'profile') return;
+    let cancelled = false;
+    async function loadPref() {
+      setPrefLoading(true);
+      try {
+        const data = await getPreferences();
+        if (!cancelled) setPref(data);
+      } catch {
+        // keep default
+      } finally {
+        if (!cancelled) setPrefLoading(false);
+      }
+    }
+    loadPref();
+    return () => { cancelled = true; };
+  }, [activeTab, currentView, isLoggedIn, session]);
+
   // ============================================================
   // BOOTING / LOGIN GATE
   // ============================================================
@@ -1690,51 +1735,6 @@ export default function App() {
       />
     );
   }
-
-  // ---- Load profile API khi vào tab "Tôi" ----
-  useEffect(() => {
-    if (!isLoggedIn || currentView !== 'list' || activeTab !== 'profile') return;
-    let cancelled = false;
-    async function loadProfile() {
-      setProfileErr('');
-      try {
-        const data = await getProfile(session.profile?.extension || '');
-        if (!cancelled) {
-          setProfile(data);
-          saveSession({ ...session, profile: data });
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setProfileErr(`Không tải được hồ sơ: ${e?.message || e}`);
-          setProfile(session.profile || {});
-        }
-      }
-    }
-    loadProfile();
-    return () => { cancelled = true; };
-  }, [activeTab, currentView, isLoggedIn, session]);
-
-  const profileFallback = session.profile || {};
-  const profileDisplay = profile || profileFallback;
-
-  // ---- Load preferences khi vào tab "Tôi" ----
-  useEffect(() => {
-    if (!isLoggedIn || currentView !== 'list' || activeTab !== 'profile') return;
-    let cancelled = false;
-    async function loadPref() {
-      setPrefLoading(true);
-      try {
-        const data = await getPreferences();
-        if (!cancelled) setPref(data);
-      } catch {
-        // keep default
-      } finally {
-        if (!cancelled) setPrefLoading(false);
-      }
-    }
-    loadPref();
-    return () => { cancelled = true; };
-  }, [activeTab, currentView, isLoggedIn, session]);
 
   return (
     <div className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col overflow-hidden bg-slate-950 font-sans text-gray-900">
