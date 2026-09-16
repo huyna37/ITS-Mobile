@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "created": "2026-04-29T00:00:00+07:00",
+  "workspace_path": "d:\\Etc\\ITS_Mobile_VEC",
+  "current_step": "complete",
+  "steps": {
+    "1": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "2": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "3": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "3b": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "gate-a": { "status": "done", "confirmed": true, "iterations": 0, "iteration-metrics": [], "completed_at": "2026-04-29T00:00:00+07:00" },
+    "4": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00", "sub-state": "4a-minimal" },
+    "4a": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "4b": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "4c": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "gate-b": { "status": "done", "confirmed": true, "iterations": 0,
+                "risk_score": 3, "selected_path": "M", "output_mode": "lean",
+                "skip_step_5": false, "completed_at": "2026-04-29T00:00:00+07:00" },
+    "5": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" },
+    "6": { "status": "done", "completed_at": "2026-04-29T00:00:00+07:00" }
+  },
+  "config": {
+    "input_files": [
+      "d:\\Etc\\ITS_Mobile_VEC\\docs\\source\\Yêu cầu ứng dụng di động vận hành.docx"
+    ],
+    "figma_available": false,
+    "figma_status": "skipped-no-mcp",
+    "figma_file_url": null,
+    "tokens_status": "skipped-no-tokens",
+    "workspace_preexisting": false,
+    "dev_unit": "ETC"
+  },
+  "artifacts": {
+    "step-2-source": {
+      "step": "2",
+      "status": "done",
+      "files": [
+        "d:\\Etc\\ITS_Mobile_VEC\\docs\\source\\Yêu cầu ứng dụng di động vận hành.docx"
+      ]
+    }
+  }
+}

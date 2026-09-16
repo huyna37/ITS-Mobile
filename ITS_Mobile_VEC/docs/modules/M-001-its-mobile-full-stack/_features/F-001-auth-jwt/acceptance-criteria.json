@@ -1,0 +1,8 @@
+[
+  "All endpoints except /api/auth/login require Authorization: Bearer header",
+  "Token verified using SHA-256 key from appsettings.json",
+  "Logout invalidates session and current token",
+  "ChangePassword validates old password before updating new one",
+  "Frontend App.jsx uses src/api/ client instead of inline apiFetch",
+  "Login token stored and sent with every subsequent request"
+]

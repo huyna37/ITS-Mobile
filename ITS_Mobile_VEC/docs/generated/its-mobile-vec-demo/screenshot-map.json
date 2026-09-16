@@ -1,0 +1,113 @@
+{
+  "produced_at": "2026-04-30T15:34:00+07:00",
+  "base_url": "http://localhost:5173",
+  "viewport": { "width": 390, "height": 844 },
+  "screenshots": [
+    {
+      "id": "s01-login",
+      "filename": "s01-login.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s01-login.png",
+      "screen_id": "login",
+      "feature_ids": ["M1-F001"],
+      "title": "Màn hình đăng nhập",
+      "captured": true,
+      "notes": "Form đăng nhập với 3 trường: tài khoản, extension PBX, mật khẩu"
+    },
+    {
+      "id": "s02-calls-directory",
+      "filename": "s02-calls-directory.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s02-calls-directory.png",
+      "screen_id": "calls-directory",
+      "feature_ids": ["M1-F003"],
+      "title": "Danh bạ nội bộ",
+      "captured": true,
+      "notes": "Tab Liên lạc > sub-tab Danh bạ với trạng thái online/offline"
+    },
+    {
+      "id": "s03-calls-history",
+      "filename": "s03-calls-history.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s03-calls-history.png",
+      "screen_id": "calls-history",
+      "feature_ids": ["M1-F003"],
+      "title": "Lịch sử cuộc gọi",
+      "captured": true,
+      "notes": "Tab Liên lạc > sub-tab Lịch sử"
+    },
+    {
+      "id": "s04-tasks-list",
+      "filename": "s04-tasks-list.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s04-tasks-list.png",
+      "screen_id": "tasks",
+      "feature_ids": ["M2-F001", "M2-F005"],
+      "title": "Danh sách công việc và sự kiện tuyến",
+      "captured": true,
+      "notes": "Tab Công việc với task cards + section sự kiện tuyến đường"
+    },
+    {
+      "id": "s05-task-detail",
+      "filename": "s05-task-detail.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s05-task-detail.png",
+      "screen_id": "task-detail",
+      "feature_ids": ["M2-F002"],
+      "title": "Chi tiết sự cố — phần đầu",
+      "captured": true,
+      "notes": "Header chi tiết với badge mức độ, ID sự cố, loại, vị trí, hướng, mô tả, phương án xử lý"
+    },
+    {
+      "id": "s06-task-status-buttons",
+      "filename": "s06-task-status-buttons.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s06-task-status-buttons.png",
+      "screen_id": "task-detail-status",
+      "feature_ids": ["M2-F003"],
+      "title": "Cập nhật trạng thái xử lý",
+      "captured": true,
+      "notes": "3 nút trạng thái (1→2→3) và khu vực ghi chú hiện trường"
+    },
+    {
+      "id": "s07-task-media-attach",
+      "filename": "s07-task-media-attach.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s07-task-media-attach.png",
+      "screen_id": "task-detail-media",
+      "feature_ids": ["M2-F004"],
+      "title": "Đính kèm ảnh/video hiện trường",
+      "captured": true,
+      "notes": "Section Ảnh & video gửi TMC với nút chụp ảnh, quay video, đính kèm gallery"
+    },
+    {
+      "id": "s08-notifications",
+      "filename": "s08-notifications.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s08-notifications.png",
+      "screen_id": "alerts",
+      "feature_ids": ["M3-F002", "M3-F003"],
+      "title": "Danh sách thông báo",
+      "captured": true,
+      "notes": "Tab Thông báo với danh sách notifications, badge chưa đọc, unread styling"
+    },
+    {
+      "id": "s09-profile",
+      "filename": "s09-profile.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s09-profile.png",
+      "screen_id": "profile",
+      "feature_ids": ["M1-F005", "M1-F002"],
+      "title": "Hồ sơ cá nhân",
+      "captured": true,
+      "notes": "Tab Tôi với thông tin nhân viên và nút Đăng xuất"
+    },
+    {
+      "id": "s10-sos-dialog",
+      "filename": "s10-sos-dialog.png",
+      "path": "docs/generated/its-mobile-vec-demo/screenshots/s10-sos-dialog.png",
+      "screen_id": "sos-dialog",
+      "feature_ids": ["M1-F004"],
+      "title": "Hộp thoại xác nhận SOS",
+      "captured": true,
+      "notes": "Modal xác nhận gọi SOS khẩn cấp trước khi khởi động cuộc gọi GSM"
+    }
+  ],
+  "coverage": {
+    "total_screens": 10,
+    "captured": 10,
+    "failed": 0,
+    "coverage_percent": 100
+  }
+}

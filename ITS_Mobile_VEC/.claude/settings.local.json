@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl.exe -s -o /dev/null -w \"%{http_code}\" --max-time 3 \"http://localhost:8001/healthz\")",
+      "Bash(python -c \"import tree_sitter; print\\('tree-sitter:', tree_sitter.__version__\\)\")",
+      "Bash(python -c \"import tree_sitter_languages; print\\('tree-sitter-languages: OK'\\)\")",
+      "Bash(py --version)",
+      "Bash(py -c \"import tree_sitter; print\\('tree-sitter:', tree_sitter.__version__\\)\")",
+      "Bash(py -c \"import tree_sitter_languages; print\\('tree-sitter-languages: OK'\\)\")",
+      "Bash(scc --version)",
+      "Bash(tokei --version)",
+      "Bash(ctags --version)",
+      "Bash(curl -s http://localhost:8001/jobs/j_Y-vHqPoS_7_fo8KHmACK)",
+      "Bash(node -e \"process.stdin.resume\\(\\);let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);console.log\\(JSON.stringify\\(j.error,null,2\\)\\);console.log\\('Status:',j.status\\);console.log\\('Outputs:',j.outputs\\);}catch\\(e\\){console.log\\(d\\);}}\\)\")",
+      "Bash(node -e \"process.stdin.resume\\(\\);let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);console.log\\(JSON.stringify\\(j,null,2\\)\\);}catch\\(e\\){console.log\\(d\\);}}\\)\")",
+      "PowerShell($env:ANTHROPIC_API_KEY)"
+    ]
+  }
+}

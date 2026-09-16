@@ -1,0 +1,159 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "producer": "from-code",
+    "produced_at": "2026-04-30T14:04:00+07:00",
+    "confidence": "high",
+    "tier": "tier3-llm",
+    "adapter": "react-vite-spa",
+    "source_files": ["src/App.jsx", "src/main.jsx", "src/index.css", "package.json", "vite.config.js"]
+  },
+  "stack": {
+    "language": "JavaScript ESM",
+    "framework": "React 18",
+    "build_tool": "Vite 5",
+    "styling": "Tailwind CSS 3",
+    "icons": "Lucide React 0.460",
+    "target": "browser (SPA) → React Native (planned production)"
+  },
+  "file_inventory": {
+    "src_files": 3,
+    "total_loc": 1200,
+    "primary_component_loc": 1154,
+    "test_files": 0,
+    "config_files": 4
+  },
+  "components": [
+    {
+      "name": "App",
+      "file": "src/App.jsx",
+      "type": "root-component",
+      "state_vars": ["session", "booting", "activeTab", "currentView", "selectedTask", "callsSubTab", "callHistory", "loginAccount", "loginExt", "loginPass", "loginErr", "loginSubmitting", "sosOpen"],
+      "sub_components": ["LoginView", "TaskListView", "TaskDetailViewPanel", "CallsView", "NotificationsView", "ProfileView"],
+      "global_elements": ["SOS_FAB", "bottom-navigation"]
+    },
+    {
+      "name": "LoginView",
+      "file": "src/App.jsx",
+      "type": "inline-function-component",
+      "screens": ["login"],
+      "handlers": ["handleLogin"],
+      "validation": ["required: tai_khoan, mat_khau", "extension_pbx: 4 digits regex"]
+    },
+    {
+      "name": "TaskListView",
+      "file": "src/App.jsx",
+      "type": "inline-function-component",
+      "screens": ["tasks-list"],
+      "sections": ["Nhiệm vụ (task cards)", "Sự kiện trên tuyến (events)", "Công việc gần đây (completed)"],
+      "data_sources": ["tasks (useMemo mock)", "events (useMemo mock)", "recentCompletedTasks (useMemo mock)"]
+    },
+    {
+      "name": "TaskDetailViewPanel",
+      "file": "src/App.jsx",
+      "type": "exported-function-component",
+      "screens": ["task-detail"],
+      "handlers": ["applyStatus", "submitToTmc", "addFilesFromInput", "removeAttachment", "pushStatusLog"],
+      "state_vars": ["fieldNotes", "attachments", "detailStatus", "statusLog"],
+      "media_inputs": ["photoCamRef (camera capture)", "videoCamRef (video capture)", "attachRef (gallery)"]
+    },
+    {
+      "name": "CallsView",
+      "file": "src/App.jsx",
+      "type": "inline-function-component",
+      "screens": ["calls-directory", "calls-history"],
+      "data_sources": ["directory (useMemo mock)", "callHistory (localStorage)"],
+      "handlers": ["addMockCallHistory"]
+    },
+    {
+      "name": "NotificationsView",
+      "file": "src/App.jsx",
+      "type": "inline-function-component",
+      "screens": ["notifications"],
+      "data_sources": ["notifications (useMemo mock)"]
+    }
+  ],
+  "entities_from_code": [
+    {
+      "name": "NguoiDung",
+      "evidence": "session.profile: {ten_nhan_vien, chuc_vu, extension, don_vi}; localStorage LS_SESSION",
+      "fields": ["ten_nhan_vien", "chuc_vu", "extension", "don_vi"]
+    },
+    {
+      "name": "PhienDangNhap",
+      "evidence": "localStorage.getItem(LS_SESSION) / setItem — {token, profile}",
+      "fields": ["token", "profile"]
+    },
+    {
+      "name": "NhiemVu",
+      "evidence": "tasks useMemo: {id, code, type, level, location, direction, time, status, description, script}",
+      "fields": ["id", "code", "type", "level", "location", "direction", "time", "status", "description", "script"]
+    },
+    {
+      "name": "LichSuCuocGoi",
+      "evidence": "callHistory state: {id, extension_nguoi_nhan, ten_nguoi_nhan, thoi_gian, thoi_luong, trang_thai}; localStorage LS_HISTORY",
+      "fields": ["id", "extension_nguoi_nhan", "ten_nguoi_nhan", "thoi_gian", "thoi_luong", "trang_thai"]
+    },
+    {
+      "name": "DanhBaNguoiDung",
+      "evidence": "directory useMemo: {name, ext, online}",
+      "fields": ["name", "ext", "online"]
+    },
+    {
+      "name": "ThongBao",
+      "evidence": "notifications useMemo: {id, title, desc, time, unread}",
+      "fields": ["id", "title", "desc", "time", "unread"]
+    },
+    {
+      "name": "SuKienTuyenDuong",
+      "evidence": "events useMemo: {id, title, location, time, icon, tag}",
+      "fields": ["id", "title", "location", "time", "icon", "tag"]
+    }
+  ],
+  "auth_evidence": {
+    "session_storage": "localStorage",
+    "session_key": "its_session_v1",
+    "login_validation": {
+      "tai_khoan": "required, non-empty",
+      "mat_khau": "required, non-empty",
+      "extension_pbx": "regex /^\\d{4}$/ — exactly 4 digits"
+    },
+    "mock_token_format": "jwt-{Date.now()}",
+    "session_guard": "isLoggedIn = !!session (boolean check on session object)"
+  },
+  "integrations_evidence": [
+    {
+      "type": "GSM-native-dialer",
+      "evidence": "window.location.href = `tel:${SOS_TEL}`",
+      "env": "VITE_SOS_TEL (default: '113')",
+      "status": "implemented-prototype"
+    },
+    {
+      "type": "ITS-REST-API",
+      "evidence": "No axios/fetch calls in App.jsx — all data mocked in useMemo",
+      "status": "planned-not-implemented"
+    },
+    {
+      "type": "PBX-SIP-VoIP",
+      "evidence": "No SIP SDK in package.json — addMockCallHistory writes to localStorage only",
+      "status": "planned-not-implemented"
+    },
+    {
+      "type": "FCM-APNs-Push",
+      "evidence": "No firebase SDK in package.json — notifications hardcoded",
+      "status": "planned-not-implemented"
+    }
+  ],
+  "todo_markers": [],
+  "test_coverage": {
+    "test_files": 0,
+    "coverage_percent": 0,
+    "note": "No test files in prototype — production implementation will need full test suite"
+  },
+  "status_evidence_summary": {
+    "overall": "in-progress",
+    "ui_completeness": "high — all 6 screens implemented with full UI",
+    "api_completeness": "none — all data mocked",
+    "rationale": "React prototype demonstrates full UX flow; production implementation requires React Native port + real API integration"
+  }
+}

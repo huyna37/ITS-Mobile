@@ -1,0 +1,6 @@
+modules:
+  M-001:
+    name: ITS Mobile Full Stack
+    path: docs/modules/M-001-its-mobile-full-stack
+    slug: its-mobile-full-stack
+schema_version: "1.0"

@@ -1,0 +1,8 @@
+[
+  "POST /api/files/upload accepts multipart/form-data (image/video)",
+  "File saved to FilesOfIncident table with metadata (path, type, size)",
+  "Response returns file URL/id for frontend",
+  "Frontend uploads image/video when submitting task detail",
+  "Files >10MB or unsupported formats show error",
+  "Preview images/videos from server URL instead of object URL"
+]

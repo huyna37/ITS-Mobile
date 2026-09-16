@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "producer": "from-code",
+    "produced_at": "2026-04-30T14:02:00+07:00",
+    "confidence": "high",
+    "source_producers": ["from-code", "doc-intel"],
+    "evidence": [
+      "docs/features/ITSM-20260429-001/feature-brief.md",
+      "docs/features/ITSM-20260429-002/feature-brief.md",
+      "docs/features/ITSM-20260429-003/feature-brief.md",
+      "docs/intel/doc-brief.md#5-business-rules"
+    ]
+  },
+  "note": "Ứng dụng di động này chỉ có 1 role người dùng chính (nhan-vien-hien-truong). Các actor khác (nhan-vien-tmc, its-backend, pbx-system) tương tác qua API/integration, không đăng nhập vào app này.",
+  "roles": {
+    "nhan-vien-hien-truong": {
+      "display_name": "Nhân viên vận hành hiện trường",
+      "scope": "mobile-app-primary",
+      "modules": {
+        "M1": {
+          "display_name": "Xác thực và Liên lạc",
+          "features": {
+            "M1-F001": { "name": "Đăng nhập hệ thống", "permissions": ["execute"], "constraint": "dual credentials: tài khoản + extension PBX" },
+            "M1-F002": { "name": "Đăng xuất hệ thống", "permissions": ["execute"], "constraint": "clears session and call history" },
+            "M1-F003": { "name": "Thực hiện cuộc gọi nội bộ PBX", "permissions": ["execute", "view"], "constraint": "SIP/VoIP; only to extensions in directory" },
+            "M1-F004": { "name": "Gọi khẩn cấp SOS qua GSM", "permissions": ["execute"], "constraint": "always visible; works without internet" },
+            "M1-F005": { "name": "Hiển thị thông tin cá nhân", "permissions": ["view"], "constraint": "read-only; data from session" }
+          }
+        },
+        "M2": {
+          "display_name": "Quản lý Sự cố và Nhiệm vụ",
+          "features": {
+            "M2-F001": { "name": "Hiển thị danh sách công việc", "permissions": ["view"], "constraint": "server-side filter: own tasks only (BR-INTEL-011)" },
+            "M2-F002": { "name": "Xem chi tiết công việc", "permissions": ["view"], "constraint": "includes handling script + ITS API fields" },
+            "M2-F003": { "name": "Cập nhật trạng thái xử lý sự cố", "permissions": ["update"], "constraint": "sequential only: 1→2→3, no skip/rollback (BR-INTEL-015, 016)" },
+            "M2-F004": { "name": "Đính kèm ảnh hiện trường", "permissions": ["create"], "constraint": "image/video from camera or gallery; upload to ITS API" },
+            "M2-F005": { "name": "Hiển thị sự cố/sự kiện giao thông", "permissions": ["view"], "constraint": "read-only; received from ITS push" }
+          }
+        },
+        "M3": {
+          "display_name": "Thông báo",
+          "features": {
+            "M3-F001": { "name": "Nhận Push Notification", "permissions": ["receive"], "constraint": "FCM/APNs; works in background/killed (BR-INTEL-024)" },
+            "M3-F002": { "name": "Xem danh sách thông báo", "permissions": ["view"], "constraint": "reverse chronological; unread badge" },
+            "M3-F003": { "name": "Đánh dấu đã đọc / chưa đọc", "permissions": ["update"], "constraint": "toggle per notification" }
+          }
+        }
+      }
+    },
+    "nhan-vien-tmc": {
+      "display_name": "Nhân viên Trung tâm điều hành",
+      "scope": "out-of-scope",
+      "note": "TMC operators use a separate management system. They do NOT log in to this mobile app. Their actions (create tasks, send notifications) appear as data pushed to this app via ITS API + FCM.",
+      "modules": {}
+    },
+    "its-backend": {
+      "display_name": "Hệ thống ITS tuyến",
+      "scope": "system-integration",
+      "note": "System actor. Provides REST API for task data; receives status updates and media uploads.",
+      "api_permissions": ["task:read", "task:status-write", "media:write", "notification:push"]
+    },
+    "pbx-system": {
+      "display_name": "Hệ thống tổng đài PBX",
+      "scope": "system-integration",
+      "note": "System actor. Handles SIP call routing, extension presence, call history.",
+      "api_permissions": ["sip:call-route", "sip:presence-read", "call-history:read"]
+    }
+  },
+  "business_rules_enforced": [
+    { "id": "BR-INTEL-011", "rule": "Task list shows ONLY tasks assigned to current user", "enforcement": "server-side" },
+    { "id": "BR-INTEL-015", "rule": "Status transitions: ChuaXuLy→DaNhan→DangXuLy→HoanThanh (strict sequence)", "enforcement": "client + server" },
+    { "id": "BR-INTEL-016", "rule": "No backward status transitions allowed", "enforcement": "client + server" },
+    { "id": "BR-INTEL-008", "rule": "SOS call must work WITHOUT internet (GSM only)", "enforcement": "hardware/native" },
+    { "id": "BR-INTEL-009", "rule": "SOS button always visible on every screen", "enforcement": "UI" },
+    { "id": "BR-INTEL-003", "rule": "Auth must use HTTPS + token session", "enforcement": "transport + client" }
+  ]
+}

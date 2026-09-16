@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "editorconfig.editorconfig",
+    "formulahendry.auto-rename-tag",
+    "pkief.material-icon-theme"
+  ]
+}

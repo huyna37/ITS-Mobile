@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-05-28T08:48:08Z",
+  "generator": "ai-kit/scaffold-feature",
+  "modules": {
+    "M-001": {
+      "aggregate_size_status": "green",
+      "depends_on": [],
+      "feature_count": 7,
+      "features": {
+        "F-001": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-001",
+          "name": "Auth and JWT",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-001-auth-jwt",
+          "slug": "auth-jwt",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        },
+        "F-002": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-002",
+          "name": "Incident Detail & Update",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-002-incident-detail-update",
+          "slug": "incident-detail-update",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        },
+        "F-003": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-003",
+          "name": "Call History Record",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-003-call-history-record",
+          "slug": "call-history-record",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        },
+        "F-004": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-004",
+          "name": "Advanced Notifications",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-004-notifications-advanced",
+          "slug": "notifications-advanced",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        },
+        "F-005": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-005",
+          "name": "File Upload Attachments",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-005-file-upload",
+          "slug": "file-upload",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        },
+        "F-006": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-006",
+          "name": "Profile & Preferences",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-006-profile-preferences",
+          "slug": "profile-preferences",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        },
+        "F-007": {
+          "classification": "local",
+          "confidence": "manual",
+          "id": "F-007",
+          "name": "Remove All Mock Data & Hardcodes",
+          "path": "docs/modules/M-001-its-mobile-full-stack/_features/F-007-remove-mock-data-hardcodes",
+          "slug": "remove-mock-data-hardcodes",
+          "status": "proposed",
+          "visibility": [
+            "PRIVATE"
+          ]
+        }
+      },
+      "id": "M-001",
+      "name": "ITS Mobile Full Stack",
+      "path": "docs/modules/M-001-its-mobile-full-stack",
+      "slug": "its-mobile-full-stack",
+      "status": "in-progress"
+    }
+  },
+  "version": "v2"
+}

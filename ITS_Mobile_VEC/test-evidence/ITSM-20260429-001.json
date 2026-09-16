@@ -1,0 +1,62 @@
+{
+  "feature_id": "ITSM-20260429-001",
+  "milestone": "M1",
+  "captured_at": "2026-04-30T07:12:00.000Z",
+  "playwright_spec": "playwright/ITSM-20260429-001.spec.ts",
+  "canonical_test_evidence": "docs/intel/test-evidence/ITSM-20260429-001.json",
+  "notes": "All 5 E2E tests passed locally (chromium). Canonical intel: docs/intel/test-evidence + docs/intel/screenshots. Re-run: npm run test:e2e -- playwright/ITSM-20260429-001.spec.ts",
+  "test_cases": [
+    {
+      "id": "M1-F001",
+      "title": "Login validation errors (empty account/password; extension not 4 digits)",
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T07:12:00.000Z"
+      }
+    },
+    {
+      "id": "M1-F002",
+      "title": "Successful login; default Liên lạc / Liên lạc PBX visible",
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T07:12:00.000Z"
+      }
+    },
+    {
+      "id": "M1-F003",
+      "title": "Liên lạc → Danh bạ → mock call → Lịch sử shows entry",
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T07:12:00.000Z"
+      }
+    },
+    {
+      "id": "M1-F004",
+      "title": "Profile shows extension; logout returns to login",
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T07:12:00.000Z"
+      }
+    },
+    {
+      "id": "M1-F005",
+      "title": "SOS opens dialog; Hủy closes without confirm (no tel navigation)",
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T07:12:00.000Z"
+      }
+    }
+  ],
+  "screenshots_expected": [
+    "docs/intel/screenshots/ITSM-20260429-001-step-01-login.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-02-validation-empty.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-03-validation-extension.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-04-after-login-calls.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-05-directory-after-call.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-06-call-history.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-07-profile.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-08-after-logout.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-09-sos-modal-open.png",
+    "docs/intel/screenshots/ITSM-20260429-001-step-10-sos-modal-closed.png"
+  ]
+}

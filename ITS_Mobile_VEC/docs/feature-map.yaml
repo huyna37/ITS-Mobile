@@ -1,0 +1,56 @@
+repo-type: mini
+workspace: d:\Etc\ITS_Mobile_VEC
+generated: 2026-04-30
+updated-by-from-code: 2026-04-30
+system-name: ITS Mobile VEC (NB-LC Express)
+dev-unit: ETC
+risk-score: 3
+path: M
+from-code-summary:
+  total-features: 13
+  status-breakdown: { planned: 0, stubbed: 3, in-progress: 10, done: 1 }
+  blocking-gaps: [GAP-001, GAP-002, GAP-003, GAP-008]
+  intel-artifacts: [actor-registry.json, permission-matrix.json, sitemap.json, feature-catalog.json, code-facts.json]
+
+features:
+  ITSM-20260429-001:
+    name: Xac thuc va Lien lac (M1)
+    project: mobile-app
+    docs_path: docs/features/ITSM-20260429-001
+    status: done
+    current-stage: closed
+    pipeline-path: M
+    depends-on: []
+    created: 2026-04-29
+    updated: 2026-04-30
+    features-count: 5
+    priority-p0: 3
+
+  ITSM-20260429-002:
+    name: Quan ly Su co va Nhiem vu (M2)
+    project: mobile-app
+    docs_path: docs/features/ITSM-20260429-002
+    status: in-progress
+    current-stage: qa-wave-1
+    depends-on: [ITSM-20260429-001]
+    created: 2026-04-29
+    updated: 2026-04-30
+    features-count: 5
+    priority-p0: 3
+
+  ITSM-20260429-003:
+    name: Thong bao (M3)
+    project: mobile-app
+    docs_path: docs/features/ITSM-20260429-003
+    status: in-progress
+    current-stage: qa-wave-1
+    depends-on: [ITSM-20260429-001, ITSM-20260429-002]
+    created: 2026-04-29
+    updated: 2026-04-30
+    features-count: 3
+    priority-p0: 1
+
+execution-order:
+  wave-1: [ITSM-20260429-001]
+  wave-2: [ITSM-20260429-002]
+  wave-3: [ITSM-20260429-003]

@@ -1,0 +1,48 @@
+{
+  "project": {
+    "display_name": "ITS Mobile VEC — Ứng dụng di động vận hành ITS tuyến Nội Bài – Lào Cai",
+    "code": "ITS-MOBILE-VEC",
+    "client": "VEC — Tổng công ty đường cao tốc Việt Nam",
+    "description": "Ứng dụng di động iOS/Android cho nhân viên vận hành hiện trường tuyến cao tốc Nội Bài – Lào Cai. Cho phép nhân viên nhận nhiệm vụ xử lý sự cố từ Trung tâm điều hành (TMC), liên lạc nội bộ qua VoIP/PBX, cập nhật trạng thái xử lý theo thời gian thực, gửi ảnh/video hiện trường và gọi SOS khẩn cấp qua GSM.",
+    "tech_stack": "React Native (iOS + Android) | React 18 + Vite 5 (prototype) | SIP/VoIP | FCM/APNs | REST API"
+  },
+  "dev_unit": "Công ty Cổ phần Hệ thống Công nghệ ETC",
+  "meta": {
+    "today": "30/04/2026",
+    "version": "1.0",
+    "test_period": "Tháng 05/2026"
+  },
+  "overview": {
+    "purpose": "Tài liệu mô tả thiết kế và hướng dẫn sử dụng ứng dụng di động ITS Mobile VEC — công cụ tác nghiệp hiện trường cho nhân viên vận hành tuyến cao tốc Nội Bài – Lào Cai. Ứng dụng số hóa quy trình nhận và xử lý sự cố giao thông, thay thế phương thức báo cáo thủ công bằng điện thoại.",
+    "scope": "Phạm vi: Ứng dụng di động dành cho nhân viên vận hành hiện trường (patrol, rescue) trên tuyến NB-LC. Bao gồm 3 module chức năng: M1 Xác thực & Liên lạc (5 chức năng), M2 Quản lý Sự cố & Nhiệm vụ (5 chức năng), M3 Thông báo (3 chức năng). Ngoài phạm vi: Hệ thống TMC, quản trị PBX, đăng ký tài khoản.",
+    "system_description": "ITS Mobile VEC là ứng dụng di động nền tảng React Native hỗ trợ iOS và Android. Phiên bản prototype hiện tại là React 18 SPA chạy trên trình duyệt web. Ứng dụng kết nối với 4 hệ thống ngoài: ITS Backend (REST API) để đồng bộ nhiệm vụ và trạng thái; Tổng đài PBX (SIP/VoIP) để liên lạc nội bộ; FCM/APNs để nhận push notification; Mạng GSM để gọi SOS khẩn cấp khi không có internet. Ứng dụng phục vụ khoảng 50–200 nhân viên hiện trường, xử lý 10–50 sự cố mỗi ngày.",
+    "conventions": "Tài liệu sử dụng tiếng Việt. Mã chức năng theo định dạng F-NNN (ba chữ số). Mã quy tắc nghiệp vụ theo định dạng BR-INTEL-NNN. Trạng thái nhiệm vụ dùng số nguyên: 1 = Đã nhận, 2 = Đang xử lý, 3 = Hoàn thành.",
+    "terms": [
+      { "short": "TMC", "full": "Traffic Management Center", "explanation": "Trung tâm điều hành giao thông — đơn vị phát nhiệm vụ cho nhân viên hiện trường" },
+      { "short": "ITS", "full": "Intelligent Transportation System", "explanation": "Hệ thống giao thông thông minh — hệ thống backend quản lý sự cố và nhiệm vụ tuyến NB-LC" },
+      { "short": "PBX", "full": "Private Branch Exchange", "explanation": "Tổng đài nội bộ VoIP của VEC — dùng để gọi nội bộ giữa nhân viên và TMC" },
+      { "short": "SIP", "full": "Session Initiation Protocol", "explanation": "Giao thức khởi tạo phiên cho cuộc gọi VoIP qua tổng đài PBX" },
+      { "short": "VoIP", "full": "Voice over Internet Protocol", "explanation": "Gọi điện qua internet — sử dụng cho liên lạc nội bộ khi có kết nối mạng" },
+      { "short": "GSM", "full": "Global System for Mobile Communications", "explanation": "Mạng điện thoại di động — dùng cho cuộc gọi SOS khẩn cấp không cần internet" },
+      { "short": "FCM", "full": "Firebase Cloud Messaging", "explanation": "Dịch vụ push notification của Google dành cho Android" },
+      { "short": "APNs", "full": "Apple Push Notification service", "explanation": "Dịch vụ push notification của Apple dành cho iOS" },
+      { "short": "JWT", "full": "JSON Web Token", "explanation": "Token xác thực phiên đăng nhập — lưu trong localStorage/AsyncStorage" },
+      { "short": "NB-LC", "full": "Nội Bài – Lào Cai", "explanation": "Tuyến đường cao tốc từ Nội Bài (Hà Nội) đến Lào Cai" },
+      { "short": "SOS", "full": "Save Our Souls", "explanation": "Nút gọi khẩn cấp — luôn hiển thị trên mọi màn hình; hoạt động không cần internet" },
+      { "short": "Extension", "full": "PBX Extension Number", "explanation": "Số nội bộ 4 chữ số — dùng để đăng nhập và nhận dạng nhân viên trong hệ thống PBX" }
+    ],
+    "references": [
+      { "stt": "1", "name": "Yêu cầu ứng dụng di động vận hành ITS NB-LC", "ref": "docs/source/Yêu cầu ứng dụng di động vận hành.docx" },
+      { "stt": "2", "name": "Tài liệu thiết kế kiến trúc ITS Mobile VEC v1.0", "ref": "docs/ARCHITECTURE.md" },
+      { "stt": "3", "name": "Sơ đồ luồng nghiệp vụ ITS Mobile VEC", "ref": "docs/business-flows.md" },
+      { "stt": "4", "name": "Mô hình dữ liệu ITS Mobile VEC", "ref": "docs/data-model.md" },
+      { "stt": "5", "name": "Nghị quyết NĐ 45/2026 về đầu tư ứng dụng CNTT", "ref": "[CẦN BỔ SUNG: số nghị định áp dụng]" }
+    ]
+  },
+  "test_sheets": {
+    "ui_label": "Chức năng ITS Mobile VEC",
+    "api_label": "API ITS Backend",
+    "ui_requirement": "Kiểm tra toàn bộ 13 chức năng giao diện người dùng của ứng dụng di động ITS Mobile VEC",
+    "api_requirement": "Kiểm tra 7 API endpoints của ITS Backend tích hợp với ứng dụng di động"
+  }
+}

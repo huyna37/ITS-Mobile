@@ -1,0 +1,62 @@
+[
+  {
+    "index": 1,
+    "path": "wireframe:UI.jsx#LoginView",
+    "screen-title": "Đăng nhập hệ thống",
+    "screen-type": "auth",
+    "feature-guess": "M1-F001 Đăng nhập hệ thống",
+    "fields": ["Tài khoản nội bộ (username)", "Extension PBX", "Mật khẩu"],
+    "actions": ["ĐĂNG NHẬP"],
+    "ocr-confidence": "high"
+  },
+  {
+    "index": 2,
+    "path": "wireframe:UI.jsx#TaskListView",
+    "screen-title": "Danh sách nhiệm vụ + Sự kiện trên tuyến",
+    "screen-type": "list",
+    "feature-guess": "M2-F001 Nhận và quản lý công việc",
+    "fields": ["code", "type (loại sự cố)", "level (mức độ)", "location (vị trí Km)", "time", "status"],
+    "actions": ["Xem chi tiết (tap task card)"],
+    "ocr-confidence": "high"
+  },
+  {
+    "index": 3,
+    "path": "wireframe:UI.jsx#TaskDetailView",
+    "screen-title": "Chi tiết sự cố",
+    "screen-type": "detail",
+    "feature-guess": "M2-F001 Nhận và quản lý công việc",
+    "fields": ["level", "id (mã)", "type", "location", "direction", "description (mô tả hiện trường)", "script (phương án xử lý)"],
+    "actions": ["Đã nhận (1)", "Đang xử lý (2)", "Hoàn thành (3)", "Chụp ảnh", "CẬP NHẬT KẾT QUẢ", "PhoneCall"],
+    "ocr-confidence": "high"
+  },
+  {
+    "index": 4,
+    "path": "wireframe:UI.jsx#CallsView",
+    "screen-title": "Liên lạc PBX",
+    "screen-type": "list",
+    "feature-guess": "M1-F002 Thực hiện cuộc gọi nội bộ",
+    "fields": ["name (tên liên hệ)", "ext (extension)", "online status"],
+    "actions": ["Gọi (phone icon)", "Xem tất cả"],
+    "ocr-confidence": "high"
+  },
+  {
+    "index": 5,
+    "path": "wireframe:UI.jsx#NotificationsView",
+    "screen-title": "Thông báo",
+    "screen-type": "list",
+    "feature-guess": "M3-F001 Nhận thông báo",
+    "fields": ["title", "desc (mô tả)", "time", "unread (trạng thái đọc)"],
+    "actions": ["Đánh dấu đã đọc/chưa đọc"],
+    "ocr-confidence": "high"
+  },
+  {
+    "index": 6,
+    "path": "wireframe:UI.jsx#ProfileView",
+    "screen-title": "Cá nhân",
+    "screen-type": "settings",
+    "feature-guess": "M1-F001 Đăng nhập hệ thống",
+    "fields": ["Tên nhân viên", "Chức vụ", "Extension", "Đơn vị"],
+    "actions": ["Đăng xuất hệ thống"],
+    "ocr-confidence": "high"
+  }
+]

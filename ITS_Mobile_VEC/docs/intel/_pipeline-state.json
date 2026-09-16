@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "skill": "from-code",
+  "created": "2026-04-30T14:00:00+07:00",
+  "workspace_path": "d:\\Etc\\ITS_Mobile_VEC",
+  "repo_type": "mini",
+  "current_step": "complete",
+  "tier": "tier3-llm",
+  "steps": {
+    "0":  { "status": "done", "completed_at": "2026-04-30T14:00:00+07:00" },
+    "1":  { "status": "done", "completed_at": "2026-04-30T14:01:00+07:00",
+            "sub": {"1a":"done","1b":"skipped-no-routes","1c":"done","1d":"done","1e":"done","1f":"skipped","1g":"skipped"} },
+    "1.5": { "status": "done", "completed_at": "2026-04-30T14:02:00+07:00" },
+    "2":  { "status": "done", "completed_at": "2026-04-30T14:03:00+07:00" },
+    "3":  { "status": "done", "completed_at": "2026-04-30T14:04:00+07:00" },
+    "4":  { "status": "done", "completed_at": "2026-04-30T14:05:00+07:00" },
+    "5":  { "status": "done", "completed_at": "2026-04-30T14:06:00+07:00" },
+    "6":  { "status": "done", "completed_at": "2026-04-30T14:07:00+07:00" },
+    "7":  { "status": "done", "completed_at": "2026-04-30T14:08:00+07:00" }
+  },
+  "config": {
+    "repo_path": "d:\\Etc\\ITS_Mobile_VEC",
+    "detected_stack": {
+      "frontend": "react-vite",
+      "language": "javascript-jsx",
+      "css": "tailwindcss",
+      "build": "vite",
+      "runtime": "browser"
+    },
+    "selected_adapters": ["tier3-llm"],
+    "services": [
+      { "id": "root", "path": ".", "kind": "frontend", "manifest": "package.json" }
+    ],
+    "per_service_docs": false,
+    "tools_available": {
+      "tree_sitter": false,
+      "scc": false,
+      "tokei": false,
+      "ctags": false,
+      "python": "3.11.0"
+    },
+    "interview_context": {
+      "stack_context": {
+        "framework": "React 18 + Vite + Tailwind",
+        "target_platform": "Mobile browser / React Native (planned)",
+        "prototype_status": "UI prototype — demo with mocked data, no real API connections"
+      },
+      "feature_notes": {
+        "M1": "Auth + PBX calls — VoIP not implemented in prototype (mock call history only)",
+        "M2": "Task management — mock data hardcoded, no real ITS API integration in prototype",
+        "M3": "Notifications — mocked list, no real FCM push in prototype"
+      },
+      "arch_context": {
+        "type": "mobile-first SPA prototype",
+        "target": "React Native production app",
+        "backend": "ITS REST API + PBX SIP (not yet connected in prototype)"
+      }
+    }
+  },
+  "artifacts": {
+    "stack-facts.json": { "step": "1a", "status": "done" },
+    "code-facts.json": { "step": "1-merge", "status": "done" },
+    "actor-registry.json": { "step": "1.5", "status": "done" },
+    "permission-matrix.json": { "step": "1.5", "status": "done" },
+    "feature-catalog.json": { "step": "2", "status": "done" },
+    "sitemap.json": { "step": "2", "status": "done" },
+    "arch-brief.md": { "step": "5", "status": "done" },
+    "code-brief.md": { "step": "5", "status": "done" }
+  }
+}

@@ -1,0 +1,628 @@
+{
+  "_meta": {
+    "confidence": "high",
+    "evidence": [
+      "docs/features/ITSM-20260429-001/feature-brief.md",
+      "docs/features/ITSM-20260429-002/feature-brief.md",
+      "docs/features/ITSM-20260429-003/feature-brief.md",
+      "src/App.jsx — code status analysis"
+    ],
+    "produced_at": "2026-04-30T16:35:00+07:00",
+    "producer": "close-feature",
+    "schema_version": "1.0.0"
+  },
+  "features": [
+    {
+      "completeness_score": 0.45,
+      "entities": [
+        "NguoiDung",
+        "PhienDangNhap"
+      ],
+      "gaps_to_done": [
+        "Connect to real ITS Auth API (replace mock setTimeout)",
+        "Implement JWT refresh token rotation",
+        "Add HTTPS enforcement check",
+        "Resolve GAP-001 (SIP auth mechanism)"
+      ],
+      "id": "M1-F001",
+      "integrations": [],
+      "module": "M1",
+      "name": "Đăng nhập hệ thống",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "execute"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "LoginView"
+      ],
+      "slug": "dang-nhap-he-thong",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#LoginView — full login form with validation; mock JWT in handleLogin (window.setTimeout); no real API call",
+        "ui_complete": true
+      },
+      "type": "Auth"
+    },
+    {
+      "completeness_score": 0.5,
+      "entities": [
+        "PhienDangNhap"
+      ],
+      "gaps_to_done": [
+        "Server-side JWT invalidation (blacklist or short TTL)"
+      ],
+      "id": "M1-F002",
+      "module": "M1",
+      "name": "Đăng xuất hệ thống",
+      "priority": "P1",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "execute"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "ProfileView"
+      ],
+      "slug": "dang-xuat-he-thong",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#handleLogout — clears localStorage session and call history; no server-side session invalidation",
+        "ui_complete": true
+      },
+      "type": "Auth"
+    },
+    {
+      "completeness_score": 0.18,
+      "entities": [
+        "DanhBaNguoiDung",
+        "LichSuCuocGoi"
+      ],
+      "gaps_to_done": [
+        "Resolve GAP-001 (SIP auth mechanism)",
+        "Implement SIP.js or react-native-voip integration",
+        "Connect to PBX server for real directory + presence status",
+        "iOS CallKit / PushKit integration",
+        "Android foreground service for SIP keep-alive",
+        "Real call history from PBX (not localStorage mock)"
+      ],
+      "id": "M1-F003",
+      "integrations": [
+        "PBX SIP/VoIP"
+      ],
+      "module": "M1",
+      "name": "Thực hiện cuộc gọi nội bộ PBX",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "execute"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "CallsView"
+      ],
+      "slug": "thuc-hien-cuoc-goi-noi-bo-pbx",
+      "status": "stubbed",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#CallsView — UI shows directory with online/offline status and call button; addMockCallHistory() writes to local history only; no real SIP/VoIP integration",
+        "ui_complete": true
+      },
+      "type": "Integration"
+    },
+    {
+      "completeness_score": 0.65,
+      "entities": [],
+      "gaps_to_done": [
+        "Port to React Native using Linking.openURL('tel:...')",
+        "iOS prompts user confirmation — document UX flow"
+      ],
+      "id": "M1-F004",
+      "integrations": [
+        "GSM native dialer"
+      ],
+      "module": "M1",
+      "name": "Gọi khẩn cấp SOS qua GSM",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "execute"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "SOS_FAB"
+      ],
+      "slug": "goi-khan-cap-sos-gsm",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": true,
+        "evidence": "src/App.jsx#confirmSos → window.location.href = `tel:${SOS_TEL}` — native tel: scheme works; VITE_SOS_TEL env configurable; SOS FAB always visible (absolute positioned z-50)",
+        "ui_complete": true
+      },
+      "type": "Integration"
+    },
+    {
+      "completeness_score": 0.55,
+      "entities": [
+        "NguoiDung"
+      ],
+      "gaps_to_done": [
+        "Fetch real profile from ITS API (not hardcoded mock)"
+      ],
+      "id": "M1-F005",
+      "module": "M1",
+      "name": "Hiển thị thông tin cá nhân",
+      "priority": "P2",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "view"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "ProfileView"
+      ],
+      "slug": "hien-thi-thong-tin-ca-nhan",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#ProfileView — displays session.profile fields (ten_nhan_vien, chuc_vu, extension, don_vi); data from mock localStorage session",
+        "ui_complete": true
+      },
+      "type": "CRUD"
+    },
+    {
+      "completeness_score": 0.4,
+      "entities": [
+        "NhiemVu"
+      ],
+      "gaps_to_done": [
+        "Resolve GAP-002 (ITS API auth mechanism)",
+        "Resolve GAP-003 (push vs pull for task updates)",
+        "Resolve GAP-008 (ITS API spec not provided)",
+        "Connect to real ITS REST API (replace useMemo mock data)",
+        "Implement pull-to-refresh",
+        "Server-side user filter enforcement"
+      ],
+      "id": "M2-F001",
+      "integrations": [
+        "ITS Backend REST API"
+      ],
+      "module": "M2",
+      "name": "Hiển thị danh sách công việc",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "view"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "TaskListView"
+      ],
+      "slug": "hien-thi-danh-sach-cong-viec",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#TaskListView — renders task cards with level accent, status badge, location/time; tasks data is hardcoded useMemo array (2 mock tasks)",
+        "ui_complete": true
+      },
+      "type": "CRUD"
+    },
+    {
+      "completeness_score": 0.45,
+      "entities": [
+        "NhiemVu",
+        "HoSoSuCo"
+      ],
+      "gaps_to_done": [
+        "Fetch full 20+ field task detail from ITS API",
+        "Display all ITS API fields per BR-INTEL-014"
+      ],
+      "id": "M2-F002",
+      "integrations": [
+        "ITS Backend REST API"
+      ],
+      "module": "M2",
+      "name": "Xem chi tiết công việc",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "view"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "TaskDetailViewPanel"
+      ],
+      "slug": "xem-chi-tiet-cong-viec",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#TaskDetailViewPanel — full detail view with incident level, type, location, direction, description, handling script (phuong_an_xu_ly); data passed from task object",
+        "ui_complete": true
+      },
+      "type": "CRUD"
+    },
+    {
+      "completeness_score": 0.45,
+      "entities": [
+        "NhiemVu"
+      ],
+      "gaps_to_done": [
+        "Sync status update to ITS backend API (BR-INTEL-018)",
+        "Enforce sequential state machine server-side",
+        "Implement optimistic UI with rollback on sync failure",
+        "Offline queue for status updates (connectivity gaps on expressway)"
+      ],
+      "id": "M2-F003",
+      "integrations": [
+        "ITS Backend REST API"
+      ],
+      "module": "M2",
+      "name": "Cập nhật trạng thái xử lý sự cố",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "update"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "TaskDetailViewPanel"
+      ],
+      "slug": "cap-nhat-trang-thai-xu-ly-su-co",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#applyStatus — 3-state buttons (Da nhan/Dang xu ly/Hoan thanh); pushStatusLog for history; local state only, no ITS API sync",
+        "ui_complete": true
+      },
+      "type": "Workflow"
+    },
+    {
+      "completeness_score": 0.4,
+      "entities": [
+        "AnhHienTruong"
+      ],
+      "gaps_to_done": [
+        "Implement multipart/form-data upload to ITS API",
+        "Add upload progress indicator",
+        "Retry logic with exponential backoff (3G coverage gaps)",
+        "Resolve GAP-005 (camera only vs gallery)"
+      ],
+      "id": "M2-F004",
+      "integrations": [
+        "ITS Backend REST API (multipart upload)"
+      ],
+      "module": "M2",
+      "name": "Đính kèm ảnh/video hiện trường",
+      "priority": "P1",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "create"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "TaskDetailViewPanel"
+      ],
+      "slug": "dinh-kem-anh-hien-truong",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx — 3 file input buttons (camera photo, camera video, library attach); createObjectURL for preview; no upload to ITS API",
+        "ui_complete": true
+      },
+      "type": "CRUD"
+    },
+    {
+      "completeness_score": 0.35,
+      "entities": [
+        "HoSoSuCo",
+        "SuKienTuyenDuong"
+      ],
+      "gaps_to_done": [
+        "Resolve GAP-003 (push vs pull model)",
+        "Connect to ITS real-time event feed",
+        "Implement FCM data message trigger → fetch from API"
+      ],
+      "id": "M2-F005",
+      "integrations": [
+        "ITS Backend REST API (push/WebSocket)"
+      ],
+      "module": "M2",
+      "name": "Hiển thị sự cố/sự kiện giao thông",
+      "priority": "P1",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "view"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "TaskListView"
+      ],
+      "slug": "hien-thi-su-co-su-kien-giao-thong",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#TaskListView — 'Sự kiện trên tuyến' section renders events array (construction, weather); hardcoded useMemo mock data",
+        "ui_complete": true
+      },
+      "type": "CRUD"
+    },
+    {
+      "completeness_score": 0.12,
+      "entities": [
+        "ThongBao"
+      ],
+      "gaps_to_done": [
+        "Setup FCM project + google-services.json",
+        "Setup APNs certificate (Dev + Prod)",
+        "Implement @react-native-firebase/messaging",
+        "Handle foreground/background/killed states",
+        "Deep-link from notification to TaskDetailView for PhanCong type"
+      ],
+      "id": "M3-F001",
+      "integrations": [
+        "FCM (Android)",
+        "APNs (iOS)"
+      ],
+      "module": "M3",
+      "name": "Nhận Push Notification",
+      "priority": "P0",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "receive"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "NotificationsView",
+        "system-notification-tray"
+      ],
+      "slug": "nhan-push-notification",
+      "status": "stubbed",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#NotificationsView — 3 mock notification items; no FCM/APNs SDK integration; notifications hardcoded in useMemo",
+        "ui_complete": true
+      },
+      "type": "Integration"
+    },
+    {
+      "completeness_score": 0.45,
+      "entities": [
+        "ThongBao"
+      ],
+      "gaps_to_done": [
+        "Fetch notification list from ITS/TMC API",
+        "Implement reverse chronological order from server",
+        "Persist read/unread state server-side or with local sync"
+      ],
+      "id": "M3-F002",
+      "module": "M3",
+      "name": "Xem danh sách thông báo",
+      "priority": "P1",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "view"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "NotificationsView"
+      ],
+      "slug": "xem-danh-sach-thong-bao",
+      "status": "in-progress",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#NotificationsView — displays notification list with unread/read styling; badge count on Bell icon; mock data",
+        "ui_complete": true
+      },
+      "type": "CRUD"
+    },
+    {
+      "completeness_score": 0.15,
+      "entities": [
+        "ThongBao"
+      ],
+      "gaps_to_done": [
+        "Implement toggle read/unread on tap (BR-INTEL-026)",
+        "Sync read status to backend API",
+        "Update unread badge count on toggle"
+      ],
+      "id": "M3-F003",
+      "module": "M3",
+      "name": "Đánh dấu đã đọc / chưa đọc",
+      "priority": "P2",
+      "role_visibility": {
+        "nhan-vien-hien-truong": "update"
+      },
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "screens": [
+        "NotificationsView"
+      ],
+      "slug": "danh-dau-da-doc-chua-doc",
+      "status": "stubbed",
+      "status_evidence": {
+        "api_connected": false,
+        "evidence": "src/App.jsx#NotificationsView — unread styling exists (bg-blue-50) but no toggle action implemented; tap does not toggle da_doc state",
+        "ui_complete": false
+      },
+      "type": "CRUD"
+    },
+    {
+      "acceptance_criteria": [],
+      "dialogs": [],
+      "error_cases": [],
+      "id": "ITSM-20260429-001",
+      "implementation_evidence": {
+        "adrs": [],
+        "closed_at": "2026-04-30T16:35:00+07:00",
+        "commits": [],
+        "coverage_pct": null,
+        "manual_qa_passed": true,
+        "notes": "Workspace không có .git; chứng cứ commit rỗng. Các dòng M1-F001..M1-F005 trong catalog vẫn mô tả chi tiết code; mục này đại diện dossier SDLC đã niêm phong.",
+        "reviewer_verdict": "Pass",
+        "test_files": [
+          "playwright/ITSM-20260429-001.spec.ts",
+          "src/App.jsx"
+        ]
+      },
+      "module": "M1",
+      "name": "Pipeline dossier — Xác thực và Liên lạc (M1) wave 1 demo",
+      "priority": "P0",
+      "roles": [
+        "nhan-vien-hien-truong"
+      ],
+      "slug": "sdlc-dossier-m1-wave1-demo",
+      "status": "implemented",
+      "test_evidence_ref": "docs/intel/test-evidence/ITSM-20260429-001.json",
+      "type": "Release"
+    },
+    {
+      "business_intent": "ITS Mobile has no JWT auth on API - token is generated but not verified. Need JWT Bearer middleware, validate token on protected routes, complete Logout and ChangePassword.",
+      "consumed_by_modules": [],
+      "description": "Backend: JWT auth middleware, Logout real, ChangePassword validate hash. Frontend: use src/api/client instead of inline apiFetch.",
+      "id": "F-001",
+      "module_id": "M-001",
+      "name": "Auth and JWT",
+      "priority": "critical",
+      "slug": "auth-jwt",
+      "status": "proposed"
+    },
+    {
+      "business_intent": "IncidentsController only has GET /api/incidents list - no GET/{id} detail or PATCH/{id} update. Frontend calls api.getIncident(task.id) and api.updateIncident() but API returns 404. Need full incident CRUD flow with status logs and field notes.",
+      "consumed_by_modules": [],
+      "description": "Backend: IncidentsController add GET/{id} and PATCH/{id} (notes + attachments + status). Frontend: TaskDetailViewPanel calls real API, sends field notes + file metadata.",
+      "id": "F-002",
+      "module_id": "M-001",
+      "name": "Incident Detail & Update",
+      "priority": "high",
+      "slug": "incident-detail-update",
+      "status": "proposed"
+    },
+    {
+      "business_intent": "CallsController only has GET /api/calls/history - no POST to record calls. Frontend uses addMockCallHistory() which only appends to local state. Need POST endpoint that writes to CallHistory/AsteriskCDR table.",
+      "consumed_by_modules": [],
+      "description": "Backend: CallsController add POST /api/calls/history (record call to CallHistory). Frontend: addMockCallHistory calls real API instead of local state.",
+      "id": "F-003",
+      "module_id": "M-001",
+      "name": "Call History Record",
+      "priority": "medium",
+      "slug": "call-history-record",
+      "status": "proposed"
+    },
+    {
+      "business_intent": "NotificationsController only has GET /api/notifications - no mark as read, delete, or push token. Frontend can only view list. Need full notification lifecycle: read/unread, delete, push registration.",
+      "consumed_by_modules": [],
+      "description": "Backend: Notifications add PATCH/{id}/read, DELETE/{id}, POST /push-token. Frontend: mark read, delete notifications UI.",
+      "id": "F-004",
+      "module_id": "M-001",
+      "name": "Advanced Notifications",
+      "priority": "medium",
+      "slug": "notifications-advanced",
+      "status": "proposed"
+    },
+    {
+      "business_intent": "TaskDetailViewPanel allows photo/video/attachment but API has no upload endpoint. Data only stored client-side as object URLs. Need FilesController with POST /api/files/upload that stores to FilesOfIncident table and returns server URL.",
+      "consumed_by_modules": [],
+      "description": "Backend: FilesController add POST /upload (multipart, save to FilesOfIncident). Frontend: upload images/videos to server.",
+      "id": "F-005",
+      "module_id": "M-001",
+      "name": "File Upload Attachments",
+      "priority": "high",
+      "slug": "file-upload",
+      "status": "proposed"
+    },
+    {
+      "business_intent": "AuthController has GET /api/auth/profile but only accepts username query param - no me endpoint. Frontend needs real profile data from API to display on Profile tab. Need ProfileController with GET /api/profile/me, PATCH /api/profile, and preferences endpoints.",
+      "consumed_by_modules": [],
+      "description": "Backend: ProfileController GET/{username}, PATCH/{username}, GET /preferences, PATCH /preferences. Frontend: profile/me for login flow, preferences for theme.",
+      "id": "F-006",
+      "module_id": "M-001",
+      "name": "Profile & Preferences",
+      "priority": "low",
+      "slug": "profile-preferences",
+      "status": "proposed"
+    },
+    {
+      "consumed_by_modules": [],
+      "description": "Remove all mock data, tryApiOrMock, hardcoded JWT secret, login bypass, and hardcoded strings. Enforce real DB connectivity with clear error messages.",
+      "id": "F-007",
+      "module_id": "M-001",
+      "name": "Remove All Mock Data & Hardcodes",
+      "priority": "high",
+      "slug": "remove-mock-data-hardcodes",
+      "status": "proposed"
+    }
+  ],
+  "modules": [
+    {
+      "complexity": "M",
+      "depends_on": [],
+      "feature_brief_ref": "docs/features/ITSM-20260429-001/feature-brief.md",
+      "id": "M1",
+      "name": "Xác thực và Liên lạc",
+      "risk_score": 3
+    },
+    {
+      "complexity": "M",
+      "depends_on": [
+        "M1"
+      ],
+      "feature_brief_ref": "docs/features/ITSM-20260429-002/feature-brief.md",
+      "id": "M2",
+      "name": "Quản lý Sự cố và Nhiệm vụ",
+      "risk_score": 4
+    },
+    {
+      "complexity": "S",
+      "depends_on": [
+        "M1",
+        "M2"
+      ],
+      "feature_brief_ref": "docs/features/ITSM-20260429-003/feature-brief.md",
+      "id": "M3",
+      "name": "Thông báo",
+      "risk_score": 2
+    }
+  ],
+  "project": {
+    "slug": "its-mobile-vec",
+    "total_features": 14,
+    "total_modules": 3
+  },
+  "status_legend": {
+    "done": "Fully implemented with real integrations",
+    "in-progress": "UI prototype complete, no real API connections",
+    "planned": "Feature spec exists but no code implementation",
+    "stubbed": "Basic skeleton exists, < 20% complete"
+  },
+  "summary": {
+    "by_priority": {
+      "P0": 6,
+      "P1": 5,
+      "P2": 2,
+      "P3": 0
+    },
+    "by_status": {
+      "done": 1,
+      "in-progress": 10,
+      "planned": 0,
+      "stubbed": 3
+    },
+    "prototype_completeness": "UI prototype covers all 13 features at screen level; 0 features have real API connections. Estimated effort to production: 4-6 months with SIP/VoIP integration being the highest-risk item."
+  }
+}

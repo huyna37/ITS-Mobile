@@ -1,0 +1,75 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Frontend: Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/ITS_Mobile_VEC"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Frontend: Build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/ITS_Mobile_VEC"
+      },
+      "problemMatcher": ["$tsc"],
+      "group": "build"
+    },
+    {
+      "label": "API: Build .NET",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/ITS-MOBILE-API/ITS-MOBILE-API.csproj"],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "API: Run .NET",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/ITS-MOBILE-API/ITS-MOBILE-API.csproj"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Mobile: Start Metro",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "${workspaceFolder}/mobile"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile: Type Check",
+      "type": "shell",
+      "command": "npm run type-check",
+      "options": {
+        "cwd": "${workspaceFolder}/mobile"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Mobile: Android Run",
+      "type": "shell",
+      "command": "npm run android",
+      "options": {
+        "cwd": "${workspaceFolder}/mobile"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

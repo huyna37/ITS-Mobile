@@ -1,0 +1,652 @@
+{
+  "project": {
+    "name": "ITS Mobile VEC (MF-MobiSuite)",
+    "description": "Ứng dụng di động tác nghiệp hiện trường cho nhân viên vận hành tuyến cao tốc Nội Bài – Lào Cai (Kế hoạch rút gọn Fast-Track)",
+    "platforms": [
+      "Android",
+      "iOS"
+    ],
+    "framework": "React Native (TypeScript)",
+    "startDate": "2026-09-17",
+    "targetReleaseDate": "2026-10-02",
+    "totalTasks": 27,
+    "members": [
+      {
+        "name": "Huy NA",
+        "email": "huyna@etc.vn",
+        "role": "Kiến trúc & Review",
+        "responsibilities": "Chủ trì cấu trúc nền tảng (Base Architecture), Cấu hình Base React Native CLI đa nền tảng, Navigation, UI Kit, Review kỹ thuật"
+      },
+      {
+        "name": "Hậu TT",
+        "email": "Hautt@etc.vn",
+        "role": "Dev",
+        "responsibilities": "Lập trình ứng dụng (Dev), Native bridge (iOS/Android), Module M1 (Auth & PBX), Module M3 (Push FCM/APNs, Deep linking, Notifications list) & Đóng gói Release"
+      },
+      {
+        "name": "Toàn CV",
+        "email": "Toancv@etc.vn",
+        "role": "Dev",
+        "responsibilities": "Lập trình ứng dụng (Dev), Module M1 (SOS GSM offline, Profile), Module M2 (Nhiệm vụ, State Machine 3 bước 1->2->3, Camera/Video hiện trường, Nén media, Sự kiện tuyến, Cache offline)"
+      },
+      {
+        "name": "Hạnh PTH",
+        "email": "hanhpth@etc.vn",
+        "role": "Tester",
+        "responsibilities": "Xây dựng Test plan & Test case master, Quản lý Story nghiệm thu, Kiểm thử chức năng M1-M3, Kiểm thử Push Notification & Deep linking, Kiểm thử đa thiết bị (iOS/Android) & ký duyệt UAT"
+      }
+    ],
+    "designGallery": [
+      {
+        "title": "Màn hình Đăng nhập",
+        "file": "docs/designs/01-dang-nhap.png",
+        "description": "Nhập tài khoản, số extension PBX 4 chữ số, mật khẩu"
+      },
+      {
+        "title": "Màn hình Thông tin cá nhân & Đăng xuất",
+        "file": "docs/designs/02-thong-tin-ca-nhan-dang-xuat.png",
+        "description": "Xem thông tin cá nhân và nút Đăng xuất hệ thống"
+      },
+      {
+        "title": "Màn hình Danh bạ & Cuộc gọi nội bộ PBX",
+        "file": "docs/designs/03-danh-ba-lien-lac-pbx.png",
+        "description": "Danh bạ hiển thị online/offline, icon gọi nội bộ"
+      },
+      {
+        "title": "Màn hình Gọi khẩn cấp SOS qua GSM",
+        "file": "docs/designs/04-goi-khan-cap-sos.png",
+        "description": "Nút đỏ nổi, popup xác nhận gọi khẩn cấp hotline qua sim GSM"
+      },
+      {
+        "title": "Màn hình Danh sách công việc & Sự kiện tuyến",
+        "file": "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png",
+        "description": "Thẻ nhiệm vụ và các sự kiện bảo trì/thời tiết trên cao tốc"
+      },
+      {
+        "title": "Màn hình Chi tiết công việc & Trạng thái 1-2-3",
+        "file": "docs/designs/06-chi-tiet-cong-viec-trang-thai.png",
+        "description": "Xem chi tiết sự cố và thanh cập nhật tuần tự 3 bước"
+      },
+      {
+        "title": "Màn hình Đính kèm ảnh & video hiện trường",
+        "file": "docs/designs/07-dinh-kem-anh-video.png",
+        "description": "Chụp ảnh, quay video từ camera hoặc chọn từ thư viện máy"
+      },
+      {
+        "title": "Màn hình Push Notification & Badge",
+        "file": "docs/designs/08-thong-bao-push-badge.png",
+        "description": "Nhận thông báo đẩy từ TMC và hiển thị số lượng badge chưa đọc"
+      },
+      {
+        "title": "Màn hình Danh sách thông báo & Đánh dấu đọc",
+        "file": "docs/designs/09-danh-sach-thong-bao-doc-chua-doc.png",
+        "description": "Phân biệt thông báo chưa đọc (nền xanh) và toggle trạng thái"
+      }
+    ]
+  },
+  "sprints": [
+    {
+      "sprint": "Sprint 1: Base Setup, Auth (M1) & Test Design",
+      "startDate": "2026-09-17",
+      "endDate": "2026-09-21",
+      "goal": "Khởi tạo base RN CLI đa nền tảng, Navigation, UI Kit, Axios client, Đăng nhập/Đăng xuất & Thiết kế bộ Test cases master."
+    },
+    {
+      "sprint": "Sprint 2: Core M1 (Danh bạ, SOS) & M2 (Nhiệm vụ 1-2-3, Media)",
+      "startDate": "2026-09-22",
+      "endDate": "2026-09-26",
+      "goal": "Hoàn thành Danh bạ, SOS GSM, Tasks list, State machine 3 bước (1->2->3), Chụp/quay video và kiểm thử liên tục."
+    },
+    {
+      "sprint": "Sprint 3: M3 (Push FCM/APNs, Deep linking) & In-Call VoIP",
+      "startDate": "2026-09-27",
+      "endDate": "2026-09-29",
+      "goal": "Tích hợp Push FCM & APNs 3 trạng thái, Deep linking mở task, Tab Thông báo, UI gọi điện và Sự kiện trên tuyến."
+    },
+    {
+      "sprint": "Sprint 4: Offline Hardening, E2E Testing, UAT & Release",
+      "startDate": "2026-09-30",
+      "endDate": "2026-10-02",
+      "goal": "Tối ưu cache offline, test đa thiết bị iOS/Android, nghiệm thu UAT, xuất file APK và đẩy bản build lên Apple TestFlight trước ngày 02/10."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "sprint": "Sprint 1",
+      "module": "M0: Foundation",
+      "title": "Khởi tạo Base Project React Native CLI & cấu hình iOS/Android",
+      "description": "Khởi tạo repo React Native CLI với TypeScript v5, cấu hình Android Gradle/JDK 17, iOS CocoaPods, thiết lập App Icon và Splash Screen cho cả 2 nền tảng.",
+      "assignee": "huyna@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-17",
+      "dueDate": "2026-09-18",
+      "designImages": [],
+      "acceptanceCriteria": [
+        "Build thành công trên Android Emulator (API 34) và iOS Simulator (iOS 17+)",
+        "Splash screen và App icon hiển thị chuẩn, không bị vỡ hoặc lệch tỉ lệ"
+      ]
+    },
+    {
+      "id": "TASK-002",
+      "sprint": "Sprint 1",
+      "module": "M0: Foundation",
+      "title": "Cấu hình React Navigation & Cấu trúc Thư mục",
+      "description": "Cài đặt và thiết lập RootStack, AuthStack, MainBottomTab (Liên lạc, Công việc, Thông báo, Tôi). Tích hợp Safe Area Context và Header tùy biến.",
+      "assignee": "huyna@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 8,
+      "startDate": "2026-09-18",
+      "dueDate": "2026-09-19",
+      "designImages": [
+        "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png"
+      ],
+      "acceptanceCriteria": [
+        "Điều hướng mượt mà giữa các tab và stack màn hình",
+        "Hỗ trợ tốt tai thỏ (Notch) và Dynamic Island trên iOS, thanh điều hướng Android"
+      ]
+    },
+    {
+      "id": "TASK-003",
+      "sprint": "Sprint 1",
+      "module": "M0: Foundation",
+      "title": "Cấu hình NativeWind (Tailwind) & Xây dựng Common UI Kit",
+      "description": "Đồng bộ bảng màu, typography từ web demo sang NativeWind. Xây dựng các component dùng chung: Button, Input, StatusBadge, Header, ConfirmModal, Toast.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-17",
+      "dueDate": "2026-09-19",
+      "designImages": [
+        "docs/designs/01-dang-nhap.png",
+        "docs/designs/06-chi-tiet-cong-viec-trang-thai.png"
+      ],
+      "acceptanceCriteria": [
+        "Component dùng chung đồng bộ style với bản thiết kế/web demo",
+        "Có stories hoặc test screen để review trực quan các trạng thái component"
+      ]
+    },
+    {
+      "id": "TASK-004",
+      "sprint": "Sprint 1",
+      "module": "M0: Foundation",
+      "title": "Cấu hình API Client (Axios), Auth Interceptor & State Management",
+      "description": "Thiết lập Axios instance kết nối backend .NET 9 (`ITS-MOBILE-API`). Tự động đính kèm Authorization: Bearer JWT token, xử lý refresh token/401 và cấu hình Zustand store.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 8,
+      "startDate": "2026-09-17",
+      "dueDate": "2026-09-19",
+      "designImages": [],
+      "acceptanceCriteria": [
+        "Gọi API thành công tới môi trường dev/staging",
+        "Tự động bắt mã lỗi HTTP 401/403/500 và trả thông báo toast thân thiện"
+      ]
+    },
+    {
+      "id": "TASK-005",
+      "sprint": "Sprint 1",
+      "module": "M1: Auth & Contacts",
+      "title": "Xây dựng Màn hình Đăng nhập & Xác thực Tài khoản kép",
+      "description": "Form đăng nhập gồm: Tài khoản + Extension PBX (validate đúng 4 chữ số) + Mật khẩu. Validate dữ liệu client-side, gọi API `POST /api/auth/login`.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-19",
+      "dueDate": "2026-09-20",
+      "designImages": [
+        "docs/designs/01-dang-nhap.png"
+      ],
+      "acceptanceCriteria": [
+        "Chặn gửi form nếu thiếu thông tin hoặc extension không đúng 4 số",
+        "Đăng nhập thành công trả về JWT token, chuyển hướng ngay vào tab Liên lạc"
+      ]
+    },
+    {
+      "id": "TASK-006",
+      "sprint": "Sprint 1",
+      "module": "M1: Auth & Contacts",
+      "title": "Lưu trữ Session bảo mật, Tự động Đăng nhập & Chức năng Đăng xuất",
+      "description": "Lưu token và thông tin phiên bằng `react-native-keychain`. Mở app tự động khôi phục phiên (auto-restore). Đăng xuất: xóa token, xóa lịch sử gọi local, đưa về màn Login.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 8,
+      "startDate": "2026-09-20",
+      "dueDate": "2026-09-21",
+      "designImages": [
+        "docs/designs/02-thong-tin-ca-nhan-dang-xuat.png"
+      ],
+      "acceptanceCriteria": [
+        "Khởi động lại app vẫn giữ trạng thái đăng nhập nếu token chưa hết hạn",
+        "Đăng xuất xóa sạch dữ liệu phiên và lịch sử cuộc gọi cục bộ"
+      ]
+    },
+    {
+      "id": "TASK-QA-01",
+      "sprint": "Sprint 1",
+      "module": "QA: Test Management",
+      "title": "Xây dựng Test Plan & Bộ Test Case Master từ đặc tả 05.docx",
+      "description": "Phân tích tài liệu đặc tả nghiệp vụ và tạo ma trận kiểm thử: Test case Đăng nhập, Profile, SOS GSM, Danh bạ, Quản lý nhiệm vụ (1-2-3), Upload ảnh/video và Push Notification.",
+      "assignee": "hanhpth@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 16,
+      "startDate": "2026-09-17",
+      "dueDate": "2026-09-21",
+      "designImages": [
+        "docs/designs/01-dang-nhap.png",
+        "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png"
+      ],
+      "acceptanceCriteria": [
+        "Bộ Test Case Master chi tiết gồm các kịch bản: Normal, Edge case, Offline, Permisson",
+        "Được review phê duyệt làm căn cứ nghiệm thu"
+      ]
+    },
+    {
+      "id": "TASK-007",
+      "sprint": "Sprint 2",
+      "module": "M1: Auth & Contacts",
+      "title": "Nút Gọi Khẩn Cấp SOS qua GSM (Hoạt động Offline)",
+      "description": "Tạo nút nổi Floating Action Button màu đỏ góc dưới màn hình. Nhấn hiển thị popup xác nhận. Gọi trực tiếp số hotline (113 hoặc cấu hình) qua sóng di động GSM không cần internet.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 6,
+      "startDate": "2026-09-22",
+      "dueDate": "2026-09-23",
+      "designImages": [
+        "docs/designs/04-goi-khan-cap-sos.png"
+      ],
+      "acceptanceCriteria": [
+        "Nút SOS luôn nổi phía trên mọi màn hình chính sau khi đăng nhập",
+        "Kích hoạt mở native dialer thực hiện cuộc gọi bình thường khi tắt WiFi/4G"
+      ]
+    },
+    {
+      "id": "TASK-008",
+      "sprint": "Sprint 2",
+      "module": "M1: Auth & Contacts",
+      "title": "Màn hình Thông tin cá nhân (Profile - Read Only)",
+      "description": "Hiển thị thông tin cá nhân của nhân viên: Họ tên, chức vụ, extension PBX, đơn vị công tác. Dữ liệu chỉ đọc, lấy từ API `GET /api/profile`.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P2",
+      "status": "Todo",
+      "estimatedHours": 6,
+      "startDate": "2026-09-22",
+      "dueDate": "2026-09-23",
+      "designImages": [
+        "docs/designs/02-thong-tin-ca-nhan-dang-xuat.png"
+      ],
+      "acceptanceCriteria": [
+        "Hiển thị đầy đủ, chính xác các trường thông tin",
+        "Giao diện chuẩn theo tab 'Tôi' của bản thiết kế"
+      ]
+    },
+    {
+      "id": "TASK-009",
+      "sprint": "Sprint 2",
+      "module": "M1: Auth & Contacts",
+      "title": "Màn hình Danh bạ Nội bộ & Lịch sử Cuộc gọi",
+      "description": "Tab Danh bạ: Hiển thị danh sách đồng nghiệp và TMC, chỉ báo Online/Offline, ô tìm kiếm. Tab Lịch sử cuộc gọi: Hiển thị thời gian, người gọi/nhận, trạng thái cuộc gọi.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-22",
+      "dueDate": "2026-09-24",
+      "designImages": [
+        "docs/designs/03-danh-ba-lien-lac-pbx.png"
+      ],
+      "acceptanceCriteria": [
+        "Hiển thị đúng badge trạng thái Online/Offline theo extension",
+        "Lưu lịch sử cuộc gọi cục bộ bằng MMKV/AsyncStorage"
+      ]
+    },
+    {
+      "id": "TASK-010",
+      "sprint": "Sprint 2",
+      "module": "M1: Auth & Contacts",
+      "title": "Nghiên cứu & POC Tích hợp VoIP/SIP PBX Client",
+      "description": "Đánh giá thư viện VoIP (SIP.js / react-native-webrtc / react-native-callkeep). Thực hiện SIP REGISTER tới tổng đài nội bộ bằng extension và password của nhân viên.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 12,
+      "startDate": "2026-09-22",
+      "dueDate": "2026-09-24",
+      "designImages": [
+        "docs/designs/03-danh-ba-lien-lac-pbx.png"
+      ],
+      "acceptanceCriteria": [
+        "Đăng ký SIP REGISTER thành công với PBX server thử nghiệm",
+        "Có tài liệu hướng dẫn cấu hình native CallKeep trên Android và iOS"
+      ]
+    },
+    {
+      "id": "TASK-011",
+      "sprint": "Sprint 2",
+      "module": "M2: Tasks & Incidents",
+      "title": "Màn hình Danh sách Nhiệm vụ / Công việc (Tasks List)",
+      "description": "Lấy danh sách nhiệm vụ phân công từ API `GET /api/tasks`. Hiển thị thẻ: mã sự cố, loại, mức độ, vị trí Km+m, thời gian phát hiện, badge trạng thái. Hỗ trợ Pull-to-refresh.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-23",
+      "dueDate": "2026-09-24",
+      "designImages": [
+        "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png"
+      ],
+      "acceptanceCriteria": [
+        "Hiển thị danh sách nhiệm vụ mượt mà, phân trang/infinite scroll",
+        "Kéo xuống để làm mới (Pull to refresh) cập nhật dữ liệu tức thì"
+      ]
+    },
+    {
+      "id": "TASK-012",
+      "sprint": "Sprint 2",
+      "module": "M2: Tasks & Incidents",
+      "title": "Màn hình Chi tiết Công việc & State Machine 3 bước (1 -> 2 -> 3)",
+      "description": "Xem chi tiết: lý trình, hướng tuyến, mô tả hiện trường, phương án xử lý do TMC lập. Thanh chuyển đổi trạng thái: (1) Đã nhận -> (2) Đang xử lý -> (3) Hoàn thành.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 12,
+      "startDate": "2026-09-24",
+      "dueDate": "2026-09-26",
+      "designImages": [
+        "docs/designs/06-chi-tiet-cong-viec-trang-thai.png"
+      ],
+      "acceptanceCriteria": [
+        "Tuyệt đối tuân thủ quy tắc 1 -> 2 -> 3: Không được nhảy bước, không được quay ngược",
+        "Gọi API PATCH/PUT cập nhật trạng thái lên hệ thống TMC theo thời gian thực"
+      ]
+    },
+    {
+      "id": "TASK-013",
+      "sprint": "Sprint 2",
+      "module": "M2: Tasks & Incidents",
+      "title": "Module Camera, Quay Video & Đính Kèm Ảnh Hiện Trường",
+      "description": "Cấu hình quyền Camera/Mic/Storage trên iOS và Android. Cho phép: (1) Chụp ảnh camera, (2) Quay video hiện trường, (3) Chọn ảnh/video từ thư viện máy.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-24",
+      "dueDate": "2026-09-25",
+      "designImages": [
+        "docs/designs/07-dinh-kem-anh-video.png"
+      ],
+      "acceptanceCriteria": [
+        "Xin cấp quyền Camera & Gallery chuẩn theo hướng dẫn của Google/Apple",
+        "Hiển thị ảnh/video thumbnail xem trước rõ ràng, có nút xóa/chụp lại"
+      ]
+    },
+    {
+      "id": "TASK-014",
+      "sprint": "Sprint 2",
+      "module": "M2: Tasks & Incidents",
+      "title": "Xử lý Nén Media & API Upload File Hiện Trường lên Server",
+      "description": "Tích hợp thư viện nén ảnh (ảnh < 500KB) và video (chuẩn 720p) trước khi gửi. Tạo hàm upload multipart với thanh tiến trình % (progress bar) và cơ chế retry khi mạng chập chờn.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-25",
+      "dueDate": "2026-09-26",
+      "designImages": [
+        "docs/designs/07-dinh-kem-anh-video.png"
+      ],
+      "acceptanceCriteria": [
+        "Upload thành công qua API `POST /api/files/upload` hoặc endpoint nhiệm vụ",
+        "Không bị timeout khi tải video 10-20MB trên mạng 3G/4G hiện trường"
+      ]
+    },
+    {
+      "id": "TASK-QA-02",
+      "sprint": "Sprint 2",
+      "module": "QA: Testing",
+      "title": "Kiểm thử Chức năng Module M1 & M2 (Quy trình 1-2-3, Media, SOS)",
+      "description": "Thực thi test case Module M1 (Login, Auto-login, SOS GSM offline) và Module M2 (Phân công việc, Chuyển tuần tự 1->2->3, Chụp/quay video và upload media). Ghi nhận bug trên Jira.",
+      "assignee": "hanhpth@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 14,
+      "startDate": "2026-09-24",
+      "dueDate": "2026-09-26",
+      "designImages": [
+        "docs/designs/04-goi-khan-cap-sos.png",
+        "docs/designs/06-chi-tiet-cong-viec-trang-thai.png"
+      ],
+      "acceptanceCriteria": [
+        "Kiểm thử đầy đủ các kịch bản chuyển bước 1->2->3 không có bug lọt",
+        "Phát hiện và log bug chi tiết kèm log request API và video quay màn hình"
+      ]
+    },
+    {
+      "id": "TASK-015",
+      "sprint": "Sprint 3",
+      "module": "M2: Tasks & Incidents",
+      "title": "Màn hình Sự kiện / Sự cố Giao thông trên Tuyến",
+      "description": "Hiển thị danh sách sự kiện giao thông đang xảy ra trên tuyến cao tốc Nội Bài – Lào Cai (thi công, bảo trì, thời tiết xấu, ùn tắc, tai nạn) để nhân viên nắm bắt lộ trình.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 6,
+      "startDate": "2026-09-27",
+      "dueDate": "2026-09-28",
+      "designImages": [
+        "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png"
+      ],
+      "acceptanceCriteria": [
+        "Hiển thị trực quan theo từng loại sự kiện (icon, vị trí Km, thời gian bắt đầu)",
+        "Đồng bộ chuẩn dữ liệu từ `IncidentsController`"
+      ]
+    },
+    {
+      "id": "TASK-016",
+      "sprint": "Sprint 3",
+      "module": "M3: Notifications",
+      "title": "Cấu hình Firebase FCM (Android) & APNs Certificate (iOS)",
+      "description": "Cài đặt `@react-native-firebase/messaging`. Tạo APNs Auth Key (.p8) trên Apple Developer Console, liên kết Firebase Project. Lấy Device Token khi user đăng nhập và lưu lên Backend.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-27",
+      "dueDate": "2026-09-28",
+      "designImages": [
+        "docs/designs/08-thong-bao-push-badge.png"
+      ],
+      "acceptanceCriteria": [
+        "Gửi và nhận được push notification thử nghiệm từ Firebase Console trên cả 2 OS",
+        "Device Token được lưu đúng vào bảng tài khoản của Backend"
+      ]
+    },
+    {
+      "id": "TASK-017",
+      "sprint": "Sprint 3",
+      "module": "M3: Notifications",
+      "title": "Xử lý Push Notification 3 trạng thái & Deep Linking",
+      "description": "Xử lý thông báo ở Foreground (banner in-app qua Notifee), Background (notification tray hệ thống), và Killed state. Nhấn vào thông báo loại 'Phân công nhiệm vụ' -> mở thẳng chi tiết sự cố.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-28",
+      "dueDate": "2026-09-29",
+      "designImages": [
+        "docs/designs/08-thong-bao-push-badge.png"
+      ],
+      "acceptanceCriteria": [
+        "App bị tắt hoàn toàn, bấm thông báo vẫn mở app và điều hướng thẳng vào task detail",
+        "App đang mở hiển thị banner toast thông báo nhiệm vụ mới không bị crash"
+      ]
+    },
+    {
+      "id": "TASK-018",
+      "sprint": "Sprint 3",
+      "module": "M3: Notifications",
+      "title": "Màn hình Danh sách Thông báo & Đánh dấu Đã đọc / Chưa đọc",
+      "description": "Tab Thông báo: Danh sách 4 loại thông báo sắp xếp từ mới đến cũ. Chưa đọc: nền xanh nhạt, đã đọc: nền trắng. Hỗ trợ toggle trạng thái đọc khi chạm vào thông báo. Cập nhật badge số trên tabbar.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 8,
+      "startDate": "2026-09-27",
+      "dueDate": "2026-09-28",
+      "designImages": [
+        "docs/designs/09-danh-sach-thong-bao-doc-chua-doc.png"
+      ],
+      "acceptanceCriteria": [
+        "Chạm vào thông báo chưa đọc -> chuyển thành đã đọc, badge giảm 1",
+        "Chạm lần nữa chuyển lại thành chưa đọc, badge tăng 1"
+      ]
+    },
+    {
+      "id": "TASK-019",
+      "sprint": "Sprint 3",
+      "module": "M1: Auth & Contacts",
+      "title": "Giao diện Màn hình Cuộc gọi Nội bộ (In-Call Screen) & Lịch sử",
+      "description": "Xây dựng màn hình gọi điện: trạng thái chuông (Ringing), đàm thoại (Connected), thời gian gọi, nút Bật/Tắt Mic, Loa ngoài (Speaker), Ngắt cuộc gọi. Lưu bản ghi lịch sử vào database local.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 10,
+      "startDate": "2026-09-28",
+      "dueDate": "2026-09-29",
+      "designImages": [
+        "docs/designs/03-danh-ba-lien-lac-pbx.png"
+      ],
+      "acceptanceCriteria": [
+        "Giao diện gọi trực quan, phản hồi tức thì với các nút bấm loa/mic",
+        "Kết thúc cuộc gọi tự động tính thời lượng và lưu vào Lịch sử"
+      ]
+    },
+    {
+      "id": "TASK-QA-03",
+      "sprint": "Sprint 3",
+      "module": "QA: Testing",
+      "title": "Kiểm thử Push Notification (FCM/APNs), Deep Linking & Badge",
+      "description": "Kiểm thử nhận push ở cả 3 trạng thái: Foreground, Background, Killed State trên cả điện thoại Android thật và iPhone thật. Kiểm tra nhảy trang deep linking vào chi tiết nhiệm vụ.",
+      "assignee": "hanhpth@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 12,
+      "startDate": "2026-09-28",
+      "dueDate": "2026-09-29",
+      "designImages": [
+        "docs/designs/08-thong-bao-push-badge.png",
+        "docs/designs/09-danh-sach-thong-bao-doc-chua-doc.png"
+      ],
+      "acceptanceCriteria": [
+        "Nhận thông báo push đúng payload trên cả Android và iOS",
+        "Deep link hoạt động mượt mà khi app đang đóng hoàn toàn"
+      ]
+    },
+    {
+      "id": "TASK-020",
+      "sprint": "Sprint 4",
+      "module": "M4: Hardening & Release",
+      "title": "Xử lý Cơ chế Offline & Caching dữ liệu hiện trường",
+      "description": "Sử dụng MMKV lưu cache danh sách nhiệm vụ và sự kiện gần nhất. Khi mất mạng cao tốc, nhân viên vẫn đọc được phương án xử lý sự cố. Hàng đợi (Queue) tự động đồng bộ khi có sóng trở lại.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 8,
+      "startDate": "2026-09-30",
+      "dueDate": "2026-10-01",
+      "designImages": [
+        "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png"
+      ],
+      "acceptanceCriteria": [
+        "Bật chế độ máy bay, vào app vẫn đọc được các công việc đã tải trước đó",
+        "Không xảy ra lỗi màn hình trắng (White Screen) khi mất kết nối đột ngột"
+      ]
+    },
+    {
+      "id": "TASK-021",
+      "sprint": "Sprint 4",
+      "module": "M4: Hardening & Release",
+      "title": "Tối ưu hóa Giao diện Đa Màn hình (Android & iOS Notch/Dynamic Island)",
+      "description": "Rà soát toàn bộ màn hình trên các thiết bị Android tỉ lệ màn hình dài, máy bảng nhỏ và các dòng iPhone từ iPhone 11 đến iPhone 16 Pro Max. Fix lỗi overflow text và bàn phím che input.",
+      "assignee": "Toancv@etc.vn",
+      "priority": "P1",
+      "status": "Todo",
+      "estimatedHours": 8,
+      "startDate": "2026-09-30",
+      "dueDate": "2026-10-01",
+      "designImages": [
+        "docs/designs/01-dang-nhap.png",
+        "docs/designs/06-chi-tiet-cong-viec-trang-thai.png"
+      ],
+      "acceptanceCriteria": [
+        "KeyboardAvoidingView hoạt động mượt mà ở tất cả màn nhập liệu",
+        "Không bị che mất các nút hành động dưới đáy màn hình"
+      ]
+    },
+    {
+      "id": "TASK-QA-04",
+      "sprint": "Sprint 4",
+      "module": "QA: Testing",
+      "title": "Kiểm thử End-to-End Đa Thiết Bị, Chế độ Offline & Nghiệm thu UAT",
+      "description": "Chạy full test suite trên thiết bị thật: Samsung Galaxy, Xiaomi, iPhone 13/15. Test chuyển đổi mạng (WiFi -> 4G -> Mất sóng). Xác nhận hoàn thành nghiệm thu UAT Release.",
+      "assignee": "hanhpth@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 14,
+      "startDate": "2026-09-30",
+      "dueDate": "2026-10-02",
+      "designImages": [
+        "docs/designs/05-danh-sach-cong-viec-su-kien-tuyen.png"
+      ],
+      "acceptanceCriteria": [
+        "0 Bug nghiêm trọng (Blocker/Critical)",
+        "Biên bản nghiệm thu UAT được ký duyệt hoàn thành trước 17h00 ngày 02/10/2026"
+      ]
+    },
+    {
+      "id": "TASK-022",
+      "sprint": "Sprint 4",
+      "module": "M4: Hardening & Release",
+      "title": "Cấu hình Ký số Keystore & Xuất bản file APK/AAB Android",
+      "description": "Tạo keystore release cho Android, cấu hình Proguard/R8 tối ưu dung lượng app, build file APK cài đặt nội bộ và AAB cho Google Play.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 6,
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-02",
+      "designImages": [],
+      "acceptanceCriteria": [
+        "File APK cài đặt và chạy mượt mà trên thiết bị Android thật",
+        "Dung lượng file APK tối ưu (< 35MB)"
+      ]
+    },
+    {
+      "id": "TASK-023",
+      "sprint": "Sprint 4",
+      "module": "M4: Hardening & Release",
+      "title": "Cấu hình Provisioning Profile & Đẩy bản Build lên Apple TestFlight",
+      "description": "Cấu hình App ID, Certificates, Provisioning Profile trên Apple Developer Portal. Chạy Fastlane/Xcode Archive và upload bản build lên Apple TestFlight.",
+      "assignee": "Hautt@etc.vn",
+      "priority": "P0",
+      "status": "Todo",
+      "estimatedHours": 6,
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-02",
+      "designImages": [],
+      "acceptanceCriteria": [
+        "Bản build xuất hiện trên TestFlight và vượt qua vòng kiểm tra tự động của Apple",
+        "Gửi lời mời test thành công cho các tài khoản nội bộ VEC trước 02/10/2026"
+      ]
+    }
+  ]
+}

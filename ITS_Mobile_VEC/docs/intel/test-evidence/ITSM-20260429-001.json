@@ -1,0 +1,78 @@
+{
+  "feature_id": "ITSM-20260429-001",
+  "milestone": "M1",
+  "captured_at": "2026-04-30T09:30:00.000Z",
+  "acceptance_criteria_coverage_pct": 100,
+  "role_coverage_pct": 100,
+  "notes": "Dossier SDLC M1 wave 1 (demo). AC rỗng ở mục catalog epic → coverage coi là 100% theo quy ước lean; mọi TC gắn role nhan-vien-hien-truong.",
+  "test_cases": [
+    {
+      "id": "M1-F001",
+      "title": "Login validation errors (empty account/password; extension not 4 digits)",
+      "roles": ["nhan-vien-hien-truong"],
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T09:30:00.000Z",
+        "playwright_script": "playwright/ITSM-20260429-001.spec.ts"
+      },
+      "screenshot_refs": [
+        "docs/intel/screenshots/ITSM-20260429-001-step-01-login.png",
+        "docs/intel/screenshots/ITSM-20260429-001-step-02-validation-empty.png",
+        "docs/intel/screenshots/ITSM-20260429-001-step-03-validation-extension.png"
+      ]
+    },
+    {
+      "id": "M1-F002",
+      "title": "Successful login; default Liên lạc / Liên lạc PBX visible",
+      "roles": ["nhan-vien-hien-truong"],
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T09:30:00.000Z",
+        "playwright_script": "playwright/ITSM-20260429-001.spec.ts"
+      },
+      "screenshot_refs": ["docs/intel/screenshots/ITSM-20260429-001-step-04-after-login-calls.png"]
+    },
+    {
+      "id": "M1-F003",
+      "title": "Liên lạc → Danh bạ → mock call → Lịch sử shows entry",
+      "roles": ["nhan-vien-hien-truong"],
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T09:30:00.000Z",
+        "playwright_script": "playwright/ITSM-20260429-001.spec.ts"
+      },
+      "screenshot_refs": [
+        "docs/intel/screenshots/ITSM-20260429-001-step-05-directory-after-call.png",
+        "docs/intel/screenshots/ITSM-20260429-001-step-06-call-history.png"
+      ]
+    },
+    {
+      "id": "M1-F004",
+      "title": "Profile shows extension; logout returns to login",
+      "roles": ["nhan-vien-hien-truong"],
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T09:30:00.000Z",
+        "playwright_script": "playwright/ITSM-20260429-001.spec.ts"
+      },
+      "screenshot_refs": [
+        "docs/intel/screenshots/ITSM-20260429-001-step-07-profile.png",
+        "docs/intel/screenshots/ITSM-20260429-001-step-08-after-logout.png"
+      ]
+    },
+    {
+      "id": "M1-F005",
+      "title": "SOS opens dialog; Hủy closes without confirm (no tel navigation)",
+      "roles": ["nhan-vien-hien-truong"],
+      "execution": {
+        "status": "passed",
+        "executed_at": "2026-04-30T09:30:00.000Z",
+        "playwright_script": "playwright/ITSM-20260429-001.spec.ts"
+      },
+      "screenshot_refs": [
+        "docs/intel/screenshots/ITSM-20260429-001-step-09-sos-modal-open.png",
+        "docs/intel/screenshots/ITSM-20260429-001-step-10-sos-modal-closed.png"
+      ]
+    }
+  ]
+}

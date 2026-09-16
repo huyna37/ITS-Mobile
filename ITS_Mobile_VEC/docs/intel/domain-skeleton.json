@@ -1,0 +1,94 @@
+{
+  "_meta": {
+    "producer": "generate-docs/stage1",
+    "produced_at": "2026-04-30T15:00:00+07:00",
+    "confidence": "high",
+    "sources": [
+      "docs/intel/feature-catalog.json",
+      "docs/features/ITSM-20260429-001/feature-brief.md",
+      "docs/features/ITSM-20260429-002/feature-brief.md",
+      "docs/features/ITSM-20260429-003/feature-brief.md",
+      "docs/intel/doc-brief.md"
+    ]
+  },
+  "domain": {
+    "name": "ITS Mobile VEC",
+    "primary_concern": "Ứng dụng di động tác nghiệp hiện trường — nhận nhiệm vụ, liên lạc VoIP, cập nhật trạng thái sự cố, báo cáo ảnh về TMC",
+    "bounded_context": "Field Operations — nhân viên hiện trường tuyến NB-LC"
+  },
+  "modules": [
+    {
+      "id": "M1",
+      "name": "Xác thực và Liên lạc",
+      "slug": "xac-thuc-va-lien-lac",
+      "description": "Xác thực nhân viên qua tài khoản nội bộ + extension PBX. Gọi nội bộ VoIP qua tổng đài. Gọi SOS khẩn cấp qua GSM.",
+      "priority": "P0",
+      "complexity": "M",
+      "risk_score": 3,
+      "feature_count": 5,
+      "features": [
+        { "id": "M1-F001", "name": "Đăng nhập hệ thống", "priority": "P0" },
+        { "id": "M1-F002", "name": "Đăng xuất hệ thống", "priority": "P1" },
+        { "id": "M1-F003", "name": "Thực hiện cuộc gọi nội bộ PBX", "priority": "P0" },
+        { "id": "M1-F004", "name": "Gọi khẩn cấp SOS qua GSM", "priority": "P0" },
+        { "id": "M1-F005", "name": "Hiển thị thông tin cá nhân", "priority": "P2" }
+      ],
+      "key_integrations": ["PBX SIP/VoIP", "GSM network"]
+    },
+    {
+      "id": "M2",
+      "name": "Quản lý Sự cố và Nhiệm vụ",
+      "slug": "quan-ly-su-co-va-nhiem-vu",
+      "description": "Nhận và hiển thị nhiệm vụ sự cố được phân công từ TMC qua ITS API. Xem chi tiết sự cố và phương án xử lý. Cập nhật trạng thái xử lý theo luồng nghiêm ngặt (1→2→3). Đính kèm ảnh/video hiện trường. Theo dõi sự kiện giao thông trên tuyến.",
+      "priority": "P0",
+      "complexity": "M",
+      "risk_score": 4,
+      "feature_count": 5,
+      "depends_on": ["M1"],
+      "features": [
+        { "id": "M2-F001", "name": "Hiển thị danh sách công việc", "priority": "P0" },
+        { "id": "M2-F002", "name": "Xem chi tiết công việc", "priority": "P0" },
+        { "id": "M2-F003", "name": "Cập nhật trạng thái xử lý sự cố", "priority": "P0" },
+        { "id": "M2-F004", "name": "Đính kèm ảnh hiện trường", "priority": "P1" },
+        { "id": "M2-F005", "name": "Hiển thị sự cố/sự kiện giao thông", "priority": "P1" }
+      ],
+      "key_integrations": ["ITS REST API", "FCM/APNs (indirect)"]
+    },
+    {
+      "id": "M3",
+      "name": "Thông báo",
+      "slug": "thong-bao",
+      "description": "Nhận push notification từ TMC qua FCM/APNs (4 loại: phân công, cập nhật trạng thái, hệ thống, TMC). Xem danh sách thông báo với badge chưa đọc. Đánh dấu đã đọc/chưa đọc.",
+      "priority": "P0",
+      "complexity": "S",
+      "risk_score": 2,
+      "feature_count": 3,
+      "depends_on": ["M1", "M2"],
+      "features": [
+        { "id": "M3-F001", "name": "Nhận Push Notification", "priority": "P0" },
+        { "id": "M3-F002", "name": "Xem danh sách thông báo", "priority": "P1" },
+        { "id": "M3-F003", "name": "Đánh dấu đã đọc / chưa đọc", "priority": "P2" }
+      ],
+      "key_integrations": ["FCM (Android)", "APNs (iOS)"]
+    }
+  ],
+  "entities_summary": [
+    { "name": "NguoiDung", "module": "M1", "type": "user-account" },
+    { "name": "PhienDangNhap", "module": "M1", "type": "session" },
+    { "name": "DanhBaNguoiDung", "module": "M1", "type": "directory" },
+    { "name": "LichSuCuocGoi", "module": "M1", "type": "call-record" },
+    { "name": "NhiemVu", "module": "M2", "type": "task" },
+    { "name": "HoSoSuCo", "module": "M2", "type": "incident-profile" },
+    { "name": "AnhHienTruong", "module": "M2", "type": "field-media" },
+    { "name": "SuKienTuyenDuong", "module": "M2", "type": "road-event" },
+    { "name": "ThongBao", "module": "M3", "type": "notification" }
+  ],
+  "totals": {
+    "modules": 3,
+    "features": 13,
+    "entities": 9,
+    "integrations": 4,
+    "business_rules": 27,
+    "screens": 6
+  }
+}

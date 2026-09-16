@@ -1,0 +1,274 @@
+{
+  "services": [
+    {
+      "slug": "xac-thuc-va-lien-lac",
+      "display_name": "Xác thực và Liên lạc",
+      "features": [
+        {
+          "id": "F-001",
+          "name": "Đăng nhập hệ thống",
+          "description": "Nhân viên hiện trường đăng nhập vào ứng dụng bằng tài khoản hệ thống kết hợp số extension PBX và mật khẩu. Phiên đăng nhập được lưu trên thiết bị và tự động phục hồi khi mở lại ứng dụng.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Thiết bị có kết nối internet. Tài khoản đã được cấp bởi quản trị viên ITS.",
+          "ui_elements": [
+            { "label": "Ô nhập Tài khoản", "type": "input", "rules": "Bắt buộc; không được để trống" },
+            { "label": "Ô nhập Extension PBX", "type": "input", "rules": "Bắt buộc; phải là 4 chữ số" },
+            { "label": "Ô nhập Mật khẩu", "type": "password", "rules": "Bắt buộc; không được để trống" },
+            { "label": "Nút ĐĂNG NHẬP", "type": "button", "rules": "Kích hoạt khi đủ 3 trường" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Mở ứng dụng ITS Mobile VEC trên thiết bị", "screenshot": "s01-login.png", "expected": "Màn hình đăng nhập hiển thị với 3 ô nhập liệu và nút ĐĂNG NHẬP" },
+            { "no": 2, "action": "Nhập tên tài khoản hệ thống vào ô 'Tài khoản'", "expected": "Văn bản nhập hiển thị bình thường" },
+            { "no": 3, "action": "Nhập số extension PBX (4 chữ số) vào ô 'Extension PBX'", "expected": "Chỉ nhận 4 chữ số; hiển thị bình thường" },
+            { "no": 4, "action": "Nhập mật khẩu vào ô 'Mật khẩu'", "expected": "Ký tự hiển thị dưới dạng dấu chấm bảo mật" },
+            { "no": 5, "action": "Nhấn nút 'ĐĂNG NHẬP'", "expected": "Hệ thống xác thực; chuyển sang màn hình Liên lạc PBX" }
+          ],
+          "error_cases": [
+            { "trigger_step": 5, "condition": "Sai tài khoản hoặc mật khẩu", "message": "Thông báo lỗi xác thực; ở lại màn hình đăng nhập" },
+            { "trigger_step": 5, "condition": "Extension PBX không đúng định dạng 4 số", "message": "Cảnh báo định dạng không hợp lệ" },
+            { "trigger_step": 5, "condition": "Mất kết nối internet", "message": "Thông báo lỗi kết nối; gợi ý kiểm tra mạng" }
+          ]
+        },
+        {
+          "id": "F-002",
+          "name": "Đăng xuất hệ thống",
+          "description": "Nhân viên kết thúc ca làm việc bằng cách đăng xuất khỏi ứng dụng. Phiên đăng nhập và lịch sử cuộc gọi được xóa khỏi thiết bị.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập vào hệ thống.",
+          "ui_elements": [
+            { "label": "Nút Đăng xuất hệ thống", "type": "button", "rules": "Hiển thị trong tab Tôi (ProfileView)" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Nhấn tab 'Tôi' ở thanh điều hướng dưới cùng", "screenshot": "s09-profile.png", "expected": "Màn hình Hồ sơ cá nhân hiển thị thông tin nhân viên và nút Đăng xuất" },
+            { "no": 2, "action": "Nhấn nút 'Đăng xuất hệ thống'", "expected": "Hộp thoại xác nhận xuất hiện" },
+            { "no": 3, "action": "Xác nhận đăng xuất", "expected": "Phiên đăng nhập bị xóa; ứng dụng chuyển về màn hình đăng nhập" }
+          ]
+        },
+        {
+          "id": "F-003",
+          "name": "Thực hiện cuộc gọi nội bộ PBX",
+          "description": "Nhân viên gọi điện nội bộ cho đồng nghiệp hoặc Trung tâm điều hành qua tổng đài PBX. Danh bạ hiển thị trạng thái trực tuyến/ngoại tuyến của từng extension. Lịch sử cuộc gọi được ghi lại.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập. Thiết bị có kết nối internet. Tổng đài PBX hoạt động.",
+          "ui_elements": [
+            { "label": "Tab Danh bạ", "type": "tab", "rules": "Sub-tab trong màn hình Liên lạc" },
+            { "label": "Tab Lịch sử", "type": "tab", "rules": "Sub-tab trong màn hình Liên lạc" },
+            { "label": "Nút Gọi (Phone icon)", "type": "button", "rules": "Bên cạnh mỗi liên hệ trong danh bạ" },
+            { "label": "Chấm xanh (Online)", "type": "indicator", "rules": "Hiển thị khi extension đang trực tuyến" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Ứng dụng tự động mở tab Liên lạc sau khi đăng nhập", "screenshot": "s02-calls-directory.png", "expected": "Màn hình Liên lạc hiển thị danh bạ nội bộ với trạng thái online/offline" },
+            { "no": 2, "action": "Xem trạng thái của liên hệ cần gọi (chấm xanh = trực tuyến)", "expected": "Trạng thái online/offline hiển thị chính xác theo thời gian thực từ PBX" },
+            { "no": 3, "action": "Nhấn biểu tượng điện thoại bên cạnh liên hệ muốn gọi", "expected": "Ứng dụng khởi động cuộc gọi VoIP qua tổng đài PBX" },
+            { "no": 4, "action": "Chờ liên hệ nghe máy và trao đổi công việc", "expected": "Cuộc gọi kết nối; âm thanh hai chiều hoạt động bình thường" },
+            { "no": 5, "action": "Nhấn kết thúc cuộc gọi", "expected": "Cuộc gọi kết thúc; lịch sử cuộc gọi được cập nhật" },
+            { "no": 6, "action": "Nhấn tab 'Lịch sử' để xem lịch sử cuộc gọi", "screenshot": "s03-calls-history.png", "expected": "Danh sách lịch sử cuộc gọi hiển thị với thông tin tên, extension, thời gian, thời lượng" }
+          ],
+          "error_cases": [
+            { "trigger_step": 3, "condition": "Liên hệ đang offline hoặc bận", "message": "Thông báo không thể kết nối; cuộc gọi nhỡ ghi vào lịch sử" },
+            { "trigger_step": 3, "condition": "Mất kết nối internet giữa chừng", "message": "Cuộc gọi bị ngắt; thông báo kết nối lại" }
+          ]
+        },
+        {
+          "id": "F-004",
+          "name": "Gọi khẩn cấp SOS qua GSM",
+          "description": "Nhân viên gọi đường dây nóng khẩn cấp bằng một thao tác. Cuộc gọi sử dụng mạng GSM — hoạt động ngay cả khi không có internet hoặc VoIP.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Thiết bị có sim điện thoại và sóng GSM. Không yêu cầu đăng nhập hay kết nối internet.",
+          "ui_elements": [
+            { "label": "Nút SOS (màu đỏ, cố định góc phải)", "type": "floating-action-button", "rules": "Luôn hiển thị trên mọi màn hình trong ứng dụng" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Nhấn nút SOS màu đỏ ở góc phải màn hình (hiển thị trên mọi màn hình)", "screenshot": "s10-sos-dialog.png", "expected": "Hộp thoại xác nhận 'Gọi khẩn cấp?' xuất hiện với số hotline" },
+            { "no": 2, "action": "Nhấn 'Xác nhận' trong hộp thoại", "expected": "Ứng dụng khởi động cuộc gọi GSM đến số hotline khẩn cấp qua ứng dụng điện thoại của thiết bị" }
+          ],
+          "error_cases": [
+            { "trigger_step": 2, "condition": "Không có sóng GSM", "message": "Thiết bị thông báo không có sóng; cần di chuyển đến vùng có sóng" }
+          ]
+        },
+        {
+          "id": "F-005",
+          "name": "Hiển thị thông tin cá nhân",
+          "description": "Nhân viên xem thông tin tài khoản của mình: họ tên, chức vụ, extension PBX, đơn vị công tác. Thông tin chỉ đọc — không thể chỉnh sửa trên ứng dụng.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập.",
+          "steps": [
+            { "no": 1, "action": "Nhấn tab 'Tôi' ở thanh điều hướng dưới cùng", "screenshot": "s09-profile.png", "expected": "Màn hình Hồ sơ hiển thị: Tên nhân viên, Chức vụ, Extension nội bộ, Đơn vị công tác" }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "quan-ly-su-co-va-nhiem-vu",
+      "display_name": "Quản lý Sự cố và Nhiệm vụ",
+      "features": [
+        {
+          "id": "F-006",
+          "name": "Hiển thị danh sách công việc",
+          "description": "Nhân viên xem danh sách nhiệm vụ được Trung tâm điều hành phân công. Mỗi thẻ nhiệm vụ hiển thị mã sự cố, loại, mức độ, vị trí km, thời gian phát hiện và trạng thái xử lý.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập. Có kết nối internet. TMC đã phân công ít nhất một nhiệm vụ.",
+          "ui_elements": [
+            { "label": "Tab Công việc", "type": "tab", "rules": "Tab thứ nhất trong thanh điều hướng" },
+            { "label": "Thẻ nhiệm vụ", "type": "card", "rules": "Nhấn để xem chi tiết" },
+            { "label": "Badge mức độ (Nghiêm trọng/Trung bình/Nhẹ)", "type": "badge", "rules": "Màu sắc khác nhau theo mức độ" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Nhấn tab 'Công việc' ở thanh điều hướng dưới cùng", "screenshot": "s04-tasks-list.png", "expected": "Danh sách công việc hiển thị với các thẻ nhiệm vụ được phân công. Mỗi thẻ gồm: mã sự cố, loại, mức độ, vị trí, thời gian, trạng thái" },
+            { "no": 2, "action": "Kéo xuống dưới để xem phần 'Sự kiện trên tuyến'", "expected": "Danh sách sự kiện giao thông trên tuyến NB-LC hiển thị bên dưới" }
+          ]
+        },
+        {
+          "id": "F-007",
+          "name": "Xem chi tiết công việc",
+          "description": "Nhân viên xem toàn bộ thông tin sự cố bao gồm mã, loại, vị trí km, hướng, mô tả chi tiết và phương án xử lý do TMC cung cấp.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập. Danh sách công việc đã tải.",
+          "steps": [
+            { "no": 1, "action": "Nhấn vào thẻ nhiệm vụ trong danh sách công việc", "screenshot": "s05-task-detail.png", "expected": "Màn hình chi tiết sự cố hiển thị: badge mức độ, mã sự cố, loại sự cố, vị trí km, hướng, thời gian phát hiện, mô tả và phương án xử lý" },
+            { "no": 2, "action": "Đọc phương án xử lý (phuong_an_xu_ly) do TMC cung cấp", "expected": "Nội dung phương án xử lý hiển thị đầy đủ; có thể cuộn để xem toàn bộ" },
+            { "no": 3, "action": "Nhấn nút 'Quay lại' hoặc vuốt từ trái để trở về danh sách", "expected": "Trở về màn hình danh sách công việc" }
+          ]
+        },
+        {
+          "id": "F-008",
+          "name": "Cập nhật trạng thái xử lý sự cố",
+          "description": "Nhân viên cập nhật tiến độ xử lý sự cố theo 3 bước tuần tự: (1) Đã nhận nhiệm vụ → (2) Đang xử lý → (3) Hoàn thành. Không thể bỏ bước hoặc quay ngược.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đang xem chi tiết một nhiệm vụ. Nhiệm vụ chưa hoàn thành.",
+          "ui_elements": [
+            { "label": "Nút 1 — Đã nhận", "type": "button", "rules": "Kích hoạt khi trạng thái là Chưa xử lý" },
+            { "label": "Nút 2 — Đang xử lý", "type": "button", "rules": "Kích hoạt khi trạng thái là Đã nhận" },
+            { "label": "Nút 3 — Kết quả xử lý", "type": "button", "rules": "Kích hoạt khi trạng thái là Đang xử lý" },
+            { "label": "Ô Ghi chú hiện trường", "type": "textarea", "rules": "Tùy chọn; nhập trước khi nhấn Cập nhật" },
+            { "label": "Nút CẬP NHẬT KẾT QUẢ", "type": "button", "rules": "Gửi trạng thái và ghi chú về ITS Backend" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Trong màn hình chi tiết sự cố, cuộn xuống phần 'Cập nhật trạng thái (1 → 2 → 3)'", "screenshot": "s06-task-status-buttons.png", "expected": "3 nút trạng thái hiển thị; nút hiện tại được tô đậm" },
+            { "no": 2, "action": "Nhấn nút '1 — Đã nhận' khi đến hiện trường", "expected": "Nút 1 được chọn (tô đậm); nút 2 và 3 chưa kích hoạt" },
+            { "no": 3, "action": "Nhấn nút 'CẬP NHẬT KẾT QUẢ'", "expected": "Trạng thái Đã nhận được đồng bộ về ITS Backend; TMC nhận được thông báo" },
+            { "no": 4, "action": "Bắt đầu xử lý sự cố. Nhấn nút '2 — Đang xử lý'", "expected": "Nút 2 được chọn" },
+            { "no": 5, "action": "Nhấn nút 'CẬP NHẬT KẾT QUẢ'", "expected": "Trạng thái Đang xử lý được đồng bộ" },
+            { "no": 6, "action": "Sau khi hoàn thành, nhấn nút '3 — Kết quả xử lý'. Nhập ghi chú hiện trường (nếu cần)", "expected": "Nút 3 được chọn; ô ghi chú có thể nhập văn bản" },
+            { "no": 7, "action": "Nhấn nút 'CẬP NHẬT KẾT QUẢ'", "expected": "Nhiệm vụ chuyển trạng thái Hoàn thành; lịch sử cập nhật ghi lại 3 mốc thời gian" }
+          ],
+          "error_cases": [
+            { "trigger_step": 3, "condition": "Mất kết nối khi đồng bộ", "message": "Thông báo đồng bộ thất bại; hệ thống sẽ thử lại tự động khi có mạng" }
+          ]
+        },
+        {
+          "id": "F-009",
+          "name": "Đính kèm ảnh/video hiện trường",
+          "description": "Nhân viên chụp ảnh hoặc quay video hiện trường và đính kèm vào nhiệm vụ để gửi về TMC. Hỗ trợ 3 nguồn: chụp ảnh bằng camera, quay video bằng camera, hoặc chọn từ thư viện ảnh.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đang xem chi tiết nhiệm vụ. Thiết bị có camera và quyền truy cập camera/thư viện.",
+          "ui_elements": [
+            { "label": "Nút Chụp ảnh (Camera icon)", "type": "button", "rules": "Mở camera để chụp ảnh" },
+            { "label": "Nút Quay video (Video icon)", "type": "button", "rules": "Mở camera để quay video" },
+            { "label": "Nút Đính kèm (Attachment icon)", "type": "button", "rules": "Mở thư viện ảnh để chọn file" },
+            { "label": "Vùng xem trước ảnh đính kèm", "type": "gallery", "rules": "Hiển thị thumbnail các file đã chọn" }
+          ],
+          "steps": [
+            { "no": 1, "action": "Trong màn hình chi tiết sự cố, cuộn xuống phần 'Ảnh & video gửi TMC'", "screenshot": "s07-task-media-attach.png", "expected": "3 nút đính kèm hiển thị: Chụp ảnh, Quay video, Đính kèm từ thư viện" },
+            { "no": 2, "action": "Nhấn nút 'Chụp ảnh' để chụp ảnh hiện trường", "expected": "Camera mở; nhân viên chụp ảnh" },
+            { "no": 3, "action": "Xác nhận ảnh chụp", "expected": "Ảnh thumbnail hiển thị trong vùng đính kèm" },
+            { "no": 4, "action": "Nhấn 'CẬP NHẬT KẾT QUẢ' để gửi ảnh kèm trạng thái về TMC", "expected": "Ảnh được upload lên ITS Backend; tiến trình upload hiển thị" }
+          ],
+          "error_cases": [
+            { "trigger_step": 4, "condition": "3G yếu, upload thất bại", "message": "Thông báo upload thất bại; hệ thống tự động thử lại; ảnh vẫn giữ trong hàng chờ" }
+          ]
+        },
+        {
+          "id": "F-010",
+          "name": "Hiển thị sự cố/sự kiện giao thông",
+          "description": "Nhân viên xem danh sách sự cố và sự kiện giao thông đang xảy ra trên tuyến NB-LC (thi công, thời tiết, tai nạn) để cập nhật tình hình tuyến đường.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập. Có kết nối internet.",
+          "steps": [
+            { "no": 1, "action": "Nhấn tab 'Công việc'. Cuộn xuống phần 'Sự kiện trên tuyến'", "screenshot": "s04-tasks-list.png", "expected": "Danh sách sự kiện tuyến đường hiển thị với tiêu đề, vị trí km, thời gian và loại sự kiện (thi công, thời tiết, v.v.)" }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "thong-bao",
+      "display_name": "Thông báo",
+      "features": [
+        {
+          "id": "F-011",
+          "name": "Nhận Push Notification",
+          "description": "Ứng dụng nhận thông báo đẩy từ TMC qua FCM (Android) hoặc APNs (iOS). Hỗ trợ 4 loại: Phân công nhiệm vụ, Cập nhật trạng thái, Thông báo hệ thống, Thông báo từ TMC. Hoạt động ở cả 3 trạng thái: foreground, background và khi app đã bị tắt.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập. Đã cấp quyền thông báo cho ứng dụng trên thiết bị.",
+          "steps": [
+            { "no": 1, "action": "TMC phân công nhiệm vụ mới cho nhân viên trong hệ thống ITS", "expected": "Thiết bị nhận push notification trong khay thông báo hệ thống" },
+            { "no": 2, "action": "Nhấn vào thông báo trong khay để mở ứng dụng", "expected": "Ứng dụng mở và chuyển thẳng đến màn hình chi tiết nhiệm vụ được phân công (loại PhanCong)" }
+          ]
+        },
+        {
+          "id": "F-012",
+          "name": "Xem danh sách thông báo",
+          "description": "Nhân viên xem toàn bộ lịch sử thông báo đã nhận, được sắp xếp từ mới nhất đến cũ nhất. Thông báo chưa đọc có nền màu xanh nhạt. Badge số trên tab Thông báo hiển thị số chưa đọc.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đã đăng nhập.",
+          "steps": [
+            { "no": 1, "action": "Nhấn tab 'Thông báo' (biểu tượng chuông) ở thanh điều hướng", "screenshot": "s08-notifications.png", "expected": "Danh sách thông báo hiển thị theo thứ tự thời gian mới nhất trước. Thông báo chưa đọc có nền xanh nhạt; badge số hiển thị tổng chưa đọc" }
+          ]
+        },
+        {
+          "id": "F-013",
+          "name": "Đánh dấu đã đọc / chưa đọc",
+          "description": "Nhân viên có thể toggle trạng thái đọc của từng thông báo. Badge chưa đọc trên tab cập nhật ngay lập tức.",
+          "actors": ["Nhân viên vận hành hiện trường"],
+          "preconditions": "Đang xem danh sách thông báo.",
+          "steps": [
+            { "no": 1, "action": "Nhấn vào một thông báo chưa đọc (nền xanh nhạt)", "screenshot": "s08-notifications.png", "expected": "Thông báo được đánh dấu đã đọc (nền trắng); badge số giảm đi 1" },
+            { "no": 2, "action": "Nhấn lại vào thông báo đó để đánh dấu chưa đọc", "expected": "Thông báo trở lại nền xanh nhạt (chưa đọc); badge số tăng lên 1" }
+          ]
+        }
+      ]
+    }
+  ],
+  "troubleshooting": [
+    {
+      "situation": "Không đăng nhập được — báo sai thông tin",
+      "cause": "Tài khoản/mật khẩu sai, hoặc extension PBX không khớp với tài khoản trong hệ thống ITS",
+      "resolution": "Kiểm tra lại tài khoản (chú ý phân biệt chữ hoa/thường), số extension 4 chữ số và mật khẩu. Nếu quên mật khẩu, liên hệ quản trị viên ITS để cấp lại."
+    },
+    {
+      "situation": "Ứng dụng bị đăng xuất tự động",
+      "cause": "Phiên đăng nhập (JWT token) hết hạn",
+      "resolution": "Đăng nhập lại bằng tài khoản và mật khẩu. Đây là hành vi bình thường theo chính sách bảo mật."
+    },
+    {
+      "situation": "Danh sách công việc không tải được hoặc trống",
+      "cause": "Mất kết nối internet, hoặc ITS Backend không phản hồi, hoặc chưa có nhiệm vụ nào được phân công",
+      "resolution": "Kiểm tra kết nối 3G/WiFi. Kéo xuống để làm mới danh sách. Nếu vẫn trống, liên hệ TMC xác nhận có nhiệm vụ được phân công hay không."
+    },
+    {
+      "situation": "Không thể cập nhật trạng thái — nút bị mờ",
+      "cause": "Đã ở trạng thái cuối (Hoàn thành), hoặc đang cố bỏ bước (từ 1 sang 3)",
+      "resolution": "Trạng thái phải cập nhật tuần tự 1→2→3. Không thể bỏ bước hoặc quay ngược. Nếu nhiệm vụ đã Hoàn thành thì không cần cập nhật thêm."
+    },
+    {
+      "situation": "Upload ảnh hiện trường thất bại",
+      "cause": "Tín hiệu 3G yếu tại hiện trường",
+      "resolution": "Ứng dụng tự động thử lại khi tín hiệu tốt hơn. Ảnh vẫn được giữ trong hàng chờ. Di chuyển đến vị trí có tín hiệu tốt hơn và thử lại."
+    },
+    {
+      "situation": "Không nhận được push notification",
+      "cause": "Quyền thông báo bị tắt, hoặc ứng dụng chưa kết nối FCM/APNs",
+      "resolution": "Vào Cài đặt thiết bị → Ứng dụng → ITS Mobile VEC → Thông báo → Bật tất cả loại thông báo. Đăng xuất và đăng nhập lại để đăng ký lại device token."
+    },
+    {
+      "situation": "Nút SOS không gọi được",
+      "cause": "Không có sóng GSM tại vị trí hiện tại",
+      "resolution": "Di chuyển đến vị trí có sóng điện thoại. SOS hoạt động hoàn toàn độc lập với internet nhưng vẫn cần sóng GSM của nhà mạng."
+    },
+    {
+      "situation": "Không gọi được VoIP nội bộ",
+      "cause": "Mất kết nối internet, hoặc tổng đài PBX đang bảo trì",
+      "resolution": "Kiểm tra kết nối internet. Sử dụng SOS hoặc gọi điện thoại thông thường trong trường hợp khẩn cấp. Liên hệ quản trị viên PBX nếu sự cố kéo dài."
+    }
+  ]
+}

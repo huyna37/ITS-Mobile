@@ -1,0 +1,28 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Frontend & Web (React, JS, TS, JSON, CSS, Tailwind, YAML)
+[*.{js,jsx,ts,tsx,json,jsonc,css,scss,html,yaml,yml}]
+indent_style = space
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# Backend (.NET 9 / C#)
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# XML / Csproj
+[*.{csproj,props,targets,xml,config,axaml}]
+indent_style = space
+indent_size = 4

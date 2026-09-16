@@ -1,0 +1,51 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "F5: Chạy Mobile Web Preview (Cổng 5173)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/ITS_Mobile_VEC"
+    },
+    {
+      "name": "F5: Chạy Mobile trên Chrome (http://localhost:5173)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/ITS_Mobile_VEC",
+      "preLaunchTask": "Frontend: Dev Server"
+    },
+    {
+      "name": "F5: Chạy Mobile React Native (Start Metro)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm start",
+      "cwd": "${workspaceFolder}/mobile"
+    },
+    {
+      "name": "F5: Chạy Mobile Android (React Native)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run android",
+      "cwd": "${workspaceFolder}/mobile"
+    },
+    {
+      "name": "F5: Chạy Backend .NET API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "API: Build .NET",
+      "program": "${workspaceFolder}/ITS-MOBILE-API/bin/Debug/net9.0/ITS-MOBILE-API.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/ITS-MOBILE-API",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ]
+}
