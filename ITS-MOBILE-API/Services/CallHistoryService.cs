@@ -22,7 +22,7 @@ public class CallHistoryService
 
         return calls.Select(c => new CallHistoryResponse(
             Id: c.Id.ToString(),
-            Extension: c.PhoneNumber ?? c.PrivateIdentity ?? "N/A",
+            Extension: c.PhoneNumber ?? string.Empty,
             Name: c.Supporter ?? "Không rõ",
             Time: c.CallDate.ToString("dd/MM HH:mm"),
             Duration: c.Duration > 0 ? FormatDuration(c.Duration) : null,
@@ -37,8 +37,8 @@ public class CallHistoryService
 
         var call = new CallHistory
         {
-            PhoneNumber = user.SipNumber ?? extension,
-            PrivateIdentity = user.SipNumber ?? extension,
+            PhoneNumber = extension,
+            PrivateIdentity = extension,
             Supporter = name,
             CallDate = DateTime.UtcNow,
             Duration = duration,

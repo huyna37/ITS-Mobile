@@ -15,10 +15,20 @@ interface AuthState {
   restoreSession: () => void;
 }
 
+const DEFAULT_USER: User = {
+  id: 'USER-001',
+  username: 'hoang_nm',
+  fullName: 'Nguyễn Minh Hoàng',
+  extension: '1001',
+  role: 'Nhân viên tuần tra',
+  department: 'Trạm NB-01',
+  phone: '0912.345.678',
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  user: DEFAULT_USER,
+  token: 'mock-jwt-token-its-mobile-vec-2026',
+  isAuthenticated: true,
   isLoading: false,
   error: null,
 

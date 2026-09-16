@@ -21,15 +21,16 @@ public class ContactService
             .ToListAsync();
 
         // Check online status from IpPhones
-        var ipPhones = await _db.IpPhones
-            .Where(p => !p.IsDeleted && p.Status == 1)
-            .ToDictionaryAsync(p => p.PhoneNumber ?? p.Code ?? string.Empty);
+        var onlinePhoneNumbers = await _db.IpPhones
+            .Where(p => !p.IsDeleted && p.Status == 1 && !string.IsNullOrEmpty(p.PhoneNumber))
+            .Select(p => p.PhoneNumber!)
+            .ToHashSetAsync();
 
         return extensions.Select(e => new ContactResponse(
             Id: e.Id.ToString(),
-            Name: e.ExtensionName ?? e.ExtensionUnsignedName ?? e.ExtensionNumber ?? "Unknown",
-            Ext: e.ExtensionNumber ?? "N/A",
-            Online: ipPhones.ContainsKey(e.ExtensionNumber ?? "")
+            Name: e.ExtensionName ?? string.Empty,
+            Ext: e.ExtensionNumber ?? string.Empty,
+            Online: !string.IsNullOrEmpty(e.ExtensionNumber) && onlinePhoneNumbers.Contains(e.ExtensionNumber)
         )).ToList();
     }
 

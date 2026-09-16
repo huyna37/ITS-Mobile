@@ -24,7 +24,7 @@ public class IncidentService
         return events.Select(e => new IncidentResponse(
             Id: e.Id.ToString(),
             Kind: GetIncidentKind(e.Description),
-            Title: e.Description ?? e.Code,
+            Title: e.Description ?? string.Empty,
             Location: $"Km {e.PositionKM}+{e.PositionM:000}",
             Time: e.TimeDetect.ToString("HH:mm dd/MM"),
             Tag: GetTagText(e)

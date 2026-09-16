@@ -12,11 +12,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.white}
-        translucent={false}
-      />
+      <StatusBar barStyle="dark-content" />
       <NavigationContainer>
         <View style={styles.container}>
           <RootNavigator />

@@ -1,27 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Header } from '../../components/common/Header';
-import { TaskCard } from '../../components/modules/TaskCard';
-import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useTasksStore } from '../../store/useTasksStore';
 import { RootStackParamList } from '../../navigation/types';
-import { IncidentTask } from '../../types/tasks';
-import { COLORS } from '../../constants/colors';
-import { AppRoutes } from '../../constants/routes';
+import { IncidentTask, ExpresswayEvent } from '../../types/tasks';
+import {
+  COLORS,
+  AppRoutes,
+  TASK_SECTION_CONSTANTS,
+  THEME_CONSTANTS,
+  UI_ICONS,
+} from '../../constants';
+import {
+  HighwayHeader,
+  SectionHeader,
+  IncidentTaskCard,
+  RouteEventCard,
+  CompletedTaskCard,
+  EmptyCard,
+} from '../../shared';
+import { CheckCircleIcon } from '../../components/icons/SvgIcons';
 
 export const TasksScreen: React.FC = () => {
-  const [filterStep, setFilterStep] = useState<'ACTIVE' | 'DONE'>('ACTIVE');
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const {
@@ -38,102 +47,112 @@ export const TasksScreen: React.FC = () => {
     fetchTasks();
   }, [fetchTasks]);
 
-  const handleTaskPress = (task: IncidentTask) => {
+  const handleTaskPress = (task: IncidentTask): void => {
     selectTask(task);
     navigation.navigate(AppRoutes.TASK_DETAIL, { task });
   };
 
-  const filteredTasks = tasks.filter((t) => {
-    if (filterStep === 'ACTIVE') {
-      return t.step === 'RECEIVED' || t.step === 'IN_PROGRESS';
-    }
-    return t.step === 'COMPLETED';
-  });
+  const activeTasks: IncidentTask[] = tasks.filter(
+    (t: IncidentTask) => t.step === 'RECEIVED' || t.step === 'IN_PROGRESS'
+  );
+
+  const completedTasks: IncidentTask[] = tasks.filter(
+    (t: IncidentTask) => t.step === 'COMPLETED'
+  );
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <Header title="Nhiệm Vụ Hiện Trường" subtitle="Điều phối từ Trung tâm TMC" />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refreshTasks}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
+        {/* 1. HEADER CAO TỐC CHUẨN VEC (SHARED) */}
+        <HighwayHeader />
 
-      {/* Events ticker bar */}
-      {events.length > 0 ? (
-        <View style={styles.eventTicker}>
-          <Text style={styles.eventIcon}>⚠️</Text>
-          <Text style={styles.eventText} numberOfLines={1}>
-            <Text style={styles.eventBold}>{events[0].title}: </Text>
-            {events[0].location}
-          </Text>
+        {/* Dòng ngày tháng chuẩn thiết kế */}
+        <View style={styles.dateRow}>
+          <Text style={styles.dateText}>Thứ Hai, 20/04/2026</Text>
         </View>
-      ) : null}
 
-      {/* Segment switcher */}
-      <View style={styles.filterRow}>
-        <TouchableOpacity
-          style={[styles.filterBtn, filterStep === 'ACTIVE' && styles.filterBtnActive]}
-          onPress={() => setFilterStep('ACTIVE')}
-          activeOpacity={0.8}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              filterStep === 'ACTIVE' && styles.filterTextActive,
-            ]}
-          >
-            Đang xử lý (
-            {tasks.filter((t) => t.step === 'RECEIVED' || t.step === 'IN_PROGRESS').length}
-            )
-          </Text>
-        </TouchableOpacity>
+        {isLoading && !isRefreshing ? (
+          <LoadingSpinner message={TASK_SECTION_CONSTANTS.LOADING_MESSAGE} />
+        ) : (
+          <>
+            {/* 2. KHỐI NHIỆM VỤ ĐƯỢC GIAO */}
+            <View style={styles.section}>
+              <SectionHeader
+                title={TASK_SECTION_CONSTANTS.ASSIGNED_TITLE}
+                subtitle={TASK_SECTION_CONSTANTS.ASSIGNED_SUBTITLE}
+                badgeText={`${activeTasks.length} ${TASK_SECTION_CONSTANTS.ASSIGNED_UNIT}`}
+                badgeType="primary"
+              />
 
-        <TouchableOpacity
-          style={[styles.filterBtn, filterStep === 'DONE' && styles.filterBtnActive]}
-          onPress={() => setFilterStep('DONE')}
-          activeOpacity={0.8}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              filterStep === 'DONE' && styles.filterTextActive,
-            ]}
-          >
-            Đã hoàn thành ({tasks.filter((t) => t.step === 'COMPLETED').length})
-          </Text>
-        </TouchableOpacity>
-      </View>
+              {activeTasks.length === 0 ? (
+                <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_ASSIGNED} />
+              ) : (
+                activeTasks.map((task: IncidentTask) => (
+                  <IncidentTaskCard
+                    key={task.id}
+                    task={task}
+                    onPress={() => handleTaskPress(task)}
+                  />
+                ))
+              )}
+            </View>
 
-      {/* List */}
-      {isLoading && !isRefreshing ? (
-        <LoadingSpinner message="Đang đồng bộ nhiệm vụ hiện trường..." />
-      ) : (
-        <FlatList
-          data={filteredTasks}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <TaskCard task={item} onPress={() => handleTaskPress(item)} />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={refreshTasks}
-              colors={[COLORS.primary]}
-            />
-          }
-          ListEmptyComponent={
-            <EmptyState
-              title={
-                filterStep === 'ACTIVE'
-                  ? 'Không có sự cố cần xử lý'
-                  : 'Chưa có sự cố hoàn thành'
-              }
-              description={
-                filterStep === 'ACTIVE'
-                  ? 'Tuyến đường thông suốt. Kéo xuống để cập nhật sự cố mới từ TMC.'
-                  : 'Các nhiệm vụ đã hoàn thành nghiệm thu sẽ hiển thị tại đây.'
-              }
-            />
-          }
-        />
-      )}
+            {/* 3. KHỐI SỰ KIỆN TRÊN TUYẾN */}
+            <View style={styles.section}>
+              <SectionHeader
+                title={TASK_SECTION_CONSTANTS.EVENTS_TITLE}
+                badgeText={TASK_SECTION_CONSTANTS.EVENTS_BADGE_WATCH}
+                badgeType="gray"
+              />
+
+              {events.length === 0 ? (
+                <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_EVENTS} />
+              ) : (
+                events.map((ev: ExpresswayEvent) => (
+                  <RouteEventCard key={ev.id} event={ev} />
+                ))
+              )}
+            </View>
+
+            {/* 4. KHỐI CÔNG VIỆC GẦN ĐÂY HOÀN THÀNH */}
+            <View style={styles.section}>
+              <SectionHeader
+                title={TASK_SECTION_CONSTANTS.COMPLETED_TITLE}
+                subtitle={`${TASK_SECTION_CONSTANTS.COMPLETED_SUBTITLE_PREFIX} (${completedTasks.length})`}
+                badgeType="success"
+                rightElement={
+                  <View style={styles.checkCircle}>
+                    <CheckCircleIcon size={32} color="#16a34a" />
+                  </View>
+                }
+              />
+
+              {completedTasks.length === 0 ? (
+                <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_COMPLETED} />
+              ) : (
+                completedTasks.map((t: IncidentTask) => (
+                  <CompletedTaskCard
+                    key={t.id}
+                    task={t}
+                    onPress={() => handleTaskPress(t)}
+                  />
+                ))
+              )}
+            </View>
+          </>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -141,58 +160,40 @@ export const TasksScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.gray50,
+    backgroundColor: THEME_CONSTANTS.HEADER_BG,
   },
-  eventTicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.warningLight,
-    borderBottomWidth: 1,
-    borderBottomColor: '#fde68a',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  container: {
+    flex: 1,
+    backgroundColor: THEME_CONSTANTS.CONTAINER_BG,
   },
-  eventIcon: {
+  contentContainer: {
+    paddingBottom: 120,
+  },
+  dateRow: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  dateText: {
     fontSize: 14,
-    marginRight: 6,
-  },
-  eventText: {
-    fontSize: 12,
-    color: COLORS.warningDark,
-    flex: 1,
-  },
-  eventBold: {
-    fontWeight: '700',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray200,
-  },
-  filterBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: COLORS.gray100,
-    marginHorizontal: 4,
-  },
-  filterBtnActive: {
-    backgroundColor: COLORS.primaryLight,
-  },
-  filterText: {
-    fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gray600,
+    color: '#64748b',
   },
-  filterTextActive: {
-    color: COLORS.primaryDark,
-    fontWeight: '700',
+  section: {
+    paddingHorizontal: 16,
+    marginTop: 16,
   },
-  listContent: {
-    padding: 16,
+  checkCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME_CONSTANTS.CHECK_CIRCLE_BG,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIcon: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: COLORS.success,
   },
 });

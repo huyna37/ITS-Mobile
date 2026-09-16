@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
@@ -10,15 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Header } from '../../components/common/Header';
-import { EmptyState } from '../../components/common/EmptyState';
+import { HighwayHeader } from '../../components/shared/HighwayHeader';
+import { BellIcon } from '../../components/icons/SvgIcons';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useNotificationsStore } from '../../store/useNotificationsStore';
 import { useTasksStore } from '../../store/useTasksStore';
 import { RootStackParamList } from '../../navigation/types';
 import { NotificationItem } from '../../types/notifications';
-import { formatTime, formatVietnameseDate } from '../../utils/formatting';
-import { COLORS } from '../../constants/colors';
 import { AppRoutes } from '../../constants/routes';
 
 export const NotificationsScreen: React.FC = () => {
@@ -29,7 +27,6 @@ export const NotificationsScreen: React.FC = () => {
     isLoading,
     fetchNotifications,
     toggleNotificationRead,
-    markAllAsRead,
   } = useNotificationsStore();
 
   const { tasks, selectTask } = useTasksStore();
@@ -39,12 +36,10 @@ export const NotificationsScreen: React.FC = () => {
   }, [fetchNotifications]);
 
   const handleNotificationPress = (item: NotificationItem) => {
-    // Đánh dấu đã đọc khi chạm
     if (!item.isRead) {
       toggleNotificationRead(item.id);
     }
 
-    // Deep linking: Nếu notification trỏ tới taskId, mở thẳng TaskDetail
     if (item.taskId) {
       const targetTask = tasks.find((t) => t.id === item.taskId);
       if (targetTask) {
@@ -54,72 +49,89 @@ export const NotificationsScreen: React.FC = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: NotificationItem }) => {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={() => handleNotificationPress(item)}
-        style={[styles.itemCard, !item.isRead && styles.itemUnread]}
-      >
-        <View style={styles.itemHeader}>
-          <View style={styles.titleBox}>
-            {!item.isRead ? <View style={styles.unreadDot} /> : null}
-            <Text style={[styles.title, !item.isRead && styles.titleUnread]}>
-              {item.title}
-            </Text>
-          </View>
-          <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
-        </View>
-
-        <Text style={styles.bodyText}>{item.body}</Text>
-
-        <View style={styles.footerRow}>
-          <Text style={styles.dateText}>{formatVietnameseDate(item.timestamp)}</Text>
-          {item.taskId ? (
-            <Text style={styles.deepLinkHint}>Bấm để mở sự cố ➔</Text>
-          ) : null}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <Header
-        title={`Thông Báo (${unreadCount} chưa đọc)`}
-        rightAction={
-          unreadCount > 0 ? (
-            <TouchableOpacity onPress={markAllAsRead} style={styles.markAllBtn}>
-              <Text style={styles.markAllText}>Đọc tất cả</Text>
-            </TouchableOpacity>
-          ) : null
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={fetchNotifications}
+            colors={['#0090e7']}
+            tintColor="#0090e7"
+          />
         }
-      />
+      >
+        {/* Header cao tốc chuẩn thiết kế */}
+        <HighwayHeader />
 
-      {isLoading ? (
-        <LoadingSpinner message="Đang tải thông báo TMC..." />
-      ) : (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={renderItem}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={fetchNotifications}
-              colors={[COLORS.primary]}
-            />
-          }
-          ListEmptyComponent={
-            <EmptyState
-              title="Không có thông báo mới"
-              description="Các cảnh báo sự cố từ TMC sẽ hiển thị tại đây"
-              iconText="🔔"
-            />
-          }
-        />
-      )}
+        {/* Tiêu đề & Badge Chưa đọc */}
+        <View style={styles.titleRow}>
+          <Text style={styles.screenTitle}>Thông báo</Text>
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadBadgeText}>
+              {unreadCount > 0 ? `${unreadCount} chưa đọc` : '0 chưa đọc'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Subtitle */}
+        <View style={styles.subtitleRow}>
+          <Text style={styles.subtitleText}>Đã đọc / chưa đọc</Text>
+        </View>
+
+        {/* Danh sách thông báo dạng pill cards riêng biệt */}
+        <View style={styles.listContainer}>
+          {isLoading && notifications.length === 0 ? (
+            <LoadingSpinner message="Đang tải thông báo..." />
+          ) : (
+            notifications.map((item) => {
+              const isUnread = !item.isRead;
+
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.notificationCard,
+                    isUnread && styles.notificationCardUnread,
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => handleNotificationPress(item)}
+                >
+                  {/* Icon squircle */}
+                  <View
+                    style={[
+                      styles.iconSquircle,
+                      isUnread
+                        ? styles.iconSquircleUnread
+                        : styles.iconSquircleRead,
+                    ]}
+                  >
+                    <BellIcon
+                      size={22}
+                      color={isUnread ? '#ffffff' : '#94a3b8'}
+                    />
+                  </View>
+
+                  {/* Nội dung thông báo */}
+                  <View style={styles.cardContent}>
+                    <View style={styles.topContentRow}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.itemTime}>{item.timestamp}</Text>
+                    </View>
+                    <Text style={styles.itemBody} numberOfLines={2}>
+                      {item.body}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -127,87 +139,109 @@ export const NotificationsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.gray50,
+    backgroundColor: '#dff1fd',
   },
-  listContent: {
-    padding: 16,
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
   },
-  markAllBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+  contentContainer: {
+    paddingBottom: 120,
   },
-  markAllText: {
-    fontSize: 13,
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-  itemCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: COLORS.gray200,
-  },
-  itemUnread: {
-    backgroundColor: COLORS.primarySubtle,
-    borderColor: COLORS.primaryLight,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 6,
-  },
-  titleBox: {
+  titleRow: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#0f172a',
+    letterSpacing: -0.5,
+  },
+  unreadBadge: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  unreadBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  subtitleRow: {
+    paddingHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+  },
+  notificationCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  notificationCardUnread: {
+    borderColor: '#e0f2fe',
+    backgroundColor: '#fcfdff',
+  },
+  iconSquircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  iconSquircleUnread: {
+    backgroundColor: '#0090e7',
+  },
+  iconSquircleRead: {
+    backgroundColor: '#f1f5f9',
+  },
+  cardContent: {
+    flex: 1,
+  },
+  topContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
     flex: 1,
     marginRight: 8,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-    marginRight: 6,
+  itemTime: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '500',
   },
-  title: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.gray800,
-  },
-  titleUnread: {
-    fontWeight: '800',
-    color: COLORS.gray900,
-  },
-  timeText: {
-    fontSize: 11,
-    color: COLORS.gray400,
-  },
-  bodyText: {
+  itemBody: {
     fontSize: 13,
-    color: COLORS.gray600,
+    color: '#64748b',
     lineHeight: 18,
-    marginBottom: 8,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray100,
-    paddingTop: 6,
-  },
-  dateText: {
-    fontSize: 11,
-    color: COLORS.gray400,
-  },
-  deepLinkHint: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.primary,
   },
 });

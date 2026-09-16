@@ -7,6 +7,12 @@ import { TasksScreen } from '../screens/tasks/TasksScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { useNotificationsStore } from '../store/useNotificationsStore';
+import {
+  TaskClipboardIcon,
+  PhoneHandsetIcon,
+  BellIcon,
+  UserIcon,
+} from '../components/icons/SvgIcons';
 import { COLORS } from '../constants/colors';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -16,40 +22,54 @@ export const MainTabNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
-      initialRouteName="ContactsTab"
+      initialRouteName="TasksTab"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.gray400,
+        tabBarActiveTintColor: '#0090e7',
+        tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.gray200,
+          backgroundColor: '#ffffff',
+          borderTopLeftRadius: 32,
+          borderTopRightRadius: 32,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6,
+          borderTopColor: '#f1f5f9',
+          height: 74,
+          paddingBottom: 12,
+          paddingTop: 8,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.04,
+          shadowRadius: 12,
+          elevation: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: 10,
+          fontWeight: '800',
+          letterSpacing: 0.6,
+          textTransform: 'uppercase',
+          marginTop: 2,
         },
       }}
     >
       <Tab.Screen
-        name="ContactsTab"
-        component={ContactsScreen}
+        name="TasksTab"
+        component={TasksScreen}
         options={{
-          tabBarLabel: 'Liên lạc',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>📞</Text>,
+          tabBarLabel: 'NHIỆM VỤ',
+          tabBarIcon: ({ color }) => (
+            <TaskClipboardIcon size={24} color={color} />
+          ),
         }}
       />
 
       <Tab.Screen
-        name="TasksTab"
-        component={TasksScreen}
+        name="ContactsTab"
+        component={ContactsScreen}
         options={{
-          tabBarLabel: 'Công việc',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>📋</Text>,
+          tabBarLabel: 'LIÊN LẠC',
+          tabBarIcon: ({ color }) => (
+            <PhoneHandsetIcon size={22} color={color} />
+          ),
         }}
       />
 
@@ -57,15 +77,13 @@ export const MainTabNavigator: React.FC = () => {
         name="NotificationsTab"
         component={NotificationsScreen}
         options={{
-          tabBarLabel: 'Thông báo',
+          tabBarLabel: 'THÔNG BÁO',
           tabBarIcon: ({ color }) => (
             <View style={{ position: 'relative' }}>
-              <Text style={{ fontSize: 20 }}>🔔</Text>
+              <BellIcon size={24} color={color} />
               {unreadCount > 0 ? (
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </Text>
+                  <Text style={styles.badgeText}>{unreadCount}</Text>
                 </View>
               ) : null}
             </View>
@@ -77,8 +95,10 @@ export const MainTabNavigator: React.FC = () => {
         name="ProfileTab"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Tôi',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>👤</Text>,
+          tabBarLabel: 'TÔI',
+          tabBarIcon: ({ color }) => (
+            <UserIcon size={24} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -86,23 +106,30 @@ export const MainTabNavigator: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -10,
-    backgroundColor: COLORS.danger,
-    borderRadius: 9,
-    minWidth: 18,
-    height: 18,
+    top: -3,
+    right: -8,
+    backgroundColor: '#ef4444',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
     borderWidth: 1.5,
-    borderColor: COLORS.white,
+    borderColor: '#ffffff',
   },
   badgeText: {
-    color: COLORS.white,
-    fontSize: 10,
-    fontWeight: '800',
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '900',
   },
 });

@@ -48,7 +48,13 @@ npm run android
 npm run ios
 ```
 
-### 2. Backend API (`ITS-MOBILE-API/`)
+### 2. Bản Web Preview Nhanh trên Trình duyệt (`ITS-MOBILE/`)
+```bash
+# Chạy trực tiếp từ thư mục gốc hoặc trong ITS-MOBILE:
+npm run web         # Mặc định chạy tại http://localhost:5173
+```
+
+### 3. Backend API (`ITS-MOBILE-API/`)
 ```bash
 cd ITS-MOBILE-API
 dotnet build
