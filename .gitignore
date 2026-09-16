@@ -13,6 +13,7 @@ out/
 .next/
 web-build/
 build-output/
+dist-ota/
 
 # React Native & Metro
 .metro-health-check*

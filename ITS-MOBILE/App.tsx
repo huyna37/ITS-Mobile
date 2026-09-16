@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { FloatingSOS } from './src/components/common/FloatingSOS';
@@ -11,8 +11,12 @@ export default function App() {
   const { isAuthenticated } = useAuthStore();
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaProvider initialWindowMetrics={initialWindowMetrics}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
       <NavigationContainer>
         <View style={styles.container}>
           <RootNavigator />

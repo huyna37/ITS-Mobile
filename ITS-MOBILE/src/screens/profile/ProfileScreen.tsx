@@ -1,12 +1,79 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HighwayHeader } from '../../components/shared/HighwayHeader';
 import { LogoutIcon } from '../../components/icons/SvgIcons';
 import { useAuthStore } from '../../store/useAuthStore';
+import {
+  checkOtaUpdate,
+  getCurrentBundleInfo,
+  OtaCheckResult,
+  OtaBundleInfo,
+  resetOtaToFactory,
+} from '../../services/otaService';
+import { OtaUpdateModal } from '../../components/shared/OtaUpdateModal';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const [bundleInfo, setBundleInfo] = useState<OtaBundleInfo | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateResult, setUpdateResult] = useState<OtaCheckResult | null>(null);
+  const [showOtaModal, setShowOtaModal] = useState(false);
+
+  useEffect(() => {
+    loadBundleInfo();
+  }, []);
+
+  const loadBundleInfo = async () => {
+    const info = await getCurrentBundleInfo();
+    setBundleInfo(info);
+  };
+
+  const handleCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const result = await checkOtaUpdate();
+      setUpdateResult(result);
+      if (result.hasUpdate) {
+        setShowOtaModal(true);
+      } else {
+        Alert.alert(
+          'ĐÃ LÀ BẢN MỚI NHẤT',
+          `Ứng dụng đang hoạt động với mã nguồn mới nhất (Phiên bản: ${bundleInfo?.bundleVersion || '1.0.0-base'}).`,
+          [{ text: 'Đóng', style: 'default' }]
+        );
+      }
+    } catch {
+      Alert.alert('THÔNG BÁO', 'Không thể kiểm tra bản cập nhật vào lúc này.');
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  const handleResetFactory = () => {
+    Alert.alert(
+      'KHÔI PHỤC BẢN GỐC',
+      'Bạn có muốn xóa toàn bộ bản cập nhật OTA và quay về mã nguồn gốc được đóng gói trong file APK không?',
+      [
+        { text: 'Hủy bỏ', style: 'cancel' },
+        {
+          text: 'Khôi phục',
+          style: 'destructive',
+          onPress: async () => {
+            await resetOtaToFactory();
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -69,6 +136,55 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Card Cập nhật trực tuyến (OTA Hot Update) */}
+        <View style={styles.otaCard}>
+          <View style={styles.otaHeaderRow}>
+            <View style={styles.otaIconBadge}>
+              <Text style={styles.otaIconText}>⚡</Text>
+            </View>
+            <View style={styles.otaTitleContainer}>
+              <Text style={styles.otaTitle}>Cập nhật trực tuyến (OTA)</Text>
+              <Text style={styles.otaSub}>
+                Phiên bản Bundle: {bundleInfo?.bundleVersion || '1.0.0-base'}
+              </Text>
+            </View>
+            {bundleInfo?.isOtaActive && (
+              <View style={styles.activeOtaBadge}>
+                <Text style={styles.activeOtaText}>Đang dùng OTA</Text>
+              </View>
+            )}
+          </View>
+
+          <Text style={styles.otaDesc}>
+            Cập nhật tức thì giao diện, xử lý nghiệp vụ và sửa lỗi trực tuyến mà không cần cài lại file APK.
+          </Text>
+
+          <View style={styles.otaActionRow}>
+            <TouchableOpacity
+              style={[styles.otaButton, checkingUpdate && styles.otaButtonDisabled]}
+              activeOpacity={0.8}
+              onPress={handleCheckUpdate}
+              disabled={checkingUpdate}
+            >
+              {checkingUpdate ? (
+                <ActivityIndicator color="#007AFF" size="small" />
+              ) : (
+                <Text style={styles.otaButtonText}>Kiểm tra cập nhật ngay</Text>
+              )}
+            </TouchableOpacity>
+
+            {bundleInfo?.isOtaActive && (
+              <TouchableOpacity
+                style={styles.resetButton}
+                activeOpacity={0.8}
+                onPress={handleResetFactory}
+              >
+                <Text style={styles.resetButtonText}>Về bản gốc</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         {/* Nút Đăng xuất hệ thống đỏ nhạt */}
         <TouchableOpacity
           style={styles.logoutButton}
@@ -79,6 +195,13 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.logoutText}>Đăng xuất hệ thống</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Modal Cập nhật OTA */}
+      <OtaUpdateModal
+        visible={showOtaModal}
+        updateInfo={updateResult}
+        onClose={() => setShowOtaModal(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -177,9 +300,109 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#0f172a',
   },
+  otaCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  otaHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  otaIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  otaIconText: {
+    fontSize: 20,
+  },
+  otaTitleContainer: {
+    flex: 1,
+  },
+  otaTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  otaSub: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    marginTop: 2,
+  },
+  activeOtaBadge: {
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  activeOtaText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  otaDesc: {
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  otaActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  otaButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#f0f7ff',
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otaButtonDisabled: {
+    opacity: 0.6,
+  },
+  otaButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0284c7',
+  },
+  resetButton: {
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94a3b8',
+  },
   logoutButton: {
     marginHorizontal: 16,
-    marginTop: 20,
+    marginTop: 16,
     height: 56,
     borderRadius: 20,
     backgroundColor: '#fef2f2',

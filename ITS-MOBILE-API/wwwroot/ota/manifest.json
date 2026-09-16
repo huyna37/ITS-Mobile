@@ -1,0 +1,8 @@
+﻿{
+    "latestVersion":  "1.0.1",
+    "mandatory":  false,
+    "releaseDate":  "2026-09-16 15:28",
+    "hasUpdate":  true,
+    "changeLog":  "Cap nhat truc tuyen: Toi uu hieu nang va giao dien ca truc.",
+    "bundleUrl":  "/api/ota/bundle/latest"
+}
