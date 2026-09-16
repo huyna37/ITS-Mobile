@@ -160,10 +160,10 @@ export function getNextStep(current: TaskStep): TaskStep | null {
 
 ---
 
-## 4. Cấu Trúc Thư Mục Chuẩn của Ứng Dụng (`mobile/src`)
+## 4. Cấu Trúc Thư Mục Chuẩn của Ứng Dụng (`ITS-MOBILE/src`)
 
 ```
-mobile/
+ITS-MOBILE/
 ├── package.json
 ├── tsconfig.json
 ├── App.tsx

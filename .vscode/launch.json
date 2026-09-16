@@ -6,14 +6,14 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "npm start",
-      "cwd": "${workspaceFolder}/mobile"
+      "cwd": "${workspaceFolder}/ITS-MOBILE"
     },
     {
       "name": "F5: Chạy Mobile Android (React Native)",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run android",
-      "cwd": "${workspaceFolder}/mobile"
+      "cwd": "${workspaceFolder}/ITS-MOBILE"
     },
     {
       "name": "F5: Chạy Backend .NET API",

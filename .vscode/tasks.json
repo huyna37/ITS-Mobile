@@ -25,7 +25,7 @@
       "type": "shell",
       "command": "npm start",
       "options": {
-        "cwd": "${workspaceFolder}/mobile"
+        "cwd": "${workspaceFolder}/ITS-MOBILE"
       },
       "isBackground": true,
       "problemMatcher": []
@@ -35,7 +35,7 @@
       "type": "shell",
       "command": "npm run type-check",
       "options": {
-        "cwd": "${workspaceFolder}/mobile"
+        "cwd": "${workspaceFolder}/ITS-MOBILE"
       },
       "problemMatcher": ["$tsc"]
     },
@@ -44,7 +44,7 @@
       "type": "shell",
       "command": "npm run android",
       "options": {
-        "cwd": "${workspaceFolder}/mobile"
+        "cwd": "${workspaceFolder}/ITS-MOBILE"
       },
       "problemMatcher": []
     }

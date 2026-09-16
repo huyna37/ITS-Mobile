@@ -8,7 +8,7 @@
 
 ```text
 its-mobile/
-├── mobile/                 # Ứng dụng di động React Native (TypeScript, Zustand, React Navigation)
+├── ITS-MOBILE/             # Ứng dụng di động React Native (TypeScript, Zustand, React Navigation)
 │   ├── src/
 │   │   ├── api/            # Tầng giao tiếp HTTP / REST API
 │   │   ├── components/     # UI Components dùng chung & theo module
@@ -38,9 +38,9 @@ its-mobile/
 
 ## 🚀 Hướng dẫn Chạy Ứng dụng
 
-### 1. Ứng dụng React Native Mobile (`mobile/`)
+### 1. Ứng dụng React Native Mobile (`ITS-MOBILE/`)
 ```bash
-cd mobile
+cd ITS-MOBILE
 npm install
 npm run start       # Khởi động Metro Bundler
 # Hoặc chạy trực tiếp trên thiết bị/giả lập:
