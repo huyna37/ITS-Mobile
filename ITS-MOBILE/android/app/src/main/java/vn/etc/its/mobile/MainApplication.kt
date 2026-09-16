@@ -8,6 +8,7 @@ import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import java.io.File
 import vn.etc.its.mobile.ota.OtaPackage
+import vn.etc.its.mobile.media.MediaPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -20,6 +21,7 @@ class MainApplication : Application(), ReactApplication {
       packageList =
         PackageList(this).packages.apply {
           add(OtaPackage())
+          add(MediaPackage())
         },
       jsBundleFilePath = bundlePath,
     )

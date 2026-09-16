@@ -9,9 +9,13 @@ import {
 } from 'react-native';
 import { PhoneHandsetIcon } from '../icons/SvgIcons';
 import { triggerSOSCall } from '../../utils/dialer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const FloatingSOS: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 14);
+  const floatingBottom = 62 + bottomInset + 14;
 
   const handleConfirmCall = () => {
     setModalVisible(false);
@@ -23,7 +27,7 @@ export const FloatingSOS: React.FC = () => {
       {/* Nút nổi gọi khẩn cấp hình tròn đỏ có icon điện thoại */}
       <TouchableOpacity
         activeOpacity={0.85}
-        style={styles.floatingButton}
+        style={[styles.floatingButton, { bottom: floatingBottom }]}
         onPress={() => setModalVisible(true)}
       >
         <View style={styles.phoneIconWrap}>

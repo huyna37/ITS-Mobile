@@ -5,7 +5,7 @@ export type TaskPriority = 'P0' | 'P1' | 'P2' | 'P3';
 export interface TaskAttachment {
   id: string;
   name: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'document';
   uri: string;
   sizeBytes?: number;
   uploadedAt: string;

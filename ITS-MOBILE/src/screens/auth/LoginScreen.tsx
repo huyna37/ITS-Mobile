@@ -38,8 +38,9 @@ export const LoginScreen: React.FC = () => {
       password: password.trim(),
     });
 
-    if (!success && error) {
-      Alert.alert('Đăng nhập thất bại', error);
+    if (!success) {
+      const err = useAuthStore.getState().error;
+      Alert.alert('Đăng nhập thất bại', err ? err : 'Không thể kết nối đến máy chủ ITS TMC (10.0.229.55:32281)');
     }
   };
 

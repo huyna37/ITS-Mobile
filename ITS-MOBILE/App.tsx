@@ -1,5 +1,5 @@
-import React from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { StatusBar, StyleSheet, View, Platform } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/navigation/RootNavigator';
@@ -10,13 +10,17 @@ import { COLORS } from './src/constants/colors';
 export default function App() {
   const { isAuthenticated } = useAuthStore();
 
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const sb = StatusBar as any;
+      sb.setTranslucent?.(true);
+      sb.setBackgroundColor?.('transparent');
+    }
+  }, []);
+
   return (
-    <SafeAreaProvider initialWindowMetrics={initialWindowMetrics}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <StatusBar barStyle="dark-content" />
       <NavigationContainer>
         <View style={styles.container}>
           <RootNavigator />

@@ -54,15 +54,13 @@ export async function checkOtaUpdate(): Promise<OtaCheckResult> {
     );
     return res.data;
   } catch {
-    // Mock phản hồi cho môi trường dev offline / khi chưa bật backend
-    const isNewer = currentInfo.bundleVersion !== '1.0.1';
     return {
-      hasUpdate: isNewer,
-      latestVersion: '1.0.1',
-      bundleUrl: `${apiClient.defaults.baseURL}/api/ota/bundle/latest`,
-      changeLog: 'Cập nhật trực tuyến OTA:\n- Tối ưu giao diện ca trực\n- Sửa màu chữ hiển thị thanh điều hướng\n- Cải thiện tốc độ tải bản đồ số',
+      hasUpdate: false,
+      latestVersion: currentInfo.bundleVersion,
+      bundleUrl: '',
+      changeLog: '',
       mandatory: false,
-      releaseDate: '2026-09-16',
+      releaseDate: '',
     };
   }
 }

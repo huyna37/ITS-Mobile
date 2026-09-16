@@ -50,7 +50,7 @@ export const NotificationsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -132,7 +132,7 @@ export const NotificationsScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   contentContainer: {
-    paddingBottom: 120,
+    paddingBottom: 150,
   },
   titleRow: {
     paddingHorizontal: 20,

@@ -13,12 +13,16 @@ import {
   BellIcon,
   UserIcon,
 } from '../components/icons/SvgIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainTabNavigator: React.FC = () => {
   const { unreadCount } = useNotificationsStore();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 14);
+  const tabHeight = 62 + bottomInset;
 
   return (
     <Tab.Navigator
@@ -33,8 +37,8 @@ export const MainTabNavigator: React.FC = () => {
           borderTopRightRadius: 32,
           borderTopWidth: 1,
           borderTopColor: '#f1f5f9',
-          height: 74,
-          paddingBottom: 12,
+          height: tabHeight,
+          paddingBottom: bottomInset,
           paddingTop: 8,
           shadowColor: '#000000',
           shadowOffset: { width: 0, height: -4 },

@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { PaperPlaneIcon, SearchIcon } from '../icons/SvgIcons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Platform, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PaperPlaneIcon, SearchIcon, CloseIcon } from '../icons/SvgIcons';
 import { HIGHWAY_CONSTANTS } from '../../constants';
 
 interface HighwayHeaderProps {
@@ -8,6 +9,11 @@ interface HighwayHeaderProps {
   subtitle?: string;
   showSearch?: boolean;
   onSearchPress?: () => void;
+  isSearching?: boolean;
+  searchQuery?: string;
+  onSearchChange?: (text: string) => void;
+  onCloseSearch?: () => void;
+  searchPlaceholder?: string;
 }
 
 export const HighwayHeader: React.FC<HighwayHeaderProps> = ({
@@ -15,36 +21,97 @@ export const HighwayHeader: React.FC<HighwayHeaderProps> = ({
   subtitle = HIGHWAY_CONSTANTS.SUBTITLE,
   showSearch = true,
   onSearchPress,
+  isSearching: controlledSearching,
+  searchQuery = '',
+  onSearchChange,
+  onCloseSearch,
+  searchPlaceholder = 'Tìm theo mã, vị trí Km, sự cố...',
 }) => {
+  const insets = useSafeAreaInsets();
+  const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
+  const topPadding = Math.max(insets.top, statusBarHeight, 32) + 12;
+
+  const [localSearching, setLocalSearching] = useState(false);
+  const isSearchActive = controlledSearching !== undefined ? controlledSearching : localSearching;
+
+  const handleOpenSearch = () => {
+    if (onSearchPress) {
+      onSearchPress();
+    } else {
+      setLocalSearching(true);
+    }
+  };
+
+  const handleCloseSearch = () => {
+    if (onCloseSearch) {
+      onCloseSearch();
+    } else {
+      setLocalSearching(false);
+    }
+  };
+
   return (
-    <View style={styles.header}>
-      <View style={styles.headerTop}>
-        {/* Nút phi thuyền tròn xanh chuẩn thiết kế */}
-        <View style={styles.navButton}>
-          <View style={styles.planeWrapper}>
-            <PaperPlaneIcon size={22} color="#ffffff" />
+    <View style={[styles.header, { paddingTop: topPadding }]}>
+      {isSearchActive ? (
+        <View style={styles.searchBarRow}>
+          <View style={styles.searchInputWrap}>
+            <SearchIcon size={18} color="#0097f0" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={searchPlaceholder}
+              placeholderTextColor="#94a3b8"
+              value={searchQuery}
+              onChangeText={onSearchChange}
+              autoFocus
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearBtn}
+                activeOpacity={0.7}
+                onPress={() => onSearchChange && onSearchChange('')}
+              >
+                <CloseIcon size={16} color="#64748b" />
+              </TouchableOpacity>
+            )}
           </View>
-        </View>
-
-        {/* Tiêu đề trung tâm 2 dòng */}
-        <View style={styles.titleBox}>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <Text style={styles.headerSubtitle}>{subtitle}</Text>
-        </View>
-
-        {/* Nút tìm kiếm tròn trắng */}
-        {showSearch ? (
           <TouchableOpacity
-            style={styles.searchButton}
+            style={styles.cancelSearchBtn}
             activeOpacity={0.7}
-            onPress={onSearchPress}
+            onPress={handleCloseSearch}
           >
-            <SearchIcon size={20} color="#475569" />
+            <Text style={styles.cancelSearchText}>Đóng</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={styles.placeholderButton} />
-        )}
-      </View>
+        </View>
+      ) : (
+        <View style={styles.headerTop}>
+          {/* Nút phi thuyền tròn xanh chuẩn thiết kế */}
+          <View style={styles.navButton}>
+            <View style={styles.planeWrapper}>
+              <PaperPlaneIcon size={22} color="#ffffff" />
+            </View>
+          </View>
+
+          {/* Tiêu đề trung tâm 2 dòng */}
+          <View style={styles.titleBox}>
+            <Text style={styles.headerTitle}>{title}</Text>
+            <Text style={styles.headerSubtitle}>{subtitle}</Text>
+          </View>
+
+          {/* Nút tìm kiếm tròn trắng */}
+          {showSearch ? (
+            <TouchableOpacity
+              style={styles.searchButton}
+              activeOpacity={0.7}
+              onPress={handleOpenSearch}
+            >
+              <SearchIcon size={20} color="#475569" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.placeholderButton} />
+          )}
+        </View>
+      )}
     </View>
   );
 };
@@ -117,6 +184,45 @@ const styles = StyleSheet.create({
   placeholderButton: {
     width: 48,
     height: 48,
+  },
+  searchBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+  },
+  searchInputWrap: {
+    flex: 1,
+    height: 48,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    shadowColor: '#0097f0',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#0f172a',
+    paddingVertical: 0,
+  },
+  clearBtn: {
+    padding: 6,
+  },
+  cancelSearchBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  cancelSearchText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0097f0',
   },
 });
 

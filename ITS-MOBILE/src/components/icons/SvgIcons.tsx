@@ -167,3 +167,30 @@ export const LogoutIcon: React.FC<IconProps> = ({ size = 22, color = '#ef4444' }
     />
   </Svg>
 );
+
+/** Biểu tượng Đóng / Xóa dấu X */
+export const CloseIcon: React.FC<IconProps> = ({ size = 20, color = '#64748b' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M18 6L6 18M6 6l12 12"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+/** Biểu tượng Thùng rác Xóa */
+export const TrashIcon: React.FC<IconProps> = ({ size = 18, color = '#ef4444' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+

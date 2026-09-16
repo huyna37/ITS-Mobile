@@ -17,6 +17,7 @@ COPY . .
 
 # Build Android APK
 WORKDIR /workspace/ITS-MOBILE/android
+ENV GRADLE_USER_HOME=/workspace/.gradle
 
 # Build Release APK with Proguard and ABI splits
 RUN ./gradlew assembleRelease --no-daemon --stacktrace

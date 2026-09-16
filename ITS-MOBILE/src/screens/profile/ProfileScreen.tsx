@@ -96,7 +96,7 @@ export const ProfileScreen: React.FC = () => {
   const displayDept = user?.department ? user.department : 'Trạm NB-01';
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -202,7 +202,7 @@ export const ProfileScreen: React.FC = () => {
         updateInfo={updateResult}
         onClose={() => setShowOtaModal(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   contentContainer: {
-    paddingBottom: 120,
+    paddingBottom: 150,
   },
   profileCard: {
     marginHorizontal: 16,

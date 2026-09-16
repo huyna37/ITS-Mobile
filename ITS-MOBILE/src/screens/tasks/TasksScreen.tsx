@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,9 @@ import { CheckCircleIcon } from '../../components/icons/SvgIcons';
 export const TasksScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const {
     tasks,
     events,
@@ -52,16 +55,45 @@ export const TasksScreen: React.FC = () => {
     navigation.navigate(AppRoutes.TASK_DETAIL, { task });
   };
 
-  const activeTasks: IncidentTask[] = tasks.filter(
-    (t: IncidentTask) => t.step === 'RECEIVED' || t.step === 'IN_PROGRESS'
-  );
+  const q = searchQuery.trim().toLowerCase();
 
-  const completedTasks: IncidentTask[] = tasks.filter(
-    (t: IncidentTask) => t.step === 'COMPLETED'
-  );
+  const activeTasks: IncidentTask[] = tasks
+    .filter((t: IncidentTask) => t.step === 'RECEIVED' || t.step === 'IN_PROGRESS')
+    .filter((t: IncidentTask) => {
+      if (!q) return true;
+      const kmStr = `km ${t.milestoneKm}+${t.milestoneM}`.toLowerCase();
+      return (
+        t.code.toLowerCase().includes(q) ||
+        t.title.toLowerCase().includes(q) ||
+        kmStr.includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.direction.toLowerCase().includes(q)
+      );
+    });
+
+  const completedTasks: IncidentTask[] = tasks
+    .filter((t: IncidentTask) => t.step === 'COMPLETED')
+    .filter((t: IncidentTask) => {
+      if (!q) return true;
+      const kmStr = `km ${t.milestoneKm}+${t.milestoneM}`.toLowerCase();
+      return (
+        t.code.toLowerCase().includes(q) ||
+        t.title.toLowerCase().includes(q) ||
+        kmStr.includes(q)
+      );
+    });
+
+  const filteredEvents: ExpresswayEvent[] = events.filter((e: ExpresswayEvent) => {
+    if (!q) return true;
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.location.toLowerCase().includes(q) ||
+      e.type.toLowerCase().includes(q)
+    );
+  });
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -74,12 +106,27 @@ export const TasksScreen: React.FC = () => {
           />
         }
       >
-        {/* 1. HEADER CAO TỐC CHUẨN VEC (SHARED) */}
-        <HighwayHeader />
+        {/* 1. HEADER CAO TỐC CHUẨN VEC (SHARED) VỚI THANH TÌM KIẾM */}
+        <HighwayHeader
+          isSearching={isSearching}
+          searchQuery={searchQuery}
+          onSearchPress={() => setIsSearching(true)}
+          onSearchChange={setSearchQuery}
+          onCloseSearch={() => {
+            setIsSearching(false);
+            setSearchQuery('');
+          }}
+        />
 
-        {/* Dòng ngày tháng chuẩn thiết kế */}
+        {/* Dòng ngày tháng hoặc thông tin kết quả tìm kiếm */}
         <View style={styles.dateRow}>
-          <Text style={styles.dateText}>Thứ Hai, 20/04/2026</Text>
+          {isSearching && searchQuery ? (
+            <Text style={[styles.dateText, { color: '#0097f0', fontWeight: '700' }]}>
+              Kết quả cho "{searchQuery}": {activeTasks.length + completedTasks.length + filteredEvents.length} mục
+            </Text>
+          ) : (
+            <Text style={styles.dateText}>Thứ Hai, 20/04/2026</Text>
+          )}
         </View>
 
         {isLoading && !isRefreshing ? (
@@ -116,10 +163,10 @@ export const TasksScreen: React.FC = () => {
                 badgeType="gray"
               />
 
-              {events.length === 0 ? (
+              {filteredEvents.length === 0 ? (
                 <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_EVENTS} />
               ) : (
-                events.map((ev: ExpresswayEvent) => (
+                filteredEvents.map((ev: ExpresswayEvent) => (
                   <RouteEventCard key={ev.id} event={ev} />
                 ))
               )}
@@ -153,7 +200,7 @@ export const TasksScreen: React.FC = () => {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -167,7 +214,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME_CONSTANTS.CONTAINER_BG,
   },
   contentContainer: {
-    paddingBottom: 120,
+    paddingBottom: 150,
   },
   dateRow: {
     paddingHorizontal: 20,

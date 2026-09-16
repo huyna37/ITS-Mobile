@@ -13,22 +13,13 @@ interface AuthState {
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => Promise<void>;
   restoreSession: () => void;
+  handleSessionExpired: () => void;
 }
 
-const DEFAULT_USER: User = {
-  id: 'USER-001',
-  username: 'hoang_nm',
-  fullName: 'Nguyễn Minh Hoàng',
-  extension: '1001',
-  role: 'Nhân viên tuần tra',
-  department: 'Trạm NB-01',
-  phone: '0912.345.678',
-};
-
 export const useAuthStore = create<AuthState>((set) => ({
-  user: DEFAULT_USER,
-  token: 'mock-jwt-token-its-mobile-vec-2026',
-  isAuthenticated: true,
+  user: null,
+  token: null,
+  isAuthenticated: false,
   isLoading: false,
   error: null,
 
@@ -47,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công';
-      set({ error: msg, isLoading: false });
+      set({ error: msg, isLoading: false, isAuthenticated: false });
       return false;
     }
   },
@@ -62,8 +53,20 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         token: null,
         isAuthenticated: false,
+        error: null,
       });
     }
+  },
+
+  handleSessionExpired: () => {
+    storage.removeItem('auth_token');
+    storage.removeItem('auth_user');
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      error: 'Phiên làm việc đã hết hạn hoặc không kết nối được máy chủ. Vui lòng đăng nhập lại.',
+    });
   },
 
   restoreSession: () => {
@@ -71,6 +74,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     const user = storage.getJSON<User>('auth_user');
     if (token && user) {
       set({ token, user, isAuthenticated: true });
+    } else {
+      set({ token: null, user: null, isAuthenticated: false });
     }
   },
 }));

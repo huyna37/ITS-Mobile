@@ -1,119 +1,118 @@
 import { IncidentTask, ExpresswayEvent, TaskStep } from '../types/tasks';
 import { apiClient } from './client';
 
-const MOCK_TASKS: IncidentTask[] = [
-  {
-    id: 'TASK-8821',
-    code: 'TASK-8821',
-    title: 'Tai nạn giao thông',
-    description: 'Va chạm giữa 2 xe con, gây ùn tắc nhẹ lane ngoài.',
-    milestoneKm: 24,
-    milestoneM: 500,
-    direction: 'LAOCAI_HANOI',
-    step: 'RECEIVED',
-    priority: 'P1',
-    assignedTo: 'Nguyễn Minh Hoàng',
-    createdAt: '2026-04-20T14:20:00Z',
-    updatedAt: '2026-04-20T14:20:00Z',
-    attachments: [],
-    notes: [
-      {
-        id: 'NOTE-01',
-        author: 'Hệ thống',
-        content: 'Phân công nhiệm vụ từ ITS/TMC',
-        createdAt: '2026-04-20T14:20:00Z',
-      },
-    ],
-  },
-  {
-    id: 'TASK-8825',
-    code: 'TASK-8825',
-    title: 'Xe hỏng hóc',
-    description: 'Xe con chết máy dừng đỗ làn khẩn cấp, cần đặt biển cảnh báo và hỗ trợ cứu hộ.',
-    milestoneKm: 158,
-    milestoneM: 200,
-    direction: 'HANOI_LAOCAI',
-    step: 'IN_PROGRESS',
-    priority: 'P2',
-    assignedTo: 'Nguyễn Minh Hoàng',
-    createdAt: '2026-04-20T14:20:00Z',
-    updatedAt: '2026-04-20T14:20:00Z',
-    attachments: [],
-    notes: [
-      {
-        id: 'NOTE-02',
-        author: 'Nguyễn Minh Hoàng',
-        content: 'Đang tiếp cận hiện trường',
-        createdAt: '2026-04-20T14:20:00Z',
-      },
-    ],
-  },
-  {
-    id: 'TASK-8742',
-    code: 'TASK-8742',
-    title: 'Dọn dẹp chướng ngại vật mặt đường',
-    description: 'Đã thu gom dọn dẹp vật cản trên tuyến, đảm bảo an toàn giao thông.',
-    milestoneKm: 35,
-    milestoneM: 0,
-    direction: 'HANOI_LAOCAI',
-    step: 'COMPLETED',
-    priority: 'P3',
-    assignedTo: 'Nguyễn Minh Hoàng',
-    createdAt: '2026-04-20T10:00:00Z',
-    updatedAt: '2026-04-20T12:00:00Z',
+export interface BackendTaskResponse {
+  id: string;
+  code: string;
+  type: string;
+  level: string;
+  location: string;
+  direction: string;
+  time: string;
+  status: number;
+  description: string;
+  script: string;
+}
+
+export interface BackendIncidentResponse {
+  id: string;
+  kind: string;
+  title: string;
+  location: string;
+  time: string;
+  tag: string;
+}
+
+function parseMilestoneKm(locationStr: string): number {
+  const match = locationStr.match(/(\d+)/);
+  if (match) {
+    return parseInt(match[1], 10);
+  }
+  return 0;
+}
+
+function parseMilestoneM(locationStr: string): number {
+  const match = locationStr.match(/\+(\d+)/);
+  if (match) {
+    return parseInt(match[1], 10);
+  }
+  return 0;
+}
+
+function mapBackendTask(item: BackendTaskResponse): IncidentTask {
+  let taskStep: TaskStep = 'RECEIVED';
+  if (item.status === 3) {
+    taskStep = 'COMPLETED';
+  } else if (item.status >= 1) {
+    taskStep = 'IN_PROGRESS';
+  }
+
+  return {
+    id: item.id,
+    code: item.code,
+    title: item.type,
+    description: item.description,
+    milestoneKm: parseMilestoneKm(item.location),
+    milestoneM: parseMilestoneM(item.location),
+    direction: item.direction === 'LAOCAI_HANOI' ? 'LAOCAI_HANOI' : 'HANOI_LAOCAI',
+    step: taskStep,
+    priority: item.level === 'P0' ? 'P0' : item.level === 'P1' ? 'P1' : item.level === 'P2' ? 'P2' : 'P3',
+    assignedTo: item.code,
+    createdAt: item.time,
+    updatedAt: item.time,
     attachments: [],
     notes: [],
-  },
-];
+  };
+}
 
-const MOCK_EVENTS: ExpresswayEvent[] = [
-  {
-    id: 'EVT-01',
-    title: 'Sơn kẻ đường định kỳ',
-    type: 'CONSTRUCTION',
-    location: 'Km 40 - Km 45',
-    time: '08:00 - 17:00',
-    severity: 'WARNING',
-  },
-  {
-    id: 'EVT-02',
-    title: 'Mưa lớn, tầm nhìn hạn chế',
-    type: 'WEATHER',
-    location: 'Khu vực Yên Bái',
-    time: 'Đang diễn ra',
-    severity: 'CRITICAL',
-  },
-];
+function mapBackendIncident(item: BackendIncidentResponse): ExpresswayEvent {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.kind === 'CONSTRUCTION' ? 'CONSTRUCTION' : item.kind === 'WEATHER' ? 'WEATHER' : item.kind === 'TRAFFIC_JAM' ? 'TRAFFIC_JAM' : 'ACCIDENT',
+    location: item.location,
+    time: item.time,
+    severity: item.tag === 'CRITICAL' ? 'CRITICAL' : item.tag === 'WARNING' ? 'WARNING' : 'INFO',
+  };
+}
 
+/**
+ * Lấy danh sách nhiệm vụ được giao và nhiệm vụ hoàn thành từ backend thật
+ */
 export async function getAssignedTasksApi(): Promise<IncidentTask[]> {
-  try {
-    const res = await apiClient.get<IncidentTask[]>('/api/tasks/assigned');
-    return res.data;
-  } catch {
-    return MOCK_TASKS;
-  }
+  const [assignedRes, completedRes] = await Promise.all([
+    apiClient.get<BackendTaskResponse[]>('/api/tasks/assigned'),
+    apiClient.get<BackendTaskResponse[]>('/api/tasks/completed-recent'),
+  ]);
+
+  const assignedTasks = assignedRes.data.map(mapBackendTask);
+  const completedTasks = completedRes.data.map(mapBackendTask);
+  return [...assignedTasks, ...completedTasks];
 }
 
+/**
+ * Cập nhật trạng thái nhiệm vụ trên máy chủ backend
+ */
 export async function updateTaskStepApi(id: string, step: TaskStep): Promise<IncidentTask> {
-  try {
-    const res = await apiClient.patch<IncidentTask>(`/api/tasks/${id}/step`, { step });
-    return res.data;
-  } catch {
-    const task = MOCK_TASKS.find((t) => t.id === id);
-    if (task) {
-      task.step = step;
-      task.updatedAt = new Date().toISOString();
-      return { ...task };
-    }
-    throw new Error('Task not found');
+  const statusCode = step === 'RECEIVED' ? 0 : step === 'IN_PROGRESS' ? 1 : 3;
+
+  await apiClient.patch(`/api/tasks/${id}`, {
+    status: statusCode,
+    actor: 'Tuần kiểm tra VEC',
+  });
+
+  const tasks = await getAssignedTasksApi();
+  const updated = tasks.find((t) => t.id === id);
+  if (updated) {
+    return updated;
   }
+  throw new Error('Cập nhật trạng thái nhiệm vụ không thành công');
 }
 
+/**
+ * Lấy danh sách sự kiện trên tuyến từ backend thật
+ */
 export async function getExpresswayEventsApi(): Promise<ExpresswayEvent[]> {
-  try {
-    const res = await apiClient.get<ExpresswayEvent[]>('/api/events');
-    return res.data;
-  } catch {
-    return MOCK_EVENTS;
-  }
+  const res = await apiClient.get<BackendIncidentResponse[]>('/api/incidents');
+  return res.data.map(mapBackendIncident);
 }

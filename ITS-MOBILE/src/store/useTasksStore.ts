@@ -18,6 +18,7 @@ interface TasksState {
   selectTask: (task: IncidentTask) => void;
   advanceTaskStep: (id: string) => Promise<boolean>;
   addAttachment: (taskId: string, attachment: TaskAttachment) => void;
+  removeAttachment: (taskId: string, attachmentId: string) => void;
 }
 
 export const useTasksStore = create<TasksState>((set, get) => ({
@@ -94,6 +95,23 @@ export const useTasksStore = create<TasksState>((set, get) => ({
           ? {
               ...state.selectedTask,
               attachments: [...state.selectedTask.attachments, attachment],
+            }
+          : state.selectedTask,
+    }));
+  },
+
+  removeAttachment: (taskId, attachmentId) => {
+    set((state) => ({
+      tasks: state.tasks.map((t) =>
+        t.id === taskId
+          ? { ...t, attachments: t.attachments.filter((a) => a.id !== attachmentId) }
+          : t
+      ),
+      selectedTask:
+        state.selectedTask?.id === taskId
+          ? {
+              ...state.selectedTask,
+              attachments: state.selectedTask.attachments.filter((a) => a.id !== attachmentId),
             }
           : state.selectedTask,
     }));

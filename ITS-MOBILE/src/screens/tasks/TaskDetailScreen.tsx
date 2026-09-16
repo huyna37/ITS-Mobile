@@ -7,8 +7,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  StatusBar,
+  Platform,
+  Image,
+  Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { useTasksStore } from '../../store/useTasksStore';
@@ -19,19 +23,22 @@ import {
   VideoIcon,
   PaperclipIcon,
   PaperPlaneIcon,
+  CloseIcon,
 } from '../../components/icons/SvgIcons';
 import { triggerPBXCall } from '../../utils/dialer';
+import { capturePhoto, captureVideo, pickDocument } from '../../utils/mediaPicker';
 
 export const TaskDetailScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
   const navigation = useNavigation();
   const { task: initialTask } = route.params;
 
-  const { tasks, advanceTaskStep, addAttachment } = useTasksStore();
+  const { tasks, advanceTaskStep, addAttachment, removeAttachment } = useTasksStore();
   const currentTask = tasks.find((t) => t.id === initialTask.id);
   const task = currentTask !== undefined ? currentTask : initialTask;
 
   const [fieldNotes, setFieldNotes] = useState('');
+  const [previewMediaUri, setPreviewMediaUri] = useState<string | null>(null);
 
   const handleStepPress = async (targetStep: 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED') => {
     if (targetStep === task.step) return;
@@ -52,22 +59,71 @@ export const TaskDetailScreen: React.FC = () => {
     );
   };
 
-  const handleCapturePhoto = () => {
-    Alert.alert('Chụp ảnh', 'Đã mở máy ảnh và đính kèm ảnh hiện trường (<500KB).');
-    addAttachment(task.id, {
-      id: `ATT-${Date.now()}`,
-      name: `anh-hien-truong-${Date.now()}.jpg`,
-      type: 'image',
-      uri: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957',
-      sizeBytes: 320000,
-      uploadedAt: new Date().toISOString(),
-    });
+  const handleTakePhoto = async () => {
+    const photo = await capturePhoto();
+    if (photo) {
+      addAttachment(task.id, {
+        id: `ATT-${Date.now()}`,
+        name: photo.name,
+        type: 'image',
+        uri: photo.uri,
+        sizeBytes: photo.size,
+        uploadedAt: new Date().toISOString(),
+      });
+      Alert.alert('Thành công', `Đã chụp và lưu ảnh hiện trường (${Math.round(photo.size / 1024)} KB)`);
+    }
+  };
+
+  const handleRecordVideo = async () => {
+    const video = await captureVideo();
+    if (video) {
+      addAttachment(task.id, {
+        id: `ATT-${Date.now()}`,
+        name: video.name,
+        type: 'video',
+        uri: video.uri,
+        sizeBytes: video.size,
+        uploadedAt: new Date().toISOString(),
+      });
+      Alert.alert('Thành công', `Đã ghi lại clip video hiện trường (${Math.round(video.size / 1024)} KB)`);
+    }
+  };
+
+  const handlePickAttachment = async () => {
+    const media = await pickDocument('all');
+    if (media) {
+      addAttachment(task.id, {
+        id: `ATT-${Date.now()}`,
+        name: media.name,
+        type: media.type,
+        uri: media.uri,
+        sizeBytes: media.size,
+        uploadedAt: new Date().toISOString(),
+      });
+      Alert.alert('Thành công', `Đã đính kèm tệp (${Math.round(media.size / 1024)} KB)`);
+    }
+  };
+
+  const handleDeleteAttachment = (attId: string, name: string) => {
+    Alert.alert(
+      'XÓA TỆP ĐÍNH KÈM',
+      `Bạn có chắc chắn muốn xóa "${name}" khỏi báo cáo hiện trường?`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => removeAttachment(task.id, attId),
+        },
+      ]
+    );
   };
 
   const handleSendReport = () => {
+    const attCount = task.attachments ? task.attachments.length : 0;
     Alert.alert(
       'GỬI BÁO CÁO VỀ TMC',
-      'Đã đồng bộ toàn bộ ghi nhận hiện trường và tệp đính kèm về Trung tâm điều hành ITS.',
+      `Đã đồng bộ toàn bộ ghi nhận hiện trường (${attCount} tệp đính kèm) về Trung tâm điều hành ITS TMC.`,
       [{ text: 'Đóng' }]
     );
   };
@@ -76,10 +132,14 @@ export const TaskDetailScreen: React.FC = () => {
   const isInProgress = task.step === 'IN_PROGRESS';
   const isCompleted = task.step === 'COMPLETED';
 
+  const insets = useSafeAreaInsets();
+  const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
+  const topInset = Math.max(insets.top, statusBarHeight, 28);
+
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <View style={styles.safeArea}>
       {/* Top Header thanh mảnh chuẩn thiết kế */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { paddingTop: topInset, height: 56 + topInset }]}>
         <TouchableOpacity
           style={styles.backBtn}
           activeOpacity={0.7}
@@ -254,7 +314,7 @@ export const TaskDetailScreen: React.FC = () => {
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionHeaderTitle}>Ảnh & video gửi TMC</Text>
           <Text style={styles.sectionSubDesc}>
-            Chụp mới hoặc đính kèm từ thư viện thiết bị.
+            Chụp mới trực tiếp từ camera hoặc đính kèm từ thiết bị.
           </Text>
 
           <View style={styles.attachmentsRow}>
@@ -262,9 +322,9 @@ export const TaskDetailScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.dashedBox}
               activeOpacity={0.7}
-              onPress={handleCapturePhoto}
+              onPress={handleTakePhoto}
             >
-              <CameraIcon size={26} color="#475569" />
+              <CameraIcon size={26} color="#0090e7" />
               <Text style={styles.dashedLabel}>Chụp ảnh</Text>
             </TouchableOpacity>
 
@@ -272,22 +332,69 @@ export const TaskDetailScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.dashedBox}
               activeOpacity={0.7}
-              onPress={handleCapturePhoto}
+              onPress={handleRecordVideo}
             >
-              <VideoIcon size={26} color="#475569" />
-              <Text style={styles.dashedLabel}>Quay / video</Text>
+              <VideoIcon size={26} color="#0090e7" />
+              <Text style={styles.dashedLabel}>Quay video</Text>
             </TouchableOpacity>
 
             {/* Đính kèm */}
             <TouchableOpacity
               style={[styles.dashedBox, styles.dashedBoxAmber]}
               activeOpacity={0.7}
-              onPress={handleCapturePhoto}
+              onPress={handlePickAttachment}
             >
               <PaperclipIcon size={26} color="#d97706" />
               <Text style={styles.dashedLabelAmber}>Đính kèm</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Danh sách tệp đính kèm đã chụp/tải lên */}
+          {task.attachments && task.attachments.length > 0 && (
+            <View style={styles.attachedListWrap}>
+              <Text style={styles.attachedCountTitle}>
+                Đã đính kèm ({task.attachments.length} tệp):
+              </Text>
+              {task.attachments.map((item) => (
+                <View key={item.id} style={styles.attachedItemRow}>
+                  {item.type === 'image' ? (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => setPreviewMediaUri(item.uri)}
+                    >
+                      <Image source={{ uri: item.uri }} style={styles.attachedThumbnail} />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.attachedIconPlaceholder}>
+                      {item.type === 'video' ? (
+                        <VideoIcon size={22} color="#0090e7" />
+                      ) : (
+                        <PaperclipIcon size={22} color="#d97706" />
+                      )}
+                    </View>
+                  )}
+
+                  <View style={styles.attachedInfoCol}>
+                    <Text style={styles.attachedFileName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.attachedFileSize}>
+                      {item.type === 'video' ? '🎬 Video' : item.type === 'image' ? '📸 Ảnh' : '📄 Tệp'} •{' '}
+                      {item.sizeBytes ? Math.round(item.sizeBytes / 1024) : 0} KB
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.deleteAttBtn}
+                    activeOpacity={0.7}
+                    onPress={() => handleDeleteAttachment(item.id, item.name)}
+                  >
+                    <CloseIcon size={18} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Nút gửi báo cáo về TMC */}
@@ -302,7 +409,31 @@ export const TaskDetailScreen: React.FC = () => {
           <Text style={styles.sendReportText}>Gửi báo cáo về TMC</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Modal phóng to xem ảnh hiện trường */}
+      <Modal
+        visible={previewMediaUri !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewMediaUri(null)}
+      >
+        <View style={styles.previewModalOverlay}>
+          <TouchableOpacity
+            style={styles.previewCloseBtn}
+            onPress={() => setPreviewMediaUri(null)}
+          >
+            <CloseIcon size={24} color="#ffffff" />
+          </TouchableOpacity>
+          {previewMediaUri && (
+            <Image
+              source={{ uri: previewMediaUri }}
+              style={styles.previewFullImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
+    </View>
   );
 };
 
@@ -605,5 +736,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#ffffff',
+  },
+  attachedListWrap: {
+    marginTop: 16,
+    gap: 10,
+  },
+  attachedCountTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 4,
+  },
+  attachedItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  attachedThumbnail: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#e2e8f0',
+  },
+  attachedIconPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachedInfoCol: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 8,
+  },
+  attachedFileName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  attachedFileSize: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 3,
+  },
+  deleteAttBtn: {
+    padding: 8,
+  },
+  previewModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCloseBtn: {
+    position: 'absolute',
+    top: 48,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 24,
+  },
+  previewFullImage: {
+    width: '94%',
+    height: '80%',
   },
 });

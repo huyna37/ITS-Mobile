@@ -25,8 +25,16 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      storage.removeItem('auth_token');
+    const isLoginRequest = error.config?.url?.includes('/api/auth/login');
+    if (!isLoginRequest) {
+      // Trường hợp không gọi được hoặc lỗi: tự động về trang đăng nhập
+      try {
+        const { useAuthStore } = require('../store/useAuthStore');
+        useAuthStore.getState().handleSessionExpired();
+      } catch {
+        storage.removeItem('auth_token');
+        storage.removeItem('auth_user');
+      }
     }
     return Promise.reject(error);
   }

@@ -44,7 +44,7 @@ export const ContactsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -207,7 +207,7 @@ export const ContactsScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   contentContainer: {
-    paddingBottom: 120,
+    paddingBottom: 150,
   },
   titleSection: {
     paddingHorizontal: 20,
