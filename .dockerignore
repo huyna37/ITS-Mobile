@@ -1,0 +1,10 @@
+node_modules
+ITS-MOBILE/node_modules
+dist
+ITS-MOBILE/dist
+.git
+.agents
+docs
+.vscode
+ITS-MOBILE-API/bin
+ITS-MOBILE-API/obj

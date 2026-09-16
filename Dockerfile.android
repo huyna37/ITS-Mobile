@@ -1,0 +1,25 @@
+# Official React Native Android Docker Environment (JDK 17 + Android SDK + Node.js)
+FROM reactnativecommunity/react-native-android:latest
+
+WORKDIR /workspace
+
+# Copy workspace package.json & lock files
+COPY package.json ./
+COPY ITS-MOBILE/package.json ./ITS-MOBILE/
+
+# Install dependencies inside ITS-MOBILE
+WORKDIR /workspace/ITS-MOBILE
+RUN npm install --legacy-peer-deps
+
+# Copy entire source code
+WORKDIR /workspace
+COPY . .
+
+# Build Android APK
+WORKDIR /workspace/ITS-MOBILE/android
+
+# Build Release APK with Proguard and ABI splits
+RUN ./gradlew assembleRelease --no-daemon --stacktrace
+
+# Copy generated APK to /output when container runs
+CMD ["sh", "-c", "mkdir -p /output && cp app/build/outputs/apk/release/*.apk /output/its-mobile-vec-release.apk && echo '===> RELEASE APK COPIED TO /output <==='"]
