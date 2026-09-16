@@ -1,30 +1,7 @@
 {
   "version": "2.0.0",
   "tasks": [
-    {
-      "label": "Frontend: Dev Server",
-      "type": "shell",
-      "command": "npm run dev",
-      "options": {
-        "cwd": "${workspaceFolder}/ITS_Mobile_VEC"
-      },
-      "isBackground": true,
-      "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "label": "Frontend: Build",
-      "type": "shell",
-      "command": "npm run build",
-      "options": {
-        "cwd": "${workspaceFolder}/ITS_Mobile_VEC"
-      },
-      "problemMatcher": ["$tsc"],
-      "group": "build"
-    },
+
     {
       "label": "API: Build .NET",
       "type": "process",

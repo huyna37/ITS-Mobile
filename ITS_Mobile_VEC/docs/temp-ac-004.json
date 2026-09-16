@@ -1,8 +1,0 @@
-[
-  "PATCH /api/notifications/{id}/read marks notification as read",
-  "DELETE /api/notifications/{id} removes notification from list",
-  "POST /api/notifications/push-token registers push token",
-  "Frontend shows unread badge count",
-  "Notification click auto-marks as read",
-  "Delete updates list immediately"
-]

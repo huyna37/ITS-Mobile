@@ -1,8 +1,0 @@
-[
-  "GET /api/profile/me returns profile of logged-in user (from token)",
-  "PATCH /api/profile updates user information",
-  "GET /api/profile/preferences returns preferences",
-  "PATCH /api/profile/preferences saves theme, color preferences",
-  "Frontend Profile tab shows real data from API",
-  "Frontend change password uses real /api/auth/change-password"
-]

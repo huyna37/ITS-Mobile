@@ -1,8 +1,0 @@
-[
-  "GET /api/incidents/{id} returns incident detail (profile + logs)",
-  "PATCH /api/incidents/{id} accepts payload {status, notes, actor, attachments}",
-  "Status update writes log entry to IncidentLogs table",
-  "Field notes saved to IncidentLog.Description",
-  "Attachment metadata sent to FilesOfIncident",
-  "Frontend TaskDetailViewPanel displays real data from API"
-]

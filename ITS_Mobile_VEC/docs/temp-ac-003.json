@@ -1,7 +1,0 @@
-[
-  "POST /api/calls/history accepts payload {extension, name, type}",
-  "Record written to CallHistory or AsteriskCDR table",
-  "Response returns created call record",
-  "Frontend addMockCallHistory calls real API instead of local state",
-  "Success or error feedback displayed to user"
-]

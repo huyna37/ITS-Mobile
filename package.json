@@ -4,11 +4,11 @@
   "private": true,
   "description": "Workspace root cho dự án ITS Mobile VEC (MF-MobiSuite)",
   "scripts": {
-    "dev": "npm --prefix ITS_Mobile_VEC run dev",
-    "start": "npm --prefix ITS_Mobile_VEC run dev",
-    "mobile:web": "npm --prefix ITS_Mobile_VEC run dev",
+    "dev": "npm --prefix mobile run start",
+    "start": "npm --prefix mobile run start",
     "mobile:start": "npm --prefix mobile run start",
     "mobile:android": "npm --prefix mobile run android",
+    "mobile:ios": "npm --prefix mobile run ios",
     "mobile:type-check": "npm --prefix mobile run type-check",
     "api:build": "dotnet build ITS-MOBILE-API/ITS-MOBILE-API.csproj",
     "api:run": "dotnet run --project ITS-MOBILE-API/ITS-MOBILE-API.csproj"

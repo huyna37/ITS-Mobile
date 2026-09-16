@@ -27,9 +27,6 @@ its-mobile/
 │   ├── Data/               # Entity Framework Core Context kết nối CSDL ITS_MOBILE_VEC
 │   └── appsettings.json
 │
-├── ITS_Mobile_VEC/         # Bản Web Preview / Trình diễn nhanh trên trình duyệt (Vite, TailwindCSS)
-│   └── src/
-│
 ├── docs/                   # Tài liệu BA, bảng phân công nhiệm vụ, kế hoạch triển khai Excel
 │   ├── designs/            # Hình ảnh mockup giao diện chi tiết từng chức năng
 │   └── KE_HOACH_TRIEN_KHAI_ITS_MOBILE_VEC.xlsx
@@ -51,19 +48,14 @@ npm run android
 npm run ios
 ```
 
-### 2. Bản Web Preview Nhanh (`ITS_Mobile_VEC/`)
-```bash
-cd ITS_Mobile_VEC
-npm install
-npm run dev         # Mặc định chạy tại http://localhost:5173
-```
-
-### 3. Backend API (`ITS-MOBILE-API/`)
+### 2. Backend API (`ITS-MOBILE-API/`)
 ```bash
 cd ITS-MOBILE-API
 dotnet build
 dotnet run          # Khởi động API trên cổng 5000
 ```
+
+
 
 ---
 
