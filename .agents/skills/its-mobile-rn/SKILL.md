@@ -56,6 +56,20 @@ Dự án **ITS Mobile VEC** (mã dự án Jira: `BXDITSNBLC`) là ứng dụng d
   - `extension`: Đúng **4 chữ số** tổng đài (validate regex `^\d{4}$`)
   - `password`: Mật khẩu
 - **Cơ chế**: Khi thành công, lưu `token` vào Keychain. Mở app tự động kiểm tra token để Auto-login vào tab mặc định **Liên lạc**.
+- **Example tài khoản kiểm thử chuẩn (Standard Test Credentials Example)**:
+  - **Tài khoản hệ thống**: `van_hanh`
+  - **Số Extension PBX**: `2011` (chuẩn 4 chữ số)
+  - **Mật khẩu**: `123456`
+  - **Dữ liệu mẫu JSON**:
+    ```json
+    {
+      "username": "van_hanh",
+      "extension": "2011",
+      "password": "123456",
+      "role": "Nhân viên Tuần tra - Vận hành hiện trường",
+      "unit": "Đội tuần tra cơ động số 1 (Tuyến Nội Bài – Lào Cai)"
+    }
+    ```
 
 #### 2. Nút SOS gọi khẩn cấp qua GSM (Bất tử khi mất mạng)
 - **Component**: `FloatingSOS`
