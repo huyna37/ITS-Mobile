@@ -18,7 +18,6 @@ public class IncidentService
         var events = await _db.EventInfos
             .Where(e => !e.IsDeleted)
             .OrderByDescending(e => e.CreationTime)
-            .Take(10)
             .ToListAsync();
 
         return events.Select(e => new IncidentResponse(
@@ -175,22 +174,38 @@ public class IncidentService
         _ => "Theo dõi"
     };
 
-    private string GetLevel(int? level) => level switch
+    /// <summary>
+    /// Chuyển đổi mã mức độ sự cố [dbo].[IncidentProfiles].[Level] sang text
+    /// </summary>
+    private string GetLevel(int level) => level switch
     {
-        1 or null => "Nghiêm trọng",
+        1 => "Nghiêm trọng",
         2 => "Trung bình",
         _ => "Thấp"
     };
 
+    /// <summary>
+    /// Ghép lý trình từ PositionKM và PositionM thành: Km xxx+xxx
+    /// </summary>
     private string FormatLocation(IncidentProfile profile) => $"Km {profile.PositionKM}+{profile.PositionM:000}";
 
+    /// <summary>
+    /// Quy ước Hướng tuyến cao tốc Nội Bài - Lào Cai:
+    /// Nguồn: Enum Direction trong ITS.Core.Shared & bảng [dbo].[Routes] (Mã NBLC, Km0+800 -> Km244+155)
+    /// - 1 = NoiBai_LaoCai: Hướng đi từ Hà Nội (Nội Bài) lên Lào Cai
+    /// - 2 = LaoCai_NoiBai: Hướng về từ Lào Cai về Hà Nội (Nội Bài)
+    /// Lưu trong CSDL tại cột [dbo].[IncidentProfiles].[Direction]
+    /// </summary>
     private string GetDirectionText(int direction) => direction switch
     {
-        0 => "Hướng Hà Nội",
-        1 => "Hướng Lào Cai",
+        1 => "Hà Nội ➔ Lào Cai",
+        2 => "Lào Cai ➔ Hà Nội",
         _ => "Không xác định"
     };
 
+    /// <summary>
+    /// Chuyển đổi mã trạng thái sang text
+    /// </summary>
     private string GetStatusText(int status) => status switch
     {
         1 => "Đã tiếp nhận (1)",

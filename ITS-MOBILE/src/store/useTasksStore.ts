@@ -17,6 +17,7 @@ interface TasksState {
   refreshTasks: () => Promise<void>;
   selectTask: (task: IncidentTask) => void;
   advanceTaskStep: (id: string) => Promise<boolean>;
+  updateTaskStep: (id: string, step: TaskStep) => Promise<boolean>;
   addAttachment: (taskId: string, attachment: TaskAttachment) => void;
   removeAttachment: (taskId: string, attachmentId: string) => void;
 }
@@ -80,6 +81,24 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       return true;
     } catch {
       return false;
+    }
+  },
+
+  updateTaskStep: async (id: string, step: TaskStep) => {
+    try {
+      const updated = await updateTaskStepApi(id, step);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
+        selectedTask: state.selectedTask?.id === id ? updated : state.selectedTask,
+      }));
+      return true;
+    } catch {
+      // Optimistic update
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? { ...t, step } : t)),
+        selectedTask: state.selectedTask?.id === id ? { ...state.selectedTask, step } : state.selectedTask,
+      }));
+      return true;
     }
   },
 

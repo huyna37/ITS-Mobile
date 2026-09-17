@@ -25,6 +25,8 @@ export const TASK_SECTION_CONSTANTS = {
   ASSIGNED_UNIT: 'VIỆC',
 
   EVENTS_TITLE: 'Sự kiện trên tuyến',
+  EVENTS_SUBTITLE: 'Theo dõi từ camera & hệ thống ITS',
+  EVENTS_UNIT: 'SỰ KIỆN',
   EVENTS_BADGE_WATCH: 'THEO DÕI',
 
   COMPLETED_TITLE: 'Công việc gần đây',

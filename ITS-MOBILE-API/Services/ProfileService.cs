@@ -13,21 +13,43 @@ public class ProfileService
         _db = db;
     }
 
-    public async Task<ProfileResponse?> GetProfile(string username)
+    public async Task<ProfileResponse?> GetProfile(string identifier, string? extensionClaim = null)
     {
+        long.TryParse(identifier, out var userId);
+
         var user = await _db.AbpUsers
-            .FirstOrDefaultAsync(u => u.UserName == username);
+            .FirstOrDefaultAsync(u => (userId > 0 && u.Id == userId) || u.UserName == identifier || u.EmailAddress == identifier);
 
         if (user == null) return null;
+
+        var userRole = await _db.AbpUserRoles
+            .Include(ur => ur.Role)
+            .FirstOrDefaultAsync(ur => ur.UserId == user.Id);
+        var role = userRole?.Role?.NormalizedName ?? "USER";
 
         var workerInfo = await _db.WorkerInfos
             .FirstOrDefaultAsync(w => w.UserId == user.Id && !w.IsDeleted);
 
+        var chucVu = role switch
+        {
+            "ADMIN" => "Quản trị viên",
+            "SUPERADMIN" => "Quản trị hệ thống",
+            _ => "Nhân viên vận hành hiện trường"
+        };
+
+        var donVi = workerInfo != null 
+            ? "Đội vận hành" 
+            : (role.Contains("ADMIN") ? "Quản trị hệ thống" : "Đội vận hành");
+
+        var extension = !string.IsNullOrEmpty(user.SipNumber)
+            ? user.SipNumber
+            : (!string.IsNullOrEmpty(extensionClaim) ? extensionClaim : "1001");
+
         return new ProfileResponse(
-            TenNhanVien: $"{user.Name} {user.Surname}",
-            ChucVu: "Nhân viên vận hành hiện trường",
-            DonVi: workerInfo != null ? "Đội vận hành" : "Chưa phân công",
-            Extension: user.SipNumber ?? "N/A",
+            TenNhanVien: $"{user.Name} {user.Surname}".Trim(),
+            ChucVu: chucVu,
+            DonVi: donVi,
+            Extension: extension,
             Username: user.UserName
         );
     }

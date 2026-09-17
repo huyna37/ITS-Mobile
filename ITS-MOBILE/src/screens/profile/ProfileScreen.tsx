@@ -21,9 +21,14 @@ import {
   resetOtaToFactory,
 } from '../../services/otaService';
 import { OtaUpdateModal } from '../../components/shared/OtaUpdateModal';
+import { getProfileApi, ProfileData } from '../../api/profileApi';
+import { RefreshControl } from 'react-native';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [bundleInfo, setBundleInfo] = useState<OtaBundleInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<OtaCheckResult | null>(null);
@@ -31,7 +36,25 @@ export const ProfileScreen: React.FC = () => {
 
   useEffect(() => {
     loadBundleInfo();
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    try {
+      const data = await getProfileApi();
+      setProfileData(data);
+    } catch (err) {
+      console.warn('Lỗi tải thông tin cá nhân từ API /api/profile:', err);
+    } finally {
+      setLoadingProfile(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadProfile();
+  };
 
   const loadBundleInfo = async () => {
     const info = await getCurrentBundleInfo();
@@ -93,16 +116,19 @@ export const ProfileScreen: React.FC = () => {
     );
   };
 
-  const displayName = user?.fullName ? user.fullName : 'Nguyễn Minh Hoàng';
-  const displayRole = user?.role ? user.role : 'Nhân viên tuần tra';
-  const displayExt = user?.extension ? user.extension : '1001';
-  const displayDept = user?.department ? user.department : 'Trạm NB-01';
+  const displayName = profileData?.fullName || user?.fullName || '---';
+  const displayRole = profileData?.role || user?.role || '---';
+  const displayExt = profileData?.extension || user?.extension || '---';
+  const displayDept = profileData?.department || user?.department || '---';
 
   return (
     <View style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0090e7']} />
+        }
       >
         {/* Header cao tốc chuẩn thiết kế */}
         <HighwayHeader showSearch={false} />
