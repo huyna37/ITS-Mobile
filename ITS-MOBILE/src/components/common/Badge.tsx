@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { COLORS } from '../../constants/colors';
+import { FONT_FAMILY } from '../../constants/typography';
 import { TaskStep, TaskPriority } from '../../types/tasks';
 
 interface BadgeProps {
@@ -73,6 +74,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   badgeText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
     fontWeight: '700',
   },

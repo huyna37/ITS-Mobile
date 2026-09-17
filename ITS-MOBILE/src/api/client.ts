@@ -12,7 +12,7 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  (config) => {
+  config => {
     const token = storage.getItem('auth_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -23,16 +23,17 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     const status = error.response?.status;
     const isLoginRequest = error.config?.url?.includes('/api/auth/login');
-    // Only expire session on 401 Unauthorized, do not kick out on 400 Bad Request or validation errors
-    if (status === 401 && !isLoginRequest) {
+
+    // Chỉ tự động đăng xuất khi nhận mã 401 Unauthorized từ máy chủ (hết hạn token)
+    if (!isLoginRequest && status === 401) {
       try {
         const { useAuthStore } = require('../store/useAuthStore');
         useAuthStore.getState().handleSessionExpired();

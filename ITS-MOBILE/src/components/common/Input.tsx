@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { COLORS } from '../../constants/colors';
+import { FONT_FAMILY } from '../../constants/typography';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.gray700,
@@ -79,15 +81,18 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 48,
+    fontFamily: FONT_FAMILY,
     fontSize: 15,
     color: COLORS.gray900,
   },
   errorText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
     color: COLORS.danger,
     marginTop: 4,
   },
   helperText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
     color: COLORS.gray500,
     marginTop: 4,

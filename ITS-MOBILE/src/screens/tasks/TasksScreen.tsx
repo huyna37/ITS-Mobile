@@ -19,6 +19,7 @@ import {
   TASK_SECTION_CONSTANTS,
   THEME_CONSTANTS,
   UI_ICONS,
+  FONT_FAMILY,
 } from '../../constants';
 import {
   HighwayHeader,
@@ -245,8 +246,9 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   dateText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY,
+    fontSize: 13,
+    fontWeight: '500',
     color: '#64748b',
   },
   section: {

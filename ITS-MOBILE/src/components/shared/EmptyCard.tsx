@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import { COLORS, FONT_FAMILY } from '../../constants';
 
 interface EmptyCardProps {
   message: string;
@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 13,
     color: COLORS.gray400,
     fontWeight: '500',

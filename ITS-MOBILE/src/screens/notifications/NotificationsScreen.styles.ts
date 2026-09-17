@@ -1,0 +1,140 @@
+import { StyleSheet } from 'react-native';
+import { FONT_FAMILY } from '../../constants';
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#dff1fd',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  contentContainer: {
+    paddingBottom: 150,
+  },
+  titleRow: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  screenTitle: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    letterSpacing: -0.4,
+  },
+  unreadBadge: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+    shadowColor: '#ef4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  unreadBadgeText: {
+    fontFamily: FONT_FAMILY,
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  subtitleRow: {
+    paddingHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  subtitleText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 13,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+  },
+  notificationCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  notificationCardUnread: {
+    backgroundColor: '#edf7fe',
+    borderColor: '#b9e6fe',
+    shadowColor: '#0090e7',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+  },
+  iconSquircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  iconSquircleUnread: {
+    backgroundColor: '#0090e7',
+    shadowColor: '#0090e7',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  iconSquircleRead: {
+    backgroundColor: '#f1f5f9',
+  },
+  cardContent: {
+    flex: 1,
+  },
+  topContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  itemTitle: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+    flex: 1,
+    marginRight: 8,
+  },
+  itemTime: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+  itemBody: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 19,
+  },
+  emptyBox: {
+    paddingVertical: 48,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 14,
+    color: '#94a3b8',
+  },
+});

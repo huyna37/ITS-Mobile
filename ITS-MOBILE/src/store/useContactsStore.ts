@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { Contact, CallRecord } from '../types/contacts';
-import { getContactsApi, getCallHistoryApi, bypassPbxCallApi } from '../api/contactsApi';
+import {
+  getContactsApi,
+  getCallHistoryApi,
+  recordCallApi,
+  bypassPbxCallApi,
+  deleteCallRecordApi,
+} from '../api/contactsApi';
 
 interface ContactsState {
   contacts: Contact[];
@@ -11,7 +17,8 @@ interface ContactsState {
   fetchContacts: () => Promise<void>;
   fetchHistory: () => Promise<void>;
   setSearchQuery: (query: string) => void;
-  recordCall: (contact: Contact) => void;
+  recordCall: (contact: Contact, duration?: number, status?: number) => Promise<CallRecord>;
+  deleteCallRecord: (id: string) => Promise<boolean>;
 }
 
 export const useContactsStore = create<ContactsState>((set, get) => ({
@@ -23,10 +30,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
   fetchContacts: async () => {
     set({ isLoading: true });
     try {
-      const [contacts, callHistory] = await Promise.all([
-        getContactsApi(),
-        getCallHistoryApi(),
-      ]);
+      const [contacts, callHistory] = await Promise.all([getContactsApi(), getCallHistoryApi()]);
       set({ contacts, callHistory, isLoading: false });
     } catch {
       set({ isLoading: false });
@@ -42,35 +46,52 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
     }
   },
 
-  setSearchQuery: (searchQuery) => {
+  setSearchQuery: (searchQuery: string) => {
     set({ searchQuery });
   },
 
-  recordCall: (contact) => {
-    const simulatedDuration = 45;
-    const now = new Date();
+  recordCall: async (contact: Contact, duration = 45, status = 1): Promise<CallRecord> => {
     const pad = (n: number) => String(n).padStart(2, '0');
-    const fullTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+    const now = new Date();
+    const fallbackTimeStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-    const newRecord: CallRecord = {
+    const fallbackRecord: CallRecord = {
       id: `CALL-${Date.now()}`,
       contactName: contact.name,
       extension: contact.extension,
-      timestamp: fullTimeStr,
-      durationSeconds: simulatedDuration,
+      timestamp: fallbackTimeStr,
+      durationSeconds: duration,
       type: 'OUTGOING',
     };
-    set((state) => ({
-      callHistory: [newRecord, ...state.callHistory],
-    }));
 
-    // Bypass đồng bộ cuộc gọi lên Backend API và tự động tải lại danh sách mới nhất từ server
-    bypassPbxCallApi(contact.extension, contact.name, simulatedDuration)
-      .then(async () => {
-        await get().fetchHistory();
-      })
-      .catch((err) => {
-        console.warn('Lỗi ghi log cuộc gọi bypass:', err);
+    try {
+      const res = await recordCallApi({
+        extension: contact.extension,
+        name: contact.name,
+        duration,
+        status,
       });
+      const finalRecord = res || fallbackRecord;
+      set((state) => ({
+        callHistory: [finalRecord, ...state.callHistory.filter((c) => c.id !== finalRecord.id)],
+      }));
+      return finalRecord;
+    } catch {
+      set((state) => ({
+        callHistory: [fallbackRecord, ...state.callHistory],
+      }));
+      return fallbackRecord;
+    }
+  },
+
+  deleteCallRecord: async (id: string): Promise<boolean> => {
+    set((state) => ({
+      callHistory: state.callHistory.filter((c) => c.id !== id),
+    }));
+    try {
+      return await deleteCallRecordApi(id);
+    } catch {
+      return false;
+    }
   },
 }));

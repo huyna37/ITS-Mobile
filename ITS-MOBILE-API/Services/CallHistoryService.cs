@@ -13,6 +13,14 @@ public class CallHistoryService
         _db = db;
     }
 
+    // Chuyển UTC sang giờ Việt Nam UTC+7
+    private static DateTime ToVietnamTime(DateTime dt)
+    {
+        if (dt == default) return dt;
+        var utc = dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        return utc.AddHours(7);
+    }
+
     public async Task<List<CallHistoryResponse>> GetHistory()
     {
         var calls = await _db.CallHistories
@@ -21,14 +29,30 @@ public class CallHistoryService
             .Take(50)
             .ToListAsync();
 
-        return calls.Select(c => new CallHistoryResponse(
-            Id: c.Id.ToString(),
-            Extension: c.PhoneNumber ?? string.Empty,
-            Name: c.Supporter ?? "Không rõ",
-            Time: FormatCallDateTime(c.CallDate),
-            Duration: c.Duration > 0 ? FormatDuration(c.Duration) : FormatDuration(45),
-            Status: GetStatusText(c.Status)
-        )).ToList();
+        var extensions = (await _db.Extensions
+            .Where(e => !e.IsDeleted && !string.IsNullOrEmpty(e.ExtensionNumber))
+            .ToListAsync())
+            .GroupBy(e => e.ExtensionNumber!)
+            .ToDictionary(g => g.Key, g => g.First().ExtensionName ?? "Không rõ");
+
+        return calls.Select(c =>
+        {
+            var name = !string.IsNullOrWhiteSpace(c.Supporter)
+                ? c.Supporter
+                : (!string.IsNullOrEmpty(c.PhoneNumber) && extensions.TryGetValue(c.PhoneNumber, out var extName) ? extName : "Không rõ");
+
+            var callDate = c.CallDate != default ? c.CallDate : (c.CreationTime != default ? c.CreationTime : DateTime.UtcNow);
+            var vnTime = ToVietnamTime(callDate);
+
+            return new CallHistoryResponse(
+                Id: c.Id.ToString(),
+                Extension: c.PhoneNumber ?? string.Empty,
+                Name: name ?? "Không rõ",
+                Time: vnTime.ToString("dd/MM HH:mm"),
+                Duration: c.Duration > 0 ? FormatDuration(c.Duration) : null,
+                Status: GetStatusText(c.Status)
+            );
+        }).ToList();
     }
 
     public async Task<List<CallHistoryResponse>> GetMissedCalls()
@@ -39,14 +63,30 @@ public class CallHistoryService
             .Take(50)
             .ToListAsync();
 
-        return calls.Select(c => new CallHistoryResponse(
-            Id: c.Id.ToString(),
-            Extension: c.PhoneNumber ?? string.Empty,
-            Name: c.Supporter ?? "Không rõ",
-            Time: FormatCallDateTime(c.CallDate),
-            Duration: c.Duration > 0 ? FormatDuration(c.Duration) : null,
-            Status: GetStatusText(c.Status)
-        )).ToList();
+        var extensions = (await _db.Extensions
+            .Where(e => !e.IsDeleted && !string.IsNullOrEmpty(e.ExtensionNumber))
+            .ToListAsync())
+            .GroupBy(e => e.ExtensionNumber!)
+            .ToDictionary(g => g.Key, g => g.First().ExtensionName ?? "Không rõ");
+
+        return calls.Select(c =>
+        {
+            var name = !string.IsNullOrWhiteSpace(c.Supporter)
+                ? c.Supporter
+                : (!string.IsNullOrEmpty(c.PhoneNumber) && extensions.TryGetValue(c.PhoneNumber, out var extName) ? extName : "Không rõ");
+
+            var callDate = c.CallDate != default ? c.CallDate : (c.CreationTime != default ? c.CreationTime : DateTime.UtcNow);
+            var vnTime = ToVietnamTime(callDate);
+
+            return new CallHistoryResponse(
+                Id: c.Id.ToString(),
+                Extension: c.PhoneNumber ?? string.Empty,
+                Name: name ?? "Không rõ",
+                Time: vnTime.ToString("dd/MM HH:mm"),
+                Duration: c.Duration > 0 ? FormatDuration(c.Duration) : null,
+                Status: GetStatusText(c.Status)
+            );
+        }).ToList();
     }
 
     public async Task<CallHistoryResponse> RecordCall(string extension, string name, int duration, int status, string identifier, bool isSos = false)
@@ -55,23 +95,24 @@ public class CallHistoryService
         var user = await _db.AbpUsers.FirstOrDefaultAsync(u => (userId > 0 && u.Id == userId) || u.UserName == identifier);
         var callerName = user != null ? $"{user.Name} {user.Surname}".Trim() : identifier;
 
-        // Bypass giả lập tổng đài: nếu chưa có tổng đài thật hoặc duration = 0, đặt cuộc gọi thành công 45s
         var actualDuration = duration > 0 ? duration : 45;
-        var actualStatus = status > 0 ? status : 1; // 1: Thành công / Đã kết nối
+        var actualStatus = status > 0 ? status : 1;
 
+        var now = DateTime.UtcNow;
+        var nowTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var call = new CallHistory
         {
-            AsteriskId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            AsteriskId = nowTs,
             PhoneNumber = extension,
             PrivateIdentity = extension,
             Supporter = !string.IsNullOrEmpty(name) ? name : callerName,
-            CallDate = DateTime.UtcNow,
+            CallDate = now,
             Duration = actualDuration,
             Status = actualStatus,
             IsSOS = isSos,
             TypeId = isSos ? 1 : 0,
             IsDeleted = false,
-            CreationTime = DateTime.UtcNow
+            CreationTime = now
         };
 
         _db.CallHistories.Add(call);
@@ -81,8 +122,8 @@ public class CallHistoryService
             Id: call.Id.ToString(),
             Extension: call.PhoneNumber ?? "N/A",
             Name: call.Supporter ?? "Không rõ",
-            Time: FormatCallDateTime(call.CallDate),
-            Duration: FormatDuration(call.Duration),
+            Time: ToVietnamTime(call.CallDate).ToString("dd/MM HH:mm"),
+            Duration: call.Duration > 0 ? FormatDuration(call.Duration) : null,
             Status: GetStatusText(call.Status)
         );
     }

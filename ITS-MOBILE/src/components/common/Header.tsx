@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import { COLORS, FONT_FAMILY } from '../../constants';
 
 interface HeaderProps {
   title: string;
@@ -75,11 +75,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
+    fontFamily: FONT_FAMILY,
     fontSize: 17,
     fontWeight: '700',
     color: COLORS.gray900,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
     color: COLORS.gray500,
     marginTop: 1,

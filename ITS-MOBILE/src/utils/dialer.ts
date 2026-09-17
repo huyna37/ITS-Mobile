@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { APP_CONFIG } from '../config';
 import { showAppDialog, showAppToast } from '../store/useToastStore';
 import { recordSosCallApi } from '../api/contactsApi';
@@ -81,7 +81,11 @@ export function triggerSOSCall(hotline = APP_CONFIG.sosHotline, location?: strin
 /**
  * Kích hoạt cuộc gọi nội bộ tổng đài PBX tới đồng nghiệp (Bypass giả lập kết nối thành công)
  */
-export function triggerPBXCall(extension: string, contactName: string): void {
+export function triggerPBXCall(
+  extension: string,
+  contactName: string,
+  onConnect?: () => void
+): void {
   showAppDialog(
     'GỌI NỘI BỘ PBX',
     `Kết nối đàm thoại tới đồng nghiệp ${contactName} (Ext: ${extension})?`,
@@ -101,14 +105,16 @@ export function triggerPBXCall(extension: string, contactName: string): void {
             isOnline: true,
           });
 
-          const url = `tel:${extension}`;
-          Linking.canOpenURL(url)
-            .then((supported) => {
-              if (supported) {
-                Linking.openURL(url);
-              }
-            })
-            .catch(() => {});
+          if (Platform.OS !== 'web') {
+            const url = `tel:${extension}`;
+            Linking.canOpenURL(url)
+              .then((supported) => {
+                if (supported) {
+                  Linking.openURL(url).catch(() => {});
+                }
+              })
+              .catch(() => {});
+          }
 
           // Hiển thị thông báo cuộc gọi thành công
           showAppToast(
@@ -116,6 +122,7 @@ export function triggerPBXCall(extension: string, contactName: string): void {
             'KẾT NỐI PBX THÀNH CÔNG',
             `Đã kết nối đàm thoại nội bộ tới ${contactName} (Ext: ${extension}). Cuộc gọi thành công.`
           );
+          onConnect?.();
         },
       },
     ],
