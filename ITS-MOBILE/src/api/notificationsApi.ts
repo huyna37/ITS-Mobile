@@ -21,10 +21,21 @@ function mapNotification(n: BackendNotificationResponse): NotificationItem {
 }
 
 export async function getNotificationsApi(): Promise<NotificationItem[]> {
-  const res = await apiClient.get<BackendNotificationResponse[]>('/api/notifications');
-  return res.data.map(mapNotification);
+  try {
+    const res = await apiClient.get<BackendNotificationResponse[]>('/api/notifications');
+    if (res.data && Array.isArray(res.data)) {
+      return res.data.map(mapNotification);
+    }
+  } catch (err) {
+    console.warn('Lỗi lấy danh sách thông báo từ API:', err);
+  }
+  return [];
 }
 
 export async function markNotificationReadApi(id: string, isRead: boolean): Promise<void> {
-  await apiClient.patch(`/api/notifications/${id}/read`, { isRead });
+  try {
+    await apiClient.patch(`/api/notifications/${id}/read`, { isRead });
+  } catch {
+    // Không chặn luồng UI nếu backend chưa hỗ trợ
+  }
 }

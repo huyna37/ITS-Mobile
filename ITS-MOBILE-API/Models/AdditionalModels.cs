@@ -76,7 +76,7 @@ public class AbpNotification
 {
     [Key] public Guid Id { get; set; }
     [Required] public string NotificationName { get; set; } = string.Empty;
-    public int Severity { get; set; }
+    public byte Severity { get; set; }
     public string? Data { get; set; }
     public DateTime CreationTime { get; set; }
 }

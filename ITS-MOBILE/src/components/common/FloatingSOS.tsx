@@ -8,7 +8,8 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { PhoneHandsetIcon } from '../icons/SvgIcons';
-import { triggerSOSCall } from '../../utils/dialer';
+import { performSOSCall } from '../../utils/dialer';
+import { APP_CONFIG } from '../../config';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const FloatingSOS: React.FC = () => {
@@ -19,12 +20,12 @@ export const FloatingSOS: React.FC = () => {
 
   const handleConfirmCall = () => {
     setModalVisible(false);
-    triggerSOSCall();
+    performSOSCall(APP_CONFIG.sosHotline);
   };
 
   return (
     <>
-      {/* Nút nổi gọi khẩn cấp hình tròn đỏ có icon điện thoại */}
+      {/* Nút nổi gọi khẩn cấp hình tròn đỏ có icon điện thoại - Z-Index cao nhất */}
       <TouchableOpacity
         activeOpacity={0.85}
         style={[styles.floatingButton, { bottom: floatingBottom }]}
@@ -46,9 +47,17 @@ export const FloatingSOS: React.FC = () => {
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={styles.modalCard}>
-                <Text style={styles.modalTitle}>Gọi khẩn cấp?</Text>
+                <View style={styles.badgeRow}>
+                  <View style={styles.sosBadge}>
+                    <Text style={styles.sosBadgeText}>KHẨN CẤP GSM</Text>
+                  </View>
+                </View>
+                <Text style={styles.modalTitle}>GỌI CỨU HỘ KHẨN CẤP SOS</Text>
                 <Text style={styles.modalBody}>
-                  Ứng dụng sẽ mở trình quay số . Trên máy tính có thể không có ứng dụng gọi.
+                  Ứng dụng sẽ kết nối trực tiếp đến số khẩn cấp{' '}
+                  <Text style={styles.hotlineHighlight}>{APP_CONFIG.sosHotline}</Text> qua mạng
+                  viễn thông di động GSM. Cuộc gọi hoạt động bình thường ngay cả khi không có
+                  Internet hay bật chế độ máy bay (chỉ cần có sóng di động).
                 </Text>
 
                 <View style={styles.modalButtonsRow}>
@@ -57,7 +66,7 @@ export const FloatingSOS: React.FC = () => {
                     activeOpacity={0.7}
                     onPress={() => setModalVisible(false)}
                   >
-                    <Text style={styles.cancelBtnText}>Hủy</Text>
+                    <Text style={styles.cancelBtnText}>Hủy bỏ</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -92,8 +101,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
-    elevation: 8,
-    zIndex: 999,
+    elevation: 9999,
+    zIndex: 99999,
   },
   phoneIconWrap: {
     transform: [{ rotate: '-35deg' }],
@@ -160,5 +169,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#ffffff',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  sosBadge: {
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  sosBadgeText: {
+    color: '#dc2626',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  hotlineHighlight: {
+    fontWeight: '800',
+    color: '#dc2626',
   },
 });

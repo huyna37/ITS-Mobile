@@ -1,5 +1,5 @@
-import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
 import { ContactsScreen } from '../screens/contacts/ContactsScreen';
@@ -14,15 +14,19 @@ import {
   UserIcon,
 } from '../components/icons/SvgIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '../constants/colors';
+import { COLORS, FONT_FAMILY } from '../constants';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainTabNavigator: React.FC = () => {
-  const { unreadCount } = useNotificationsStore();
+  const { unreadCount, fetchNotifications } = useNotificationsStore();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 14);
   const tabHeight = 62 + bottomInset;
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   return (
     <Tab.Navigator
@@ -47,9 +51,10 @@ export const MainTabNavigator: React.FC = () => {
           elevation: 8,
         },
         tabBarLabelStyle: {
+          fontFamily: FONT_FAMILY,
           fontSize: 10,
-          fontWeight: '800',
-          letterSpacing: 0.6,
+          fontWeight: '700',
+          letterSpacing: 0.5,
           textTransform: 'uppercase',
           marginTop: 2,
         },
@@ -111,9 +116,10 @@ export const MainTabNavigator: React.FC = () => {
 
 const styles = StyleSheet.create({
   tabLabel: {
+    fontFamily: FONT_FAMILY,
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.8,
+    fontWeight: '700',
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginTop: 2,
   },
@@ -132,8 +138,9 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
   },
   badgeText: {
+    fontFamily: FONT_FAMILY,
     color: '#ffffff',
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '700',
   },
 });

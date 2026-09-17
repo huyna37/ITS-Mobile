@@ -6,6 +6,7 @@ import {
   UI_ICONS,
   TASK_STATUS_LABELS,
   THEME_CONSTANTS,
+  FONT_FAMILY,
 } from '../../constants';
 import { formatMilestone, formatTime } from '../../utils/formatting';
 
@@ -100,8 +101,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   completedCode: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748b',
     letterSpacing: 0.5,
   },
@@ -114,19 +116,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   completedBadgeText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#15803d',
   },
   completedTitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0f172a',
     marginVertical: 3,
   },
   completedMeta: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#64748b',
   },
 });

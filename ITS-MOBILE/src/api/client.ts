@@ -12,22 +12,28 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  (config) => {
+  config => {
     const token = storage.getItem('auth_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // For FormData uploads, let the runtime/browser set multipart/form-data with boundary
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
+    const status = error.response?.status;
     const isLoginRequest = error.config?.url?.includes('/api/auth/login');
-    if (!isLoginRequest) {
-      // Trường hợp không gọi được hoặc lỗi: tự động về trang đăng nhập
+
+    // Chỉ tự động đăng xuất khi nhận mã 401 Unauthorized từ máy chủ (hết hạn token)
+    if (!isLoginRequest && status === 401) {
       try {
         const { useAuthStore } = require('../store/useAuthStore');
         useAuthStore.getState().handleSessionExpired();

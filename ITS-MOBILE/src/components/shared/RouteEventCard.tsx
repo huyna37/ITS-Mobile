@@ -6,6 +6,7 @@ import {
   COLORS,
   UI_ICONS,
   EVENT_TAG_LABELS,
+  FONT_FAMILY,
 } from '../../constants';
 
 interface RouteEventCardProps {
@@ -105,8 +106,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   eventTitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#0f172a',
     flex: 1,
     marginRight: 8,
@@ -118,8 +120,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   eventTagText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0284c7',
     letterSpacing: 0.5,
   },
@@ -129,11 +132,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eventLocation: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
     fontWeight: '500',
     color: '#64748b',
   },
   eventTime: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
     fontWeight: '500',
     color: '#64748b',

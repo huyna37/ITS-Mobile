@@ -6,11 +6,11 @@ interface IconProps {
   color?: string;
 }
 
-/** Biểu tượng phi thuyền / Paper Airplane chuẩn thiết kế VEC */
+/** Biểu tượng phi thuyền / Paper Airplane chuẩn thiết kế VEC (cân đối chính tâm 100%) */
 export const PaperPlaneIcon: React.FC<IconProps> = ({ size = 20, color = '#ffffff' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
-      d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"
+      d="M21.286 3.164a1 1 0 00-1.077-.225l-17.5 6.806a1 1 0 00.041 1.882l6.81 2.553 2.553 6.81a1 1 0 001.882.041l6.806-17.5a1 1 0 00-.225-1.077z"
       fill={color}
     />
   </Svg>
@@ -194,3 +194,49 @@ export const TrashIcon: React.FC<IconProps> = ({ size = 18, color = '#ef4444' })
   </Svg>
 );
 
+/** Biểu tượng Mắt Mở (Hiện mật khẩu) */
+export const EyeIcon: React.FC<IconProps> = ({ size = 20, color = '#64748b' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Biểu tượng Mắt Đóng / Gạch chéo (Ẩn mật khẩu) */
+export const EyeOffIcon: React.FC<IconProps> = ({ size = 20, color = '#64748b' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+/** Biểu tượng Thử lại / Refresh */
+export const RefreshCwIcon: React.FC<IconProps> = ({ size = 16, color = '#0284c7' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M23 4v6h-6M1 20v-6h6"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);

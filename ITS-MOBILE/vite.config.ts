@@ -25,6 +25,8 @@ export default defineConfig(({ mode }) => {
         '@react-native/assets-registry': path.resolve(__dirname, './src/shims/assetsRegistry.ts'),
         'react-native/Libraries/Utilities/codegenNativeComponent': 'react-native-web',
         'react-native/Libraries/ReactNative/AppContainer': 'react-native-web',
+        'react-native-compressor': path.resolve(__dirname, './src/shims/nativeMedia.ts'),
+        'react-native-image-picker': path.resolve(__dirname, './src/shims/nativeMedia.ts'),
         'react-native': 'react-native-web',
         '@': path.resolve(__dirname, './src'),
       },

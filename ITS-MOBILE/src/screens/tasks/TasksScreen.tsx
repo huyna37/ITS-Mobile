@@ -19,6 +19,7 @@ import {
   TASK_SECTION_CONSTANTS,
   THEME_CONSTANTS,
   UI_ICONS,
+  FONT_FAMILY,
 } from '../../constants';
 import {
   HighwayHeader,
@@ -97,6 +98,7 @@ export const TasksScreen: React.FC = () => {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
+        nestedScrollEnabled={true}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -145,13 +147,20 @@ export const TasksScreen: React.FC = () => {
               {activeTasks.length === 0 ? (
                 <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_ASSIGNED} />
               ) : (
-                activeTasks.map((task: IncidentTask) => (
-                  <IncidentTaskCard
-                    key={task.id}
-                    task={task}
-                    onPress={() => handleTaskPress(task)}
-                  />
-                ))
+                <ScrollView
+                  style={styles.sectionScrollBox}
+                  contentContainerStyle={styles.sectionScrollContent}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {activeTasks.map((task: IncidentTask) => (
+                    <IncidentTaskCard
+                      key={task.id}
+                      task={task}
+                      onPress={() => handleTaskPress(task)}
+                    />
+                  ))}
+                </ScrollView>
               )}
             </View>
 
@@ -159,16 +168,24 @@ export const TasksScreen: React.FC = () => {
             <View style={styles.section}>
               <SectionHeader
                 title={TASK_SECTION_CONSTANTS.EVENTS_TITLE}
-                badgeText={TASK_SECTION_CONSTANTS.EVENTS_BADGE_WATCH}
-                badgeType="gray"
+                subtitle={TASK_SECTION_CONSTANTS.EVENTS_SUBTITLE}
+                badgeText={`${filteredEvents.length} ${TASK_SECTION_CONSTANTS.EVENTS_UNIT}`}
+                badgeType="primary"
               />
 
               {filteredEvents.length === 0 ? (
                 <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_EVENTS} />
               ) : (
-                filteredEvents.map((ev: ExpresswayEvent) => (
-                  <RouteEventCard key={ev.id} event={ev} />
-                ))
+                <ScrollView
+                  style={styles.sectionScrollBox}
+                  contentContainerStyle={styles.sectionScrollContent}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {filteredEvents.map((ev: ExpresswayEvent) => (
+                    <RouteEventCard key={ev.id} event={ev} />
+                  ))}
+                </ScrollView>
               )}
             </View>
 
@@ -188,13 +205,20 @@ export const TasksScreen: React.FC = () => {
               {completedTasks.length === 0 ? (
                 <EmptyCard message={TASK_SECTION_CONSTANTS.EMPTY_COMPLETED} />
               ) : (
-                completedTasks.map((t: IncidentTask) => (
-                  <CompletedTaskCard
-                    key={t.id}
-                    task={t}
-                    onPress={() => handleTaskPress(t)}
-                  />
-                ))
+                <ScrollView
+                  style={styles.sectionScrollBox}
+                  contentContainerStyle={styles.sectionScrollContent}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {completedTasks.map((t: IncidentTask) => (
+                    <CompletedTaskCard
+                      key={t.id}
+                      task={t}
+                      onPress={() => handleTaskPress(t)}
+                    />
+                  ))}
+                </ScrollView>
               )}
             </View>
           </>
@@ -222,8 +246,9 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   dateText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY,
+    fontSize: 13,
+    fontWeight: '500',
     color: '#64748b',
   },
   section: {
@@ -242,5 +267,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     color: COLORS.success,
+  },
+  sectionScrollBox: {
+    maxHeight: 320,
+    paddingHorizontal: 2,
+  },
+  sectionScrollContent: {
+    paddingBottom: 6,
   },
 });

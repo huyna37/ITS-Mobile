@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { NotificationItem } from '../types/notifications';
-import { getNotificationsApi, markNotificationReadApi } from '../api/notificationsApi';
+import {
+  getNotificationsApi,
+  markNotificationReadApi,
+} from '../api/notificationsApi';
 
 interface NotificationsState {
   notifications: NotificationItem[];
