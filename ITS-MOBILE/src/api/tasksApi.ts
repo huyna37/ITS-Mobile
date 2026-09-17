@@ -4,6 +4,7 @@ import { apiClient } from './client';
 export interface BackendTaskResponse {
   id: string;
   code: string;
+  incidentCode?: string;
   type: string;
   level: string;
   location: string;
@@ -43,13 +44,16 @@ function mapBackendTask(item: BackendTaskResponse): IncidentTask {
   let taskStep: TaskStep = 'RECEIVED';
   if (item.status === 3) {
     taskStep = 'COMPLETED';
-  } else if (item.status >= 1) {
+  } else if (item.status === 2) {
     taskStep = 'IN_PROGRESS';
+  } else {
+    taskStep = 'RECEIVED';
   }
 
   return {
     id: item.id,
     code: item.code,
+    incidentCode: item.incidentCode,
     title: item.type,
     description: item.description,
     milestoneKm: parseMilestoneKm(item.location),
@@ -62,6 +66,7 @@ function mapBackendTask(item: BackendTaskResponse): IncidentTask {
     updatedAt: item.time,
     attachments: [],
     notes: [],
+    script: item.script,
   };
 }
 
@@ -94,7 +99,7 @@ export async function getAssignedTasksApi(): Promise<IncidentTask[]> {
  * Cập nhật trạng thái nhiệm vụ trên máy chủ backend
  */
 export async function updateTaskStepApi(id: string, step: TaskStep): Promise<IncidentTask> {
-  const statusCode = step === 'RECEIVED' ? 0 : step === 'IN_PROGRESS' ? 1 : 3;
+  const statusCode = step === 'RECEIVED' ? 1 : step === 'IN_PROGRESS' ? 2 : 3;
 
   await apiClient.patch(`/api/tasks/${id}`, {
     status: statusCode,

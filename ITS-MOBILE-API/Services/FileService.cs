@@ -25,25 +25,37 @@ public class FileService
         if (file == null || file.Length == 0)
             return null;
 
-        var user = await _db.AbpUsers.FirstOrDefaultAsync(u => u.UserName == username);
-        if (user == null) return null;
+        long.TryParse(username, out var uid);
+        var user = await _db.AbpUsers.FirstOrDefaultAsync(u => u.UserName == username || (uid > 0 && u.Id == uid))
+            ?? await _db.AbpUsers.FirstOrDefaultAsync(u => u.IsActive);
 
-        // Validate file type
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4", "video/quicktime", "application/pdf" };
-        if (!allowedTypes.Contains(file.ContentType))
+        var userFolder = user?.UserName ?? "uploads";
+
+        // Validate file type & extension
+        var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mov", ".avi", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
+        var allowedTypes = new[] { 
+            "image/jpeg", "image/png", "image/gif", "image/webp", "image/jpg", "image/pjpeg", 
+            "video/mp4", "video/quicktime", "video/x-msvideo", 
+            "application/pdf", "application/octet-stream" 
+        };
+
+        bool isTypeAllowed = allowedTypes.Contains(file.ContentType?.ToLowerInvariant()) || 
+                             (extension != null && allowedExtensions.Contains(extension));
+
+        if (!isTypeAllowed)
             return null;
 
-        // Validate file size (max 10MB)
-        const long maxFileSize = 10 * 1024 * 1024;
+        // Validate file size (max 50MB)
+        const long maxFileSize = 50 * 1024 * 1024;
         if (file.Length > maxFileSize)
             return null;
 
         // Generate unique filename
-        var extension = Path.GetExtension(file.FileName);
         var fileName = $"{Guid.NewGuid()}{extension}";
         var dateFolder = DateTime.UtcNow.ToString("yyyyMMdd");
-        var userFolder = Path.Combine(_uploadPath, user.UserName);
-        var datePath = Path.Combine(userFolder, dateFolder);
+        var userPath = Path.Combine(_uploadPath, userFolder);
+        var datePath = Path.Combine(userPath, dateFolder);
 
         Directory.CreateDirectory(datePath);
 
@@ -51,12 +63,17 @@ public class FileService
         using var stream = new FileStream(filePath, FileMode.Create);
         await file.CopyToAsync(stream);
 
+        // Determine TypeFile (1 = image, 2 = video, 3 = document)
+        int typeFile = 3;
+        if (extension is ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp") typeFile = 1;
+        else if (extension is ".mp4" or ".mov" or ".avi") typeFile = 2;
+
         // Save metadata to database
         var fileRecord = new FilesOfIncident
         {
             FileName = file.FileName,
             Size = (int)file.Length,
-            TypeFile = 1, // 1 = image, 2 = video, 3 = document
+            TypeFile = typeFile,
             PathFile = filePath,
             Extension = extension,
             IncidentProfileId = long.TryParse(incidentId, out var incId) ? incId : 0,
@@ -75,7 +92,7 @@ public class FileService
             Url: fileUrl,
             Name: file.FileName,
             Size: file.Length,
-            Type: file.ContentType
+            Type: file.ContentType ?? GetContentType(extension)
         );
     }
 

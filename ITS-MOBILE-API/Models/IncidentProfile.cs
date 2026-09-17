@@ -16,7 +16,7 @@ public class IncidentProfile
     public int Status { get; set; }
     public long TimeStamp { get; set; }
     public int Level { get; set; }
-    public string? Script { get; set; }
+    [NotMapped] public string? Script { get; set; }
     public virtual List<IncidentLog>? IncidentLogs { get; set; }
     public string? Reason { get; set; }
     public string? Damage { get; set; }

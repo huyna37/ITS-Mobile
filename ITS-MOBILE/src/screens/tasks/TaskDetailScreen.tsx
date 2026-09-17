@@ -3,57 +3,204 @@ import {
   View,
   Text,
   ScrollView,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   StatusBar,
   Platform,
   Image,
   Modal,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { useTasksStore } from '../../store/useTasksStore';
+import { showAppToast, showAppDialog } from '../../store/useToastStore';
 import {
   ChevronLeftIcon,
   PhoneHandsetIcon,
-  CameraIcon,
   VideoIcon,
   PaperclipIcon,
-  PaperPlaneIcon,
   CloseIcon,
+  CameraIcon,
+  PaperPlaneIcon,
+  RefreshCwIcon,
 } from '../../components/icons/SvgIcons';
 import { triggerPBXCall } from '../../utils/dialer';
-import { capturePhoto, captureVideo, pickDocument } from '../../utils/mediaPicker';
-import { showAppToast, showAppDialog } from '../../store/useToastStore';
+import {
+  MediaFile,
+  capturePhoto,
+  recordVideo,
+  pickMediaFromLibrary,
+} from '../../services/mediaService';
+import { uploadMediaWithRetry } from '../../services/uploadService';
 
 export const TaskDetailScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'TaskDetail'>>();
   const navigation = useNavigation();
   const { task: initialTask } = route.params;
 
-  const { tasks, advanceTaskStep, addAttachment, removeAttachment } = useTasksStore();
+  const { tasks, updateTaskStep, addAttachment } = useTasksStore();
   const currentTask = tasks.find((t) => t.id === initialTask.id);
   const task = currentTask !== undefined ? currentTask : initialTask;
 
-  const [fieldNotes, setFieldNotes] = useState('');
   const [previewMediaUri, setPreviewMediaUri] = useState<string | null>(null);
+  const [fieldNote, setFieldNote] = useState('');
+  const [mediaList, setMediaList] = useState<MediaFile[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleStepPress = async (targetStep: 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED') => {
+  const isReceived = task.step === 'RECEIVED';
+  const isInProgress = task.step === 'IN_PROGRESS';
+  const isCompleted = task.step === 'COMPLETED';
+
+  const startUploadMedia = async (file: MediaFile) => {
+    try {
+      const uploadedUrl = await uploadMediaWithRetry(
+        file,
+        { incidentId: task.id },
+        {
+          onProgress: (prog) => {
+            setMediaList((prev) =>
+              prev.map((m) => (m.id === file.id ? { ...m, progress: prog } : m))
+            );
+          },
+          onStatusChange: (status, err) => {
+            setMediaList((prev) =>
+              prev.map((m) =>
+                m.id === file.id ? { ...m, status, errorMessage: err } : m
+              )
+            );
+          },
+        }
+      );
+
+      setMediaList((prev) =>
+        prev.map((m) =>
+          m.id === file.id
+            ? { ...m, status: 'success', progress: 100, uploadedUrl }
+            : m
+        )
+      );
+      showAppToast('success', 'Tải lên hoàn tất', `Tệp ${file.name} đã được tải lên máy chủ.`);
+    } catch (err: any) {
+      setMediaList((prev) =>
+        prev.map((m) =>
+          m.id === file.id
+            ? { ...m, status: 'error', errorMessage: err?.message || 'Lỗi tải lên' }
+            : m
+        )
+      );
+      showAppToast('error', 'Lỗi tải lên', `Không thể tải lên ${file.name}. Vui lòng thử lại.`);
+    }
+  };
+
+  const handleCapturePhoto = async () => {
+    try {
+      const file = await capturePhoto();
+      if (file) {
+        setMediaList((prev) => [...prev, file]);
+        startUploadMedia(file);
+      }
+    } catch {
+      showAppToast('error', 'Lỗi Camera', 'Không thể khởi động camera lúc này.');
+    }
+  };
+
+  const handleRecordVideo = async () => {
+    try {
+      const file = await recordVideo();
+      if (file) {
+        setMediaList((prev) => [...prev, file]);
+        startUploadMedia(file);
+      }
+    } catch {
+      showAppToast('error', 'Lỗi Quay video', 'Không thể quay video lúc này.');
+    }
+  };
+
+  const handlePickAttachment = async () => {
+    try {
+      const file = await pickMediaFromLibrary();
+      if (file) {
+        setMediaList((prev) => [...prev, file]);
+        startUploadMedia(file);
+      }
+    } catch {
+      showAppToast('error', 'Lỗi Chọn tệp', 'Không thể mở thư viện lúc này.');
+    }
+  };
+
+  const handleRetryUpload = (fileId: string) => {
+    const file = mediaList.find((m) => m.id === fileId);
+    if (file) {
+      setMediaList((prev) =>
+        prev.map((m) => (m.id === fileId ? { ...m, status: 'uploading', progress: 0, errorMessage: undefined } : m))
+      );
+      startUploadMedia(file);
+    }
+  };
+
+  const handleRemoveMedia = (fileId: string) => {
+    setMediaList((prev) => prev.filter((m) => m.id !== fileId));
+  };
+
+  const handleSubmitReport = async () => {
+    const hasUploading = mediaList.some((m) => m.status === 'compressing' || m.status === 'uploading');
+    if (hasUploading) {
+      showAppToast('warning', 'Đang xử lý', 'Tệp đính kèm đang được tải lên, vui lòng đợi trong giây lát.');
+      return;
+    }
+
+    if (!fieldNote.trim() && mediaList.length === 0) {
+      showAppToast('warning', 'Chưa có thông tin', 'Vui lòng nhập ghi nhận hiện trường hoặc đính kèm ảnh/video.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      for (const m of mediaList) {
+        if (m.status === 'success' && m.uploadedUrl) {
+          addAttachment(task.id, {
+            id: m.id,
+            name: m.name,
+            uri: m.uploadedUrl,
+            type: m.type === 'video' ? 'video' : 'image',
+            sizeBytes: m.size || 0,
+            uploadedAt: new Date().toISOString(),
+          });
+        }
+      }
+
+      showAppToast('success', 'Gửi báo cáo thành công', 'Báo cáo hiện trường và tệp tư liệu đã được gửi về TMC!');
+      setFieldNote('');
+      setMediaList([]);
+    } catch {
+      showAppToast('error', 'Thất bại', 'Không thể gửi báo cáo hiện trường lúc này.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStepPress = (targetStep: 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED') => {
     if (targetStep === task.step) return;
 
+    const stepLabel = targetStep === 'RECEIVED' ? 'Đã tiếp nhận (1)' : targetStep === 'IN_PROGRESS' ? 'Đang xử lý (2)' : 'Hoàn thành (3)';
+
     showAppDialog(
-      'CẬP NHẬT TRẠNG THÁI',
-      `Xác nhận chuyển trạng thái sang bước "${targetStep}"?`,
+      'CẬP NHẬT TIẾN TRÌNH',
+      `Xác nhận chuyển trạng thái sang "${stepLabel}"?`,
       [
         { text: 'Hủy', style: 'cancel' },
         {
           text: 'Xác nhận',
           onPress: async () => {
-            await advanceTaskStep(task.id);
-            showAppToast('success', 'Thành công', 'Đã cập nhật trạng thái nhiệm vụ!');
+            const success = await updateTaskStep(task.id, targetStep);
+            if (success) {
+              showAppToast('success', 'Thành công', `Đã cập nhật tiến trình sang "${stepLabel}"!`);
+            } else {
+              showAppToast('error', 'Thất bại', 'Không thể cập nhật trạng thái lúc này.');
+            }
           },
         },
       ],
@@ -61,79 +208,27 @@ export const TaskDetailScreen: React.FC = () => {
     );
   };
 
-  const handleTakePhoto = async () => {
-    const photo = await capturePhoto();
-    if (photo) {
-      addAttachment(task.id, {
-        id: `ATT-${Date.now()}`,
-        name: photo.name,
-        type: 'image',
-        uri: photo.uri,
-        sizeBytes: photo.size,
-        uploadedAt: new Date().toISOString(),
-      });
-      showAppToast('success', 'Thành công', `Đã chụp và lưu ảnh hiện trường (${Math.round(photo.size / 1024)} KB)`);
+  const currentStepNum = isCompleted ? 3 : isInProgress ? 2 : 1;
+  const statusLabel = isCompleted ? 'Hoàn thành' : isInProgress ? 'Đang xử lý' : 'Đã tiếp nhận';
+  const statusBadgeBg = isCompleted ? '#dcfce7' : isInProgress ? '#fef3c7' : '#e0f2fe';
+  const statusBadgeColor = isCompleted ? '#16a34a' : isInProgress ? '#d97706' : '#0284c7';
+
+  const getPriorityInfo = (priority: string) => {
+    switch (priority) {
+      case 'P0':
+        return { label: 'Khẩn cấp', color: '#dc2626' };
+      case 'P1':
+        return { label: 'Nghiêm trọng', color: '#ef4444' };
+      case 'P2':
+        return { label: 'Cảnh báo', color: '#f59e0b' };
+      case 'P3':
+      default:
+        return { label: 'Thông tin', color: '#0284c7' };
     }
   };
-
-  const handleRecordVideo = async () => {
-    const video = await captureVideo();
-    if (video) {
-      addAttachment(task.id, {
-        id: `ATT-${Date.now()}`,
-        name: video.name,
-        type: 'video',
-        uri: video.uri,
-        sizeBytes: video.size,
-        uploadedAt: new Date().toISOString(),
-      });
-      showAppToast('success', 'Thành công', `Đã ghi lại clip video hiện trường (${Math.round(video.size / 1024)} KB)`);
-    }
-  };
-
-  const handlePickAttachment = async () => {
-    const media = await pickDocument('all');
-    if (media) {
-      addAttachment(task.id, {
-        id: `ATT-${Date.now()}`,
-        name: media.name,
-        type: media.type,
-        uri: media.uri,
-        sizeBytes: media.size,
-        uploadedAt: new Date().toISOString(),
-      });
-      showAppToast('success', 'Thành công', `Đã đính kèm tệp (${Math.round(media.size / 1024)} KB)`);
-    }
-  };
-
-  const handleDeleteAttachment = (attId: string, name: string) => {
-    showAppDialog(
-      'XÓA TỆP ĐÍNH KÈM',
-      `Bạn có chắc chắn muốn xóa "${name}" khỏi báo cáo hiện trường?`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: () => removeAttachment(task.id, attId),
-        },
-      ],
-      'warning'
-    );
-  };
-
-  const handleSendReport = () => {
-    const attCount = task.attachments ? task.attachments.length : 0;
-    showAppToast(
-      'success',
-      'GỬI BÁO CÁO VỀ TMC',
-      `Đã đồng bộ toàn bộ ghi nhận hiện trường (${attCount} tệp đính kèm) về Trung tâm điều hành ITS TMC.`
-    );
-  };
-
-  const isReceived = task.step === 'RECEIVED';
-  const isInProgress = task.step === 'IN_PROGRESS';
-  const isCompleted = task.step === 'COMPLETED';
+  const priorityInfo = getPriorityInfo(task.priority);
+  const locationText = `Km ${task.milestoneKm}+${String(task.milestoneM).padStart(3, '0')}`;
+  const directionText = task.direction === 'LAOCAI_HANOI' ? 'Lào Cai ➔ Hà Nội' : 'Hà Nội ➔ Lào Cai';
 
   const insets = useSafeAreaInsets();
   const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
@@ -141,7 +236,7 @@ export const TaskDetailScreen: React.FC = () => {
 
   return (
     <View style={styles.safeArea}>
-      {/* Top Header thanh mảnh chuẩn thiết kế */}
+      {/* Top Header chuẩn thiết kế */}
       <View style={[styles.headerBar, { paddingTop: topInset, height: 56 + topInset }]}>
         <TouchableOpacity
           style={styles.backBtn}
@@ -164,18 +259,18 @@ export const TaskDetailScreen: React.FC = () => {
 
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: 110 + insets.bottom }]}
       >
         {/* Khối Card Thông tin sự cố */}
         <View style={styles.incidentCard}>
           <View style={styles.badgeAndCodeRow}>
-            <View style={styles.priorityBadge}>
-              <Text style={styles.priorityBadgeText}>Nghiêm trọng</Text>
+            <View style={[styles.priorityBadge, { backgroundColor: priorityInfo.color }]}>
+              <Text style={styles.priorityBadgeText}>{priorityInfo.label}</Text>
             </View>
-            <Text style={styles.codeText}>Mã: NB-2024-001</Text>
+            <Text style={styles.codeText}>Mã: {task.incidentCode || 'N/A'}</Text>
           </View>
 
-          <Text style={styles.incidentTitle}>Tai nạn giao thông</Text>
+          <Text style={styles.incidentTitle}>{task.title || 'Nhiệm vụ sự cố'}</Text>
 
           <View style={styles.cardDivider} />
 
@@ -183,11 +278,11 @@ export const TaskDetailScreen: React.FC = () => {
           <View style={styles.twoColsRow}>
             <View style={styles.colItem}>
               <Text style={styles.colLabel}>VỊ TRÍ</Text>
-              <Text style={styles.colValue}>Km 24+500</Text>
+              <Text style={styles.colValue}>{locationText}</Text>
             </View>
             <View style={styles.colItem}>
               <Text style={styles.colLabel}>HƯỚNG</Text>
-              <Text style={styles.colValue}>Hướng Lào Cai</Text>
+              <Text style={styles.colValue}>{directionText}</Text>
             </View>
           </View>
 
@@ -195,7 +290,7 @@ export const TaskDetailScreen: React.FC = () => {
           <Text style={styles.sectionLabel}>MÔ TẢ BAN ĐẦU</Text>
           <View style={styles.descBubble}>
             <Text style={styles.descText}>
-              Va chạm giữa 2 xe con, gây ùn tắc nhẹ lane ngoài.
+              {task.description || 'Chưa có mô tả chi tiết từ trung tâm điều hành.'}
             </Text>
           </View>
 
@@ -203,8 +298,60 @@ export const TaskDetailScreen: React.FC = () => {
           <Text style={styles.sectionLabel}>PHƯƠNG ÁN XỬ LÝ (SCRIPT)</Text>
           <View style={styles.scriptBubble}>
             <Text style={styles.scriptText}>
-              Phân luồng từ xa, xe cứu hộ IC3 xuất phát.
+              {task.script || 'Chưa có phương án kịch bản xử lý.'}
             </Text>
+          </View>
+        </View>
+
+        {/* Tiến trình trạng thái (Chỉ xem - View-Only Stepper) */}
+        <View style={styles.sectionWrap}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeaderTitle}>Tiến trình xử lý</Text>
+            <View style={[styles.statusBadge, { backgroundColor: statusBadgeBg }]}>
+              <Text style={[styles.statusBadgeText, { color: statusBadgeColor }]}>{statusLabel}</Text>
+            </View>
+          </View>
+
+          <View style={styles.stepperContainer}>
+            {/* Bước 1 */}
+            <TouchableOpacity
+              style={styles.stepCol}
+              activeOpacity={0.7}
+              onPress={() => handleStepPress('RECEIVED')}
+            >
+              <View style={[styles.stepCircle, currentStepNum >= 1 && styles.stepCircleActive]}>
+                <Text style={[styles.stepNumText, currentStepNum >= 1 && styles.stepNumTextActive]}>1</Text>
+              </View>
+              <Text style={[styles.stepTitle, currentStepNum >= 1 && styles.stepTitleActive]}>Đã nhận</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.stepTrack, currentStepNum >= 2 && styles.stepTrackActive]} />
+
+            {/* Bước 2 */}
+            <TouchableOpacity
+              style={styles.stepCol}
+              activeOpacity={0.7}
+              onPress={() => handleStepPress('IN_PROGRESS')}
+            >
+              <View style={[styles.stepCircle, currentStepNum >= 2 && styles.stepCircleActive]}>
+                <Text style={[styles.stepNumText, currentStepNum >= 2 && styles.stepNumTextActive]}>2</Text>
+              </View>
+              <Text style={[styles.stepTitle, currentStepNum >= 2 && styles.stepTitleActive]}>Đang xử lý</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.stepTrack, currentStepNum >= 3 && styles.stepTrackActive]} />
+
+            {/* Bước 3 */}
+            <TouchableOpacity
+              style={styles.stepCol}
+              activeOpacity={0.7}
+              onPress={() => handleStepPress('COMPLETED')}
+            >
+              <View style={[styles.stepCircle, currentStepNum >= 3 && styles.stepCircleActive]}>
+                <Text style={[styles.stepNumText, currentStepNum >= 3 && styles.stepNumTextActive]}>3</Text>
+              </View>
+              <Text style={[styles.stepTitle, currentStepNum >= 3 && styles.stepTitleActive]}>Hoàn thành</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -213,7 +360,6 @@ export const TaskDetailScreen: React.FC = () => {
           <Text style={styles.sectionHeaderTitle}>Lịch sử cập nhật trạng thái</Text>
 
           <View style={styles.timelineContainer}>
-            {/* Step 1 */}
             <View style={styles.timelineItem}>
               <View style={styles.dotWithRing}>
                 <View style={styles.innerDot} />
@@ -225,10 +371,8 @@ export const TaskDetailScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Vertical connector line */}
             <View style={styles.verticalLine} />
 
-            {/* Step 2 */}
             <View style={styles.timelineItem}>
               <View style={styles.solidDot} />
               <View style={styles.timelineContent}>
@@ -240,55 +384,40 @@ export const TaskDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Cập nhật trạng thái (1 -> 2 -> 3) */}
+        {/* Cập nhật trạng thái (1 -> 2 -> 3) chuẩn UI như ảnh */}
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionHeaderTitle}>Cập nhật trạng thái (1 → 2 → 3)</Text>
-          <Text style={styles.currentStatusSubtitle}>
-            Hiện tại: {isReceived ? 'Đã tiếp nhận' : isInProgress ? 'Đang xử lý' : 'Hoàn thành'}
+          <Text style={styles.currentStatusText}>
+            Hiện tại: <Text style={styles.currentStatusHighlight}>{statusLabel}</Text>
           </Text>
 
-          <View style={styles.statusButtonsRow}>
+          <View style={styles.stateButtonGroup}>
             <TouchableOpacity
-              style={[styles.statusBtn, isReceived && styles.statusBtnActive]}
-              activeOpacity={0.8}
+              style={[styles.statePillBtn, isReceived && styles.statePillBtnActive]}
+              activeOpacity={0.7}
               onPress={() => handleStepPress('RECEIVED')}
             >
-              <Text
-                style={[
-                  styles.statusBtnText,
-                  isReceived && styles.statusBtnTextActive,
-                ]}
-              >
+              <Text style={[styles.statePillText, isReceived && styles.statePillTextActive]}>
                 Đã nhận (1)
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.statusBtn, isInProgress && styles.statusBtnActive]}
-              activeOpacity={0.8}
+              style={[styles.statePillBtn, isInProgress && styles.statePillBtnActive]}
+              activeOpacity={0.7}
               onPress={() => handleStepPress('IN_PROGRESS')}
             >
-              <Text
-                style={[
-                  styles.statusBtnText,
-                  isInProgress && styles.statusBtnTextActive,
-                ]}
-              >
+              <Text style={[styles.statePillText, isInProgress && styles.statePillTextActive]}>
                 Đang xử lý (2)
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.statusBtn, isCompleted && styles.statusBtnActive]}
-              activeOpacity={0.8}
+              style={[styles.statePillBtn, isCompleted && styles.statePillBtnActive]}
+              activeOpacity={0.7}
               onPress={() => handleStepPress('COMPLETED')}
             >
-              <Text
-                style={[
-                  styles.statusBtnText,
-                  isCompleted && styles.statusBtnTextActive,
-                ]}
-              >
+              <Text style={[styles.statePillText, isCompleted && styles.statePillTextActive]}>
                 Hoàn thành (3)
               </Text>
             </TouchableOpacity>
@@ -303,13 +432,13 @@ export const TaskDetailScreen: React.FC = () => {
           </Text>
 
           <TextInput
-            style={styles.notesInput}
+            style={styles.fieldNoteInput}
             placeholder="Ví dụ: Đã phân luồng, 2 làn lưu thông; đang chờ cứu hộ..."
             placeholderTextColor="#94a3b8"
             multiline
             numberOfLines={4}
-            value={fieldNotes}
-            onChangeText={setFieldNotes}
+            value={fieldNote}
+            onChangeText={setFieldNote}
           />
         </View>
 
@@ -317,47 +446,124 @@ export const TaskDetailScreen: React.FC = () => {
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionHeaderTitle}>Ảnh & video gửi TMC</Text>
           <Text style={styles.sectionSubDesc}>
-            Chụp mới trực tiếp từ camera hoặc đính kèm từ thiết bị.
+            Chụp mới hoặc đính kèm từ thư viện thiết bị.
           </Text>
 
-          <View style={styles.attachmentsRow}>
-            {/* Chụp ảnh */}
+          {/* 3 nút tác vụ: Chụp ảnh, Quay video, Đính kèm */}
+          <View style={styles.mediaActionsRow}>
             <TouchableOpacity
-              style={styles.dashedBox}
-              activeOpacity={0.7}
-              onPress={handleTakePhoto}
+              style={styles.mediaActionCard}
+              activeOpacity={0.75}
+              onPress={handleCapturePhoto}
             >
-              <CameraIcon size={26} color="#0090e7" />
-              <Text style={styles.dashedLabel}>Chụp ảnh</Text>
+              <View style={styles.mediaActionIconWrap}>
+                <CameraIcon size={26} color="#475569" />
+              </View>
+              <Text style={styles.mediaActionText}>Chụp ảnh</Text>
             </TouchableOpacity>
 
-            {/* Quay video */}
             <TouchableOpacity
-              style={styles.dashedBox}
-              activeOpacity={0.7}
+              style={styles.mediaActionCard}
+              activeOpacity={0.75}
               onPress={handleRecordVideo}
             >
-              <VideoIcon size={26} color="#0090e7" />
-              <Text style={styles.dashedLabel}>Quay video</Text>
+              <View style={styles.mediaActionIconWrap}>
+                <VideoIcon size={26} color="#475569" />
+              </View>
+              <Text style={styles.mediaActionText}>Quay / video</Text>
             </TouchableOpacity>
 
-            {/* Đính kèm */}
             <TouchableOpacity
-              style={[styles.dashedBox, styles.dashedBoxAmber]}
-              activeOpacity={0.7}
+              style={[styles.mediaActionCard, styles.mediaActionCardHighlight]}
+              activeOpacity={0.75}
               onPress={handlePickAttachment}
             >
-              <PaperclipIcon size={26} color="#d97706" />
-              <Text style={styles.dashedLabelAmber}>Đính kèm</Text>
+              <View style={styles.mediaActionIconWrap}>
+                <PaperclipIcon size={26} color="#92400e" />
+              </View>
+              <Text style={[styles.mediaActionText, styles.mediaActionTextHighlight]}>Đính kèm</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Danh sách tệp đính kèm đã chụp/tải lên */}
-          {task.attachments && task.attachments.length > 0 && (
+          {/* Danh sách tệp đính kèm mới với progress bar và retry */}
+          {mediaList.length > 0 && (
+            <View style={styles.selectedMediaList}>
+              {mediaList.map((item) => (
+                <View key={item.id} style={styles.selectedMediaItem}>
+                  <View style={styles.selectedMediaHeader}>
+                    <Text style={styles.selectedMediaName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <View style={styles.selectedMediaItemActions}>
+                      {item.status === 'error' && (
+                        <TouchableOpacity
+                          style={styles.retryBtn}
+                          activeOpacity={0.7}
+                          onPress={() => handleRetryUpload(item.id)}
+                        >
+                          <RefreshCwIcon size={13} color="#0284c7" />
+                          <Text style={styles.retryBtnText}>Thử lại</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={styles.removeMediaBtn}
+                        activeOpacity={0.7}
+                        onPress={() => handleRemoveMedia(item.id)}
+                      >
+                        <CloseIcon size={16} color="#94a3b8" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Thanh tiến trình upload */}
+                  <View style={styles.progressBarBg}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${item.progress}%` },
+                        item.status === 'error' && styles.progressBarError,
+                        item.status === 'success' && styles.progressBarSuccess,
+                      ]}
+                    />
+                  </View>
+
+                  <View style={styles.selectedMediaStatusRow}>
+                    <Text
+                      style={[
+                        styles.selectedMediaStatusText,
+                        item.status === 'error' && styles.selectedMediaStatusError,
+                        item.status === 'success' && styles.selectedMediaStatusSuccess,
+                      ]}
+                    >
+                      {item.status === 'compressing'
+                        ? 'Đang nén...'
+                        : item.status === 'uploading'
+                        ? `Đang tải lên: ${item.progress}%`
+                        : item.status === 'success'
+                        ? '✓ Đã tải lên hoàn tất'
+                        : `✕ Lỗi: ${item.errorMessage || 'Tải lên thất bại'}`}
+                    </Text>
+                    {item.size ? (
+                      <Text style={styles.selectedMediaSizeText}>
+                        {Math.round(item.size / 1024)} KB
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Tệp đính kèm & Tư liệu (Chỉ xem) */}
+        <View style={styles.sectionWrap}>
+          <Text style={styles.sectionHeaderTitle}>Tệp đính kèm & Tư liệu</Text>
+          <Text style={styles.sectionSubDesc}>
+            Hình ảnh, video hoặc tài liệu được ghi nhận từ hiện trường (chỉ xem).
+          </Text>
+
+          {task.attachments && task.attachments.length > 0 ? (
             <View style={styles.attachedListWrap}>
-              <Text style={styles.attachedCountTitle}>
-                Đã đính kèm ({task.attachments.length} tệp):
-              </Text>
               {task.attachments.map((item) => (
                 <View key={item.id} style={styles.attachedItemRow}>
                   {item.type === 'image' ? (
@@ -386,34 +592,48 @@ export const TaskDetailScreen: React.FC = () => {
                       {item.sizeBytes ? Math.round(item.sizeBytes / 1024) : 0} KB
                     </Text>
                   </View>
-
-                  <TouchableOpacity
-                    style={styles.deleteAttBtn}
-                    activeOpacity={0.7}
-                    onPress={() => handleDeleteAttachment(item.id, item.name)}
-                  >
-                    <CloseIcon size={18} color="#ef4444" />
-                  </TouchableOpacity>
                 </View>
               ))}
             </View>
+          ) : (
+            <View style={styles.emptyAttachmentsBox}>
+              <Text style={styles.emptyAttachmentsText}>
+                Không có tệp đính kèm nào được ghi nhận cho sự cố này.
+              </Text>
+            </View>
           )}
         </View>
-
-        {/* Nút gửi báo cáo về TMC */}
-        <TouchableOpacity
-          style={styles.sendReportBtn}
-          activeOpacity={0.85}
-          onPress={handleSendReport}
-        >
-          <View style={styles.planeIconWrap}>
-            <PaperPlaneIcon size={18} color="#ffffff" />
-          </View>
-          <Text style={styles.sendReportText}>Gửi báo cáo về TMC</Text>
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Modal phóng to xem ảnh hiện trường */}
+      {/* Floating Call Button */}
+      <TouchableOpacity
+        style={[styles.floatingSosBtn, { bottom: 84 + insets.bottom }]}
+        activeOpacity={0.85}
+        onPress={() => triggerPBXCall('113', 'Tổng đài Cứu hộ')}
+      >
+        <PhoneHandsetIcon size={24} color="#ffffff" />
+      </TouchableOpacity>
+
+      {/* Thanh nút gửi báo cáo cố định phía dưới */}
+      <View style={[styles.bottomBarWrap, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+        <TouchableOpacity
+          style={[styles.submitReportBtn, isSubmitting && styles.submitReportBtnDisabled]}
+          activeOpacity={0.8}
+          disabled={isSubmitting}
+          onPress={handleSubmitReport}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <>
+              <PaperPlaneIcon size={18} color="#ffffff" />
+              <Text style={styles.submitReportBtnText}>Gửi báo cáo về TMC</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal xem ảnh phóng to */}
       <Modal
         visible={previewMediaUri !== null}
         transparent
@@ -471,7 +691,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   contentContainer: {
-    paddingBottom: 120,
+    paddingBottom: 60,
   },
   incidentCard: {
     margin: 16,
@@ -503,10 +723,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  codeColumn: {
+    alignItems: 'flex-end',
+  },
   codeText: {
     fontSize: 13,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  subCodeText: {
+    fontSize: 11,
     fontWeight: '600',
     color: '#64748b',
+    marginTop: 2,
   },
   incidentTitle: {
     fontSize: 24,
@@ -571,10 +800,83 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: 24,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   sectionHeaderTitle: {
     fontSize: 18,
     fontWeight: '900',
     color: '#0f172a',
+  },
+  sectionSubDesc: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  stepCol: {
+    alignItems: 'center',
+  },
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  stepCircleActive: {
+    backgroundColor: '#0090e7',
+  },
+  stepNumText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#94a3b8',
+  },
+  stepNumTextActive: {
+    color: '#ffffff',
+  },
+  stepTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94a3b8',
+  },
+  stepTitleActive: {
+    color: '#0f172a',
+    fontWeight: '800',
+  },
+  stepTrack: {
+    height: 2,
+    flex: 1,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 8,
+    marginBottom: 18,
+  },
+  stepTrackActive: {
+    backgroundColor: '#0090e7',
   },
   timelineContainer: {
     marginTop: 16,
@@ -635,120 +937,9 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 2,
   },
-  currentStatusSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 4,
-    marginBottom: 14,
-  },
-  statusButtonsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statusBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusBtnActive: {
-    backgroundColor: '#f59e0b',
-    borderColor: '#f59e0b',
-  },
-  statusBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  statusBtnTextActive: {
-    color: '#ffffff',
-    fontWeight: '800',
-  },
-  sectionSubDesc: {
-    fontSize: 13,
-    color: '#64748b',
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  notesInput: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    padding: 14,
-    minHeight: 110,
-    fontSize: 14,
-    color: '#0f172a',
-    textAlignVertical: 'top',
-  },
-  attachmentsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  dashedBox: {
-    flex: 1,
-    height: 104,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
-    borderStyle: 'dashed',
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dashedBoxAmber: {
-    borderColor: '#f59e0b',
-    backgroundColor: '#fefce8',
-  },
-  dashedLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569',
-    marginTop: 8,
-  },
-  dashedLabelAmber: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#b45309',
-    marginTop: 8,
-  },
-  sendReportBtn: {
-    marginHorizontal: 16,
-    marginTop: 28,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: '#0090e7',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0090e7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  planeIconWrap: {
-    transform: [{ rotate: '-45deg' }],
-    marginRight: 6,
-  },
-  sendReportText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#ffffff',
-  },
   attachedListWrap: {
-    marginTop: 16,
+    marginTop: 8,
     gap: 10,
-  },
-  attachedCountTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 4,
   },
   attachedItemRow: {
     flexDirection: 'row',
@@ -776,7 +967,6 @@ const styles = StyleSheet.create({
   attachedInfoCol: {
     flex: 1,
     marginLeft: 12,
-    marginRight: 8,
   },
   attachedFileName: {
     fontSize: 13,
@@ -788,8 +978,19 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 3,
   },
-  deleteAttBtn: {
-    padding: 8,
+  emptyAttachmentsBox: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  emptyAttachmentsText: {
+    fontSize: 13,
+    color: '#94a3b8',
+    fontStyle: 'italic',
   },
   previewModalOverlay: {
     flex: 1,
@@ -809,5 +1010,222 @@ const styles = StyleSheet.create({
   previewFullImage: {
     width: '94%',
     height: '80%',
+  },
+  currentStatusText: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  currentStatusHighlight: {
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  stateButtonGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  statePillBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statePillBtnActive: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
+  },
+  statePillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  statePillTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  fieldNoteInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    padding: 14,
+    fontSize: 13,
+    color: '#0f172a',
+    minHeight: 96,
+    textAlignVertical: 'top',
+  },
+  mediaActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 4,
+  },
+  mediaActionCard: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderStyle: 'dashed',
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+  },
+  mediaActionCardHighlight: {
+    borderColor: '#fde047',
+    backgroundColor: '#fefce8',
+  },
+  mediaActionIconWrap: {
+    marginBottom: 6,
+  },
+  mediaActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  mediaActionTextHighlight: {
+    color: '#92400e',
+  },
+  selectedMediaList: {
+    marginTop: 12,
+    gap: 8,
+  },
+  selectedMediaItem: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  selectedMediaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  selectedMediaName: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginRight: 8,
+  },
+  selectedMediaItemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#e0f2fe',
+    borderRadius: 6,
+  },
+  retryBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0284c7',
+  },
+  removeMediaBtn: {
+    padding: 2,
+  },
+  progressBarBg: {
+    height: 5,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#0090e7',
+    borderRadius: 3,
+  },
+  progressBarError: {
+    backgroundColor: '#ef4444',
+  },
+  progressBarSuccess: {
+    backgroundColor: '#16a34a',
+  },
+  selectedMediaStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  selectedMediaStatusText: {
+    fontSize: 11,
+    color: '#64748b',
+  },
+  selectedMediaStatusError: {
+    color: '#ef4444',
+    fontWeight: '600',
+  },
+  selectedMediaStatusSuccess: {
+    color: '#16a34a',
+    fontWeight: '600',
+  },
+  selectedMediaSizeText: {
+    fontSize: 11,
+    color: '#94a3b8',
+  },
+  floatingSosBtn: {
+    position: 'absolute',
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#dc2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#dc2626',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    zIndex: 9,
+  },
+  bottomBarWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  submitReportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#0090e7',
+    borderRadius: 26,
+    height: 50,
+  },
+  submitReportBtnDisabled: {
+    backgroundColor: '#93c5fd',
+  },
+  submitReportBtnText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

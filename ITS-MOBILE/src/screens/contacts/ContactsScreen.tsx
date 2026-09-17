@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HighwayHeader } from '../../components/shared/HighwayHeader';
 import { PhoneHandsetIcon } from '../../components/icons/SvgIcons';
@@ -15,7 +16,7 @@ import { useContactsStore } from '../../store/useContactsStore';
 import { triggerPBXCall } from '../../utils/dialer';
 import { Contact, CallRecord } from '../../types/contacts';
 import { COLORS } from '../../constants/colors';
-import { formatTime } from '../../utils/formatting';
+import { formatCallDateTime } from '../../utils/formatting';
 
 export const ContactsScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'DIRECTORY' | 'HISTORY'>('DIRECTORY');
@@ -25,6 +26,7 @@ export const ContactsScreen: React.FC = () => {
     callHistory,
     isLoading,
     fetchContacts,
+    fetchHistory,
     recordCall,
   } = useContactsStore();
 
@@ -32,8 +34,14 @@ export const ContactsScreen: React.FC = () => {
     fetchContacts();
   }, [fetchContacts]);
 
+  // Tự động làm mới lịch sử cuộc gọi mỗi khi người dùng mở màn hình Liên lạc
+  useFocusEffect(
+    useCallback(() => {
+      fetchHistory();
+    }, [fetchHistory])
+  );
+
   const handleCall = (contact: Contact) => {
-    recordCall(contact);
     triggerPBXCall(contact.extension, contact.name);
   };
 
@@ -41,6 +49,10 @@ export const ContactsScreen: React.FC = () => {
     const trimmed = name.trim();
     if (!trimmed) return 'T';
     return trimmed.charAt(0).toUpperCase();
+  };
+
+  const handleRefresh = async () => {
+    await Promise.all([fetchContacts(), fetchHistory()]);
   };
 
   return (
@@ -51,7 +63,7 @@ export const ContactsScreen: React.FC = () => {
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
-            onRefresh={fetchContacts}
+            onRefresh={handleRefresh}
             colors={[COLORS.primary]}
             tintColor={COLORS.primary}
           />
@@ -91,7 +103,10 @@ export const ContactsScreen: React.FC = () => {
                 styles.segmentTab,
                 activeTab === 'HISTORY' && styles.segmentTabActive,
               ]}
-              onPress={() => setActiveTab('HISTORY')}
+              onPress={() => {
+                setActiveTab('HISTORY');
+                fetchHistory();
+              }}
               activeOpacity={0.85}
             >
               <Text
@@ -190,7 +205,10 @@ export const ContactsScreen: React.FC = () => {
                       <View style={styles.contactInfo}>
                         <Text style={styles.contactName}>{item.contactName}</Text>
                         <Text style={styles.contactExt}>
-                          Ext: {item.extension} · {formatTime(item.timestamp)}
+                          Ext: {item.extension}
+                        </Text>
+                        <Text style={styles.contactTime}>
+                          Bắt đầu: {formatCallDateTime(item.timestamp)}
                         </Text>
                       </View>
                       <Text style={styles.durationText}>
@@ -341,8 +359,14 @@ const styles = StyleSheet.create({
   contactExt: {
     fontSize: 13,
     color: '#64748b',
-    marginTop: 4,
-    fontWeight: '500',
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  contactTime: {
+    fontSize: 12,
+    color: '#0284c7',
+    marginTop: 3,
+    fontWeight: '600',
   },
   callButton: {
     width: 48,

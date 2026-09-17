@@ -17,6 +17,10 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // For FormData uploads, let the runtime/browser set multipart/form-data with boundary
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -25,9 +29,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    const status = error.response?.status;
     const isLoginRequest = error.config?.url?.includes('/api/auth/login');
-    if (!isLoginRequest) {
-      // Trường hợp không gọi được hoặc lỗi: tự động về trang đăng nhập
+    // Only expire session on 401 Unauthorized, do not kick out on 400 Bad Request or validation errors
+    if (status === 401 && !isLoginRequest) {
       try {
         const { useAuthStore } = require('../store/useAuthStore');
         useAuthStore.getState().handleSessionExpired();

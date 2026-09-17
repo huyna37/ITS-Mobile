@@ -21,6 +21,7 @@ export interface TaskNote {
 export interface IncidentTask {
   id: string;
   code: string;
+  incidentCode?: string;
   title: string;
   description: string;
   milestoneKm: number;
@@ -33,6 +34,7 @@ export interface IncidentTask {
   updatedAt: string;
   attachments: TaskAttachment[];
   notes: TaskNote[];
+  script?: string;
 }
 
 export interface ExpresswayEvent {

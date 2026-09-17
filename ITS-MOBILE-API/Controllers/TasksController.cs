@@ -33,6 +33,7 @@ public class TasksController : ControllerBase
 
     [Authorize]
     [HttpGet("completed-recent")]
+    [HttpGet("completed")]
     public async Task<ActionResult<List<TaskResponse>>> GetCompletedTasks()
     {
         try
