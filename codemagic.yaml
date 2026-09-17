@@ -2,8 +2,8 @@
 # Documentation: https://docs.codemagic.io/yaml/building-a-react-native-app/
 
 workflows:
-  react-native-ios:
-    name: ITS Mobile - iOS
+  its-mobile-vec-ios:
+    name: ITS Mobile VEC - iOS
     max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
@@ -12,6 +12,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "TempApp.xcworkspace"
         XCODE_SCHEME: "TempApp"
+        APP_NAME: "ITSMobileVEC"
         BUNDLE_ID: "vn.etc.its.mobile"
       node: v22.13.1
       xcode: latest
@@ -25,6 +26,12 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Prepare environment configuration
+        script: |
+          cd ITS-MOBILE
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
       - name: Install npm dependencies
         script: |
           cd ITS-MOBILE
@@ -36,23 +43,47 @@ workflows:
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles --warn-only || true
-      - name: Build iOS Application
+      - name: Build iOS Application & Package IPA
         script: |
           cd ITS-MOBILE/ios
+          mkdir -p "$CM_BUILD_DIR/build/ios/ipa"
+
           if [ -n "$CM_CERTIFICATE" ]; then
+            echo "==> Building signed IPA with Codemagic..."
             xcode-project build-ipa \
               --workspace "$XCODE_WORKSPACE" \
               --scheme "$XCODE_SCHEME"
+            # Chuẩn hóa tên file IPA xuất ra
+            find "$CM_BUILD_DIR/build/ios/ipa" -name "*.ipa" -exec cp {} "$CM_BUILD_DIR/build/ios/ipa/${APP_NAME}.ipa" \; 2>/dev/null || true
           else
-            echo "Building unsigned / archive iOS release..."
+            echo "==> Building unsigned Release (.app)..."
             xcodebuild -workspace "$XCODE_WORKSPACE" \
               -scheme "$XCODE_SCHEME" \
               -configuration Release \
               -destination 'generic/platform=iOS' \
+              -derivedDataPath "$CM_BUILD_DIR/build/DerivedData" \
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGN_IDENTITY="" \
               CODE_SIGNING_REQUIRED=NO \
               clean build
+
+            echo "==> Packaging .app into standard .ipa..."
+            APP_PATH=$(find "$CM_BUILD_DIR/build/DerivedData" -name "*.app" -type d | head -n 1)
+            if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
+              echo "Found App Bundle at: $APP_PATH"
+              if [ -f "$CM_BUILD_DIR/tools/app_to_ipa.py" ]; then
+                python3 "$CM_BUILD_DIR/tools/app_to_ipa.py" --app "$APP_PATH" --output "$CM_BUILD_DIR/build/ios/ipa/${APP_NAME}.ipa"
+              else
+                PAYLOAD_DIR="/tmp/Payload"
+                rm -rf "$PAYLOAD_DIR"
+                mkdir -p "$PAYLOAD_DIR"
+                cp -R "$APP_PATH" "$PAYLOAD_DIR/"
+                cd /tmp && zip -qry "$CM_BUILD_DIR/build/ios/ipa/${APP_NAME}.ipa" Payload
+              fi
+            else
+              echo "ERROR: Could not find .app in DerivedData!"
+              exit 1
+            fi
           fi
     artifacts:
       - build/ios/ipa/*.ipa
@@ -61,8 +92,8 @@ workflows:
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/**/*.dSYM
 
-  react-native-android:
-    name: ITS Mobile - Android
+  its-mobile-vec-android:
+    name: ITS Mobile VEC - Android
     max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
@@ -70,6 +101,7 @@ workflows:
         - google_credentials # Configure in Codemagic UI: https://docs.codemagic.io/yaml-publishing/google-play/
       vars:
         PACKAGE_NAME: "vn.etc.its.mobile"
+        APP_NAME: "ITSMobileVEC"
       node: v22.13.1
       java: 17
     triggering:
@@ -81,6 +113,12 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Prepare environment configuration
+        script: |
+          cd ITS-MOBILE
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
       - name: Install npm dependencies
         script: |
           cd ITS-MOBILE
@@ -94,7 +132,14 @@ workflows:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace
           ./gradlew bundleRelease --no-daemon --stacktrace
+
+          # Chuẩn hóa tên file artifact ra thư mục build/android
+          mkdir -p "$CM_BUILD_DIR/build/android"
+          find app/build/outputs/apk/release -name "*.apk" -exec cp {} "$CM_BUILD_DIR/build/android/${APP_NAME}-release.apk" \; 2>/dev/null || true
+          find app/build/outputs/bundle/release -name "*.aab" -exec cp {} "$CM_BUILD_DIR/build/android/${APP_NAME}-release.aab" \; 2>/dev/null || true
     artifacts:
+      - build/android/*.apk
+      - build/android/*.aab
       - ITS-MOBILE/android/app/build/outputs/**/*.apk
       - ITS-MOBILE/android/app/build/outputs/**/*.aab
       - ITS-MOBILE/android/app/build/outputs/**/mapping.txt
