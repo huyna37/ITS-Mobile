@@ -1,36 +1,70 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PaperPlaneIcon } from '../../components/icons/SvgIcons';
+import { EyeIcon, EyeOffIcon, PaperPlaneIcon } from '../../components/icons/SvgIcons';
+import { APP_CONFIG } from '../../config';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppToast } from '../../store/useToastStore';
-import { APP_CONFIG } from '../../config';
+import { FONT_FAMILY } from '../../constants';
 
 export const LoginScreen: React.FC = () => {
-  const [username, setUsername] = useState('hoangnm');
-  const [extension, setExtension] = useState('1001');
-  const [password, setPassword] = useState('123456');
+  const [username, setUsername] = useState('');
+  const [extension, setExtension] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    username?: string;
+    extension?: string;
+    password?: string;
+  }>({});
+
+  const extensionInputRef = useRef<any>(null);
+  const passwordInputRef = useRef<any>(null);
 
   const { login, isLoading, error, clearError } = useAuthStore();
 
-  const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      showAppToast('warning', 'Yêu cầu thông tin', 'Vui lòng nhập đầy đủ tài khoản và mật khẩu');
-      return;
+  const validateForm = (): boolean => {
+    const errors: { username?: string; extension?: string; password?: string } = {};
+
+    const cleanUsername = username.trim();
+    if (!cleanUsername) {
+      errors.username = 'Vui lòng nhập tài khoản nội bộ';
     }
 
-    if (!/^\d{4}$/.test(extension.trim())) {
-      showAppToast('warning', 'Định dạng Extension', 'Số Extension tổng đài PBX phải đúng 4 chữ số (Ví dụ: 1001)');
+    const cleanExtension = extension.trim();
+    if (!cleanExtension) {
+      errors.extension = 'Vui lòng nhập số Extension PBX';
+    } else if (!/^\d{4}$/.test(cleanExtension)) {
+      errors.extension = 'Số Extension PBX phải đúng 4 chữ số';
+    }
+
+    const cleanPassword = password.trim();
+    if (!cleanPassword) {
+      errors.password = 'Vui lòng nhập mật khẩu';
+    } else if (cleanPassword.length < 6) {
+      errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) {
+      showAppToast(
+        'warning',
+        'Yêu cầu thông tin',
+        'Vui lòng kiểm tra và nhập đúng các trường bắt buộc'
+      );
       return;
     }
 
@@ -42,7 +76,9 @@ export const LoginScreen: React.FC = () => {
 
     if (!success) {
       const err = useAuthStore.getState().error;
-      const errorMsg = err ? err : `Không thể kết nối đến máy chủ ITS TMC (${APP_CONFIG.apiBaseUrl}). Vui lòng kiểm tra địa chỉ máy chủ hoặc kết nối mạng.`;
+      const errorMsg = err
+        ? err
+        : `Không thể kết nối đến máy chủ ITS TMC (${APP_CONFIG.apiBaseUrl}). Vui lòng kiểm tra địa chỉ máy chủ hoặc kết nối mạng.`;
       showAppToast('error', 'Đăng nhập thất bại', errorMsg);
     }
   };
@@ -57,11 +93,9 @@ export const LoginScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo Squircle xanh với phi thuyền trắng */}
+          {/* Logo Squircle xanh với phi thuyền trắng căn chính tâm 100% */}
           <View style={styles.logoSquircle}>
-            <View style={styles.planeWrap}>
-              <PaperPlaneIcon size={44} color="#ffffff" />
-            </View>
+            <PaperPlaneIcon size={48} color="#ffffff" />
           </View>
 
           {/* Tiêu đề ứng dụng */}
@@ -71,7 +105,7 @@ export const LoginScreen: React.FC = () => {
 
           {/* Form đăng nhập */}
           <View style={styles.formContainer}>
-            {/* Banner hiển thị lỗi đăng nhập trực quan */}
+            {/* Banner hiển thị lỗi đăng nhập trực quan từ máy chủ */}
             {error ? (
               <View style={styles.errorBanner}>
                 <Text style={styles.errorIcon}>⚠️</Text>
@@ -82,46 +116,90 @@ export const LoginScreen: React.FC = () => {
             {/* Input 1: Tài khoản nội bộ */}
             <Text style={styles.inputLabel}>TÀI KHOẢN NỘI BỘ</Text>
             <TextInput
-              style={styles.textInput}
-              placeholder="Nhập username"
+              style={[styles.textInput, fieldErrors.username ? styles.inputErrorBorder : null]}
+              placeholder="Nhập tài khoản"
               placeholderTextColor="#94a3b8"
               value={username}
-              onChangeText={(val) => {
+              onChangeText={val => {
                 setUsername(val);
+                if (fieldErrors.username) {
+                  setFieldErrors(prev => ({ ...prev, username: undefined }));
+                }
                 if (error) clearError();
               }}
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => extensionInputRef.current?.focus()}
             />
+            {fieldErrors.username ? (
+              <Text style={styles.inlineErrorText}>{fieldErrors.username}</Text>
+            ) : null}
 
             {/* Input 2: Extension PBX */}
             <Text style={styles.inputLabel}>EXTENSION PBX (4 SỐ)</Text>
             <TextInput
-              style={styles.textInput}
-              placeholder="Ví dụ: 8011"
+              ref={extensionInputRef}
+              style={[styles.textInput, fieldErrors.extension ? styles.inputErrorBorder : null]}
+              placeholder="Ví dụ: 2011"
               placeholderTextColor="#94a3b8"
               value={extension}
-              onChangeText={(val) => {
-                setExtension(val);
+              onChangeText={val => {
+                // Tự động lọc chỉ cho phép nhập số
+                const sanitized = val.replace(/[^0-9]/g, '');
+                setExtension(sanitized);
+                if (fieldErrors.extension) {
+                  setFieldErrors(prev => ({ ...prev, extension: undefined }));
+                }
                 if (error) clearError();
               }}
               keyboardType="number-pad"
               maxLength={4}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
+            {fieldErrors.extension ? (
+              <Text style={styles.inlineErrorText}>{fieldErrors.extension}</Text>
+            ) : null}
 
-            {/* Input 3: Mật khẩu */}
+            {/* Input 3: Mật khẩu (Có nút ẩn/hiện) */}
             <Text style={styles.inputLabel}>MẬT KHẨU</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="••••••••"
-              placeholderTextColor="#94a3b8"
-              value={password}
-              onChangeText={(val) => {
-                setPassword(val);
-                if (error) clearError();
-              }}
-              secureTextEntry
-            />
+            <View
+              style={[styles.passwordWrap, fieldErrors.password ? styles.inputErrorBorder : null]}
+            >
+              <TextInput
+                ref={passwordInputRef}
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                placeholderTextColor="#94a3b8"
+                value={password}
+                onChangeText={val => {
+                  setPassword(val);
+                  if (fieldErrors.password) {
+                    setFieldErrors(prev => ({ ...prev, password: undefined }));
+                  }
+                  if (error) clearError();
+                }}
+                secureTextEntry={!showPassword}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                activeOpacity={0.7}
+                onPress={() => setShowPassword(prev => !prev)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {showPassword ? (
+                  <EyeOffIcon size={22} color="#64748b" />
+                ) : (
+                  <EyeIcon size={22} color="#64748b" />
+                )}
+              </TouchableOpacity>
+            </View>
+            {fieldErrors.password ? (
+              <Text style={styles.inlineErrorText}>{fieldErrors.password}</Text>
+            ) : null}
 
             {/* Nút Đăng nhập */}
             <TouchableOpacity
@@ -152,7 +230,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingTop: 36,
     paddingBottom: 40,
     alignItems: 'center',
   },
@@ -170,42 +248,41 @@ const styles = StyleSheet.create({
     elevation: 8,
     marginBottom: 24,
   },
-  planeWrap: {
-    transform: [{ rotate: '-45deg' }],
-    marginLeft: 4,
-    marginTop: 4,
-  },
   titleLine1: {
+    fontFamily: FONT_FAMILY,
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0090e7',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     textAlign: 'center',
   },
   titleLine2: {
+    fontFamily: FONT_FAMILY,
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0090e7',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     textAlign: 'center',
     marginTop: 2,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
     fontWeight: '500',
     color: '#64748b',
     textAlign: 'center',
     marginTop: 8,
-    marginBottom: 36,
+    marginBottom: 32,
   },
   formContainer: {
     width: '100%',
   },
   inputLabel: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#475569',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   textInput: {
@@ -216,7 +293,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#0f172a',
-    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    marginBottom: 16,
+  },
+  passwordWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  eyeButton: {
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputErrorBorder: {
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    backgroundColor: '#fffcfb',
+  },
+  inlineErrorText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#f87171',
+    marginTop: -8,
+    marginBottom: 14,
+    marginLeft: 4,
   },
   loginButton: {
     height: 54,
@@ -224,7 +339,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 10,
     shadowColor: '#0090e7',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
@@ -236,10 +351,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
   },
   loginButtonText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#ffffff',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   errorBanner: {
     flexDirection: 'row',

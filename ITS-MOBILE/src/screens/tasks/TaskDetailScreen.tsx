@@ -1,32 +1,33 @@
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  Platform,
+  ActivityIndicator,
   Image,
   Modal,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
   TextInput,
-  ActivityIndicator,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import {
+  CameraIcon,
+  ChevronLeftIcon,
+  CloseIcon,
+  PaperclipIcon,
+  PaperPlaneIcon,
+  PhoneHandsetIcon,
+  RefreshCwIcon,
+  VideoIcon,
+} from '../../components/icons/SvgIcons';
+import { FONT_FAMILY } from '../../constants';
 import { RootStackParamList } from '../../navigation/types';
 import { useTasksStore } from '../../store/useTasksStore';
-import { showAppToast, showAppDialog } from '../../store/useToastStore';
-import {
-  ChevronLeftIcon,
-  PhoneHandsetIcon,
-  VideoIcon,
-  PaperclipIcon,
-  CloseIcon,
-  CameraIcon,
-  PaperPlaneIcon,
-  RefreshCwIcon,
-} from '../../components/icons/SvgIcons';
+import { showAppDialog, showAppToast } from '../../store/useToastStore';
 import { triggerPBXCall } from '../../utils/dialer';
 import {
   MediaFile,
@@ -42,7 +43,7 @@ export const TaskDetailScreen: React.FC = () => {
   const { task: initialTask } = route.params;
 
   const { tasks, updateTaskStep, addAttachment } = useTasksStore();
-  const currentTask = tasks.find((t) => t.id === initialTask.id);
+  const currentTask = tasks.find(t => t.id === initialTask.id);
   const task = currentTask !== undefined ? currentTask : initialTask;
 
   const [previewMediaUri, setPreviewMediaUri] = useState<string | null>(null);
@@ -60,32 +61,26 @@ export const TaskDetailScreen: React.FC = () => {
         file,
         { incidentId: task.id },
         {
-          onProgress: (prog) => {
-            setMediaList((prev) =>
-              prev.map((m) => (m.id === file.id ? { ...m, progress: prog } : m))
-            );
+          onProgress: prog => {
+            setMediaList(prev => prev.map(m => (m.id === file.id ? { ...m, progress: prog } : m)));
           },
           onStatusChange: (status, err) => {
-            setMediaList((prev) =>
-              prev.map((m) =>
-                m.id === file.id ? { ...m, status, errorMessage: err } : m
-              )
+            setMediaList(prev =>
+              prev.map(m => (m.id === file.id ? { ...m, status, errorMessage: err } : m))
             );
           },
         }
       );
 
-      setMediaList((prev) =>
-        prev.map((m) =>
-          m.id === file.id
-            ? { ...m, status: 'success', progress: 100, uploadedUrl }
-            : m
+      setMediaList(prev =>
+        prev.map(m =>
+          m.id === file.id ? { ...m, status: 'success', progress: 100, uploadedUrl } : m
         )
       );
       showAppToast('success', 'Tải lên hoàn tất', `Tệp ${file.name} đã được tải lên máy chủ.`);
     } catch (err: any) {
-      setMediaList((prev) =>
-        prev.map((m) =>
+      setMediaList(prev =>
+        prev.map(m =>
           m.id === file.id
             ? { ...m, status: 'error', errorMessage: err?.message || 'Lỗi tải lên' }
             : m
@@ -99,7 +94,7 @@ export const TaskDetailScreen: React.FC = () => {
     try {
       const file = await capturePhoto();
       if (file) {
-        setMediaList((prev) => [...prev, file]);
+        setMediaList(prev => [...prev, file]);
         startUploadMedia(file);
       }
     } catch {
@@ -111,7 +106,7 @@ export const TaskDetailScreen: React.FC = () => {
     try {
       const file = await recordVideo();
       if (file) {
-        setMediaList((prev) => [...prev, file]);
+        setMediaList(prev => [...prev, file]);
         startUploadMedia(file);
       }
     } catch {
@@ -123,7 +118,7 @@ export const TaskDetailScreen: React.FC = () => {
     try {
       const file = await pickMediaFromLibrary();
       if (file) {
-        setMediaList((prev) => [...prev, file]);
+        setMediaList(prev => [...prev, file]);
         startUploadMedia(file);
       }
     } catch {
@@ -132,28 +127,40 @@ export const TaskDetailScreen: React.FC = () => {
   };
 
   const handleRetryUpload = (fileId: string) => {
-    const file = mediaList.find((m) => m.id === fileId);
+    const file = mediaList.find(m => m.id === fileId);
     if (file) {
-      setMediaList((prev) =>
-        prev.map((m) => (m.id === fileId ? { ...m, status: 'uploading', progress: 0, errorMessage: undefined } : m))
+      setMediaList(prev =>
+        prev.map(m =>
+          m.id === fileId ? { ...m, status: 'uploading', progress: 0, errorMessage: undefined } : m
+        )
       );
       startUploadMedia(file);
     }
   };
 
   const handleRemoveMedia = (fileId: string) => {
-    setMediaList((prev) => prev.filter((m) => m.id !== fileId));
+    setMediaList(prev => prev.filter(m => m.id !== fileId));
   };
 
   const handleSubmitReport = async () => {
-    const hasUploading = mediaList.some((m) => m.status === 'compressing' || m.status === 'uploading');
+    const hasUploading = mediaList.some(
+      m => m.status === 'compressing' || m.status === 'uploading'
+    );
     if (hasUploading) {
-      showAppToast('warning', 'Đang xử lý', 'Tệp đính kèm đang được tải lên, vui lòng đợi trong giây lát.');
+      showAppToast(
+        'warning',
+        'Đang xử lý',
+        'Tệp đính kèm đang được tải lên, vui lòng đợi trong giây lát.'
+      );
       return;
     }
 
     if (!fieldNote.trim() && mediaList.length === 0) {
-      showAppToast('warning', 'Chưa có thông tin', 'Vui lòng nhập ghi nhận hiện trường hoặc đính kèm ảnh/video.');
+      showAppToast(
+        'warning',
+        'Chưa có thông tin',
+        'Vui lòng nhập ghi nhận hiện trường hoặc đính kèm ảnh/video.'
+      );
       return;
     }
 
@@ -172,7 +179,11 @@ export const TaskDetailScreen: React.FC = () => {
         }
       }
 
-      showAppToast('success', 'Gửi báo cáo thành công', 'Báo cáo hiện trường và tệp tư liệu đã được gửi về TMC!');
+      showAppToast(
+        'success',
+        'Gửi báo cáo thành công',
+        'Báo cáo hiện trường và tệp tư liệu đã được gửi về TMC!'
+      );
       setFieldNote('');
       setMediaList([]);
     } catch {
@@ -185,7 +196,12 @@ export const TaskDetailScreen: React.FC = () => {
   const handleStepPress = (targetStep: 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED') => {
     if (targetStep === task.step) return;
 
-    const stepLabel = targetStep === 'RECEIVED' ? 'Đã tiếp nhận (1)' : targetStep === 'IN_PROGRESS' ? 'Đang xử lý (2)' : 'Hoàn thành (3)';
+    const stepLabel =
+      targetStep === 'RECEIVED'
+        ? 'Đã tiếp nhận (1)'
+        : targetStep === 'IN_PROGRESS'
+          ? 'Đang xử lý (2)'
+          : 'Hoàn thành (3)';
 
     showAppDialog(
       'CẬP NHẬT TIẾN TRÌNH',
@@ -231,7 +247,7 @@ export const TaskDetailScreen: React.FC = () => {
   const directionText = task.direction === 'LAOCAI_HANOI' ? 'Lào Cai ➔ Hà Nội' : 'Hà Nội ➔ Lào Cai';
 
   const insets = useSafeAreaInsets();
-  const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
   const topInset = Math.max(insets.top, statusBarHeight, 28);
 
   return (
@@ -308,7 +324,9 @@ export const TaskDetailScreen: React.FC = () => {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeaderTitle}>Tiến trình xử lý</Text>
             <View style={[styles.statusBadge, { backgroundColor: statusBadgeBg }]}>
-              <Text style={[styles.statusBadgeText, { color: statusBadgeColor }]}>{statusLabel}</Text>
+              <Text style={[styles.statusBadgeText, { color: statusBadgeColor }]}>
+                {statusLabel}
+              </Text>
             </View>
           </View>
 
@@ -320,9 +338,13 @@ export const TaskDetailScreen: React.FC = () => {
               onPress={() => handleStepPress('RECEIVED')}
             >
               <View style={[styles.stepCircle, currentStepNum >= 1 && styles.stepCircleActive]}>
-                <Text style={[styles.stepNumText, currentStepNum >= 1 && styles.stepNumTextActive]}>1</Text>
+                <Text style={[styles.stepNumText, currentStepNum >= 1 && styles.stepNumTextActive]}>
+                  1
+                </Text>
               </View>
-              <Text style={[styles.stepTitle, currentStepNum >= 1 && styles.stepTitleActive]}>Đã nhận</Text>
+              <Text style={[styles.stepTitle, currentStepNum >= 1 && styles.stepTitleActive]}>
+                Đã nhận
+              </Text>
             </TouchableOpacity>
 
             <View style={[styles.stepTrack, currentStepNum >= 2 && styles.stepTrackActive]} />
@@ -334,9 +356,13 @@ export const TaskDetailScreen: React.FC = () => {
               onPress={() => handleStepPress('IN_PROGRESS')}
             >
               <View style={[styles.stepCircle, currentStepNum >= 2 && styles.stepCircleActive]}>
-                <Text style={[styles.stepNumText, currentStepNum >= 2 && styles.stepNumTextActive]}>2</Text>
+                <Text style={[styles.stepNumText, currentStepNum >= 2 && styles.stepNumTextActive]}>
+                  2
+                </Text>
               </View>
-              <Text style={[styles.stepTitle, currentStepNum >= 2 && styles.stepTitleActive]}>Đang xử lý</Text>
+              <Text style={[styles.stepTitle, currentStepNum >= 2 && styles.stepTitleActive]}>
+                Đang xử lý
+              </Text>
             </TouchableOpacity>
 
             <View style={[styles.stepTrack, currentStepNum >= 3 && styles.stepTrackActive]} />
@@ -348,9 +374,13 @@ export const TaskDetailScreen: React.FC = () => {
               onPress={() => handleStepPress('COMPLETED')}
             >
               <View style={[styles.stepCircle, currentStepNum >= 3 && styles.stepCircleActive]}>
-                <Text style={[styles.stepNumText, currentStepNum >= 3 && styles.stepNumTextActive]}>3</Text>
+                <Text style={[styles.stepNumText, currentStepNum >= 3 && styles.stepNumTextActive]}>
+                  3
+                </Text>
               </View>
-              <Text style={[styles.stepTitle, currentStepNum >= 3 && styles.stepTitleActive]}>Hoàn thành</Text>
+              <Text style={[styles.stepTitle, currentStepNum >= 3 && styles.stepTitleActive]}>
+                Hoàn thành
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -445,9 +475,7 @@ export const TaskDetailScreen: React.FC = () => {
         {/* Ảnh & video gửi TMC */}
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionHeaderTitle}>Ảnh & video gửi TMC</Text>
-          <Text style={styles.sectionSubDesc}>
-            Chụp mới hoặc đính kèm từ thư viện thiết bị.
-          </Text>
+          <Text style={styles.sectionSubDesc}>Chụp mới hoặc đính kèm từ thư viện thiết bị.</Text>
 
           {/* 3 nút tác vụ: Chụp ảnh, Quay video, Đính kèm */}
           <View style={styles.mediaActionsRow}>
@@ -481,14 +509,16 @@ export const TaskDetailScreen: React.FC = () => {
               <View style={styles.mediaActionIconWrap}>
                 <PaperclipIcon size={26} color="#92400e" />
               </View>
-              <Text style={[styles.mediaActionText, styles.mediaActionTextHighlight]}>Đính kèm</Text>
+              <Text style={[styles.mediaActionText, styles.mediaActionTextHighlight]}>
+                Đính kèm
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Danh sách tệp đính kèm mới với progress bar và retry */}
           {mediaList.length > 0 && (
             <View style={styles.selectedMediaList}>
-              {mediaList.map((item) => (
+              {mediaList.map(item => (
                 <View key={item.id} style={styles.selectedMediaItem}>
                   <View style={styles.selectedMediaHeader}>
                     <Text style={styles.selectedMediaName} numberOfLines={1}>
@@ -538,10 +568,10 @@ export const TaskDetailScreen: React.FC = () => {
                       {item.status === 'compressing'
                         ? 'Đang nén...'
                         : item.status === 'uploading'
-                        ? `Đang tải lên: ${item.progress}%`
-                        : item.status === 'success'
-                        ? '✓ Đã tải lên hoàn tất'
-                        : `✕ Lỗi: ${item.errorMessage || 'Tải lên thất bại'}`}
+                          ? `Đang tải lên: ${item.progress}%`
+                          : item.status === 'success'
+                            ? '✓ Đã tải lên hoàn tất'
+                            : `✕ Lỗi: ${item.errorMessage || 'Tải lên thất bại'}`}
                     </Text>
                     {item.size ? (
                       <Text style={styles.selectedMediaSizeText}>
@@ -564,7 +594,7 @@ export const TaskDetailScreen: React.FC = () => {
 
           {task.attachments && task.attachments.length > 0 ? (
             <View style={styles.attachedListWrap}>
-              {task.attachments.map((item) => (
+              {task.attachments.map(item => (
                 <View key={item.id} style={styles.attachedItemRow}>
                   {item.type === 'image' ? (
                     <TouchableOpacity
@@ -588,8 +618,12 @@ export const TaskDetailScreen: React.FC = () => {
                       {item.name}
                     </Text>
                     <Text style={styles.attachedFileSize}>
-                      {item.type === 'video' ? '🎬 Video' : item.type === 'image' ? '📸 Ảnh' : '📄 Tệp'} •{' '}
-                      {item.sizeBytes ? Math.round(item.sizeBytes / 1024) : 0} KB
+                      {item.type === 'video'
+                        ? '🎬 Video'
+                        : item.type === 'image'
+                          ? '📸 Ảnh'
+                          : '📄 Tệp'}{' '}
+                      • {item.sizeBytes ? Math.round(item.sizeBytes / 1024) : 0} KB
                     </Text>
                   </View>
                 </View>
@@ -641,10 +675,7 @@ export const TaskDetailScreen: React.FC = () => {
         onRequestClose={() => setPreviewMediaUri(null)}
       >
         <View style={styles.previewModalOverlay}>
-          <TouchableOpacity
-            style={styles.previewCloseBtn}
-            onPress={() => setPreviewMediaUri(null)}
-          >
+          <TouchableOpacity style={styles.previewCloseBtn} onPress={() => setPreviewMediaUri(null)}>
             <CloseIcon size={24} color="#ffffff" />
           </TouchableOpacity>
           {previewMediaUri && (
@@ -738,10 +769,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   incidentTitle: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 22,
+    fontWeight: '700',
     color: '#0f172a',
-    marginVertical: 8,
+    marginVertical: 6,
   },
   cardDivider: {
     height: 1,
@@ -756,22 +788,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   colLabel: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#94a3b8',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     marginBottom: 4,
   },
   colValue: {
-    fontSize: 18,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 17,
+    fontWeight: '700',
     color: '#0f172a',
   },
   sectionLabel: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#94a3b8',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     marginTop: 14,
     marginBottom: 6,
   },
@@ -781,6 +816,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   descText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
     color: '#334155',
     lineHeight: 20,
@@ -791,8 +827,9 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   scriptText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284c7',
     lineHeight: 20,
   },
@@ -807,8 +844,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 17,
+    fontWeight: '700',
     color: '#0f172a',
   },
   sectionSubDesc: {

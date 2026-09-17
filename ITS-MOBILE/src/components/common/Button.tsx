@@ -8,6 +8,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { COLORS } from '../../constants/colors';
+import { FONT_FAMILY } from '../../constants/typography';
 
 interface ButtonProps {
   title: string;
@@ -139,6 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   text: {
+    fontFamily: FONT_FAMILY,
     fontSize: 15,
     fontWeight: '600',
   },

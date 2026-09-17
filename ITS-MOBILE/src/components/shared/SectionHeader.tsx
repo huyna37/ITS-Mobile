@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, THEME_CONSTANTS } from '../../constants';
+import { COLORS, THEME_CONSTANTS, FONT_FAMILY } from '../../constants';
 
 export type SectionBadgeType = 'primary' | 'gray' | 'success';
 
@@ -69,51 +69,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 21,
+    fontWeight: '700',
     color: '#0f172a',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#64748b',
-    marginTop: 3,
+    marginTop: 2,
   },
   countBadge: {
     backgroundColor: '#e0f2fe',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 14,
   },
   countBadgeText: {
-    fontSize: 12,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 11,
+    fontWeight: '700',
     color: '#0284c7',
+    letterSpacing: 0.3,
   },
   watchBadge: {
     backgroundColor: '#f1f5f9',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 14,
   },
   watchBadgeText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#64748b',
     letterSpacing: 0.5,
   },
   successBadge: {
     backgroundColor: THEME_CONSTANTS.SUCCESS_LIGHT,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: THEME_CONSTANTS.SUCCESS_BORDER,
   },
   successBadgeText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.success,
   },
 });

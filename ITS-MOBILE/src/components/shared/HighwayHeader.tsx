@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Platform, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PaperPlaneIcon, SearchIcon, CloseIcon } from '../icons/SvgIcons';
-import { HIGHWAY_CONSTANTS } from '../../constants';
+import { HIGHWAY_CONSTANTS, FONT_FAMILY } from '../../constants';
 
 interface HighwayHeaderProps {
   title?: string;
@@ -85,11 +85,9 @@ export const HighwayHeader: React.FC<HighwayHeaderProps> = ({
         </View>
       ) : (
         <View style={styles.headerTop}>
-          {/* Nút phi thuyền tròn xanh chuẩn thiết kế */}
+          {/* Nút phi thuyền tròn xanh chuẩn thiết kế căn chính tâm */}
           <View style={styles.navButton}>
-            <View style={styles.planeWrapper}>
-              <PaperPlaneIcon size={22} color="#ffffff" />
-            </View>
+            <PaperPlaneIcon size={22} color="#ffffff" />
           </View>
 
           {/* Tiêu đề trung tâm 2 dòng */}
@@ -143,29 +141,26 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  planeWrapper: {
-    transform: [{ rotate: '-45deg' }],
-    marginLeft: 2,
-    marginTop: 2,
-  },
   titleBox: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 8,
   },
   headerTitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0097f0',
     letterSpacing: 0.8,
     textAlign: 'center',
   },
   headerSubtitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
-    color: '#8da3b8',
-    letterSpacing: 2,
-    marginTop: 4,
+    fontWeight: '600',
+    color: '#7ba0bf',
+    letterSpacing: 1.8,
+    marginTop: 3,
     textAlign: 'center',
   },
   searchButton: {

@@ -7,6 +7,7 @@ import {
   UI_ICONS,
   TASK_STATUS_LABELS,
   THEME_CONSTANTS,
+  FONT_FAMILY,
 } from '../../constants';
 import { formatMilestone, formatTime } from '../../utils/formatting';
 
@@ -159,8 +160,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   taskCode: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#94a3b8',
     letterSpacing: 0.5,
   },
@@ -170,14 +172,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   stepBadgeText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   taskTitle: {
-    fontSize: 17,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 16,
+    fontWeight: '700',
     color: '#0f172a',
-    marginVertical: 4,
+    marginVertical: 3,
   },
   metaRow: {
     flexDirection: 'row',
@@ -194,8 +198,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   metaPillText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#475569',
   },
   chevronBox: {

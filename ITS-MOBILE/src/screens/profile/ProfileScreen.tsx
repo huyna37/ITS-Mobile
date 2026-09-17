@@ -1,28 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { HighwayHeader } from '../../components/shared/HighwayHeader';
 import { LogoutIcon } from '../../components/icons/SvgIcons';
-import { useAuthStore } from '../../store/useAuthStore';
-import { showAppToast, showAppDialog } from '../../store/useToastStore';
+import { HighwayHeader } from '../../components/shared/HighwayHeader';
+import { OtaUpdateModal } from '../../components/shared/OtaUpdateModal';
+import { FONT_FAMILY } from '../../constants';
 import {
   checkOtaUpdate,
   getCurrentBundleInfo,
-  OtaCheckResult,
   OtaBundleInfo,
+  OtaCheckResult,
   resetOtaToFactory,
 } from '../../services/otaService';
-import { OtaUpdateModal } from '../../components/shared/OtaUpdateModal';
+import { useAuthStore } from '../../store/useAuthStore';
+import { showAppDialog, showAppToast } from '../../store/useToastStore';
 import { getProfileApi, ProfileData } from '../../api/profileApi';
-import { RefreshControl } from 'react-native';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -137,9 +136,7 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.profileCard}>
           {/* Avatar squircle xanh nhạt chữ N */}
           <View style={styles.avatarSquircle}>
-            <Text style={styles.avatarLetter}>
-              {displayName.charAt(0).toUpperCase()}
-            </Text>
+            <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
           </View>
 
           {/* Tên và chức danh */}
@@ -185,7 +182,8 @@ export const ProfileScreen: React.FC = () => {
           </View>
 
           <Text style={styles.otaDesc}>
-            Cập nhật tức thì giao diện, xử lý nghiệp vụ và sửa lỗi trực tuyến mà không cần cài lại file APK.
+            Cập nhật tức thì giao diện, xử lý nghiệp vụ và sửa lỗi trực tuyến mà không cần cài lại
+            file APK.
           </Text>
 
           <View style={styles.otaActionRow}>
@@ -215,11 +213,7 @@ export const ProfileScreen: React.FC = () => {
         </View>
 
         {/* Nút Đăng xuất hệ thống đỏ nhạt */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          activeOpacity={0.8}
-          onPress={handleLogout}
-        >
+        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8} onPress={handleLogout}>
           <LogoutIcon size={20} color="#ef4444" />
           <Text style={styles.logoutText}>Đăng xuất hệ thống</Text>
         </TouchableOpacity>
@@ -273,21 +267,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   avatarLetter: {
-    fontSize: 36,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 34,
+    fontWeight: '700',
     color: '#0090e7',
   },
   fullName: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 22,
+    fontWeight: '700',
     color: '#0f172a',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
     marginBottom: 4,
     textAlign: 'center',
   },
   roleText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY,
+    fontSize: 14,
+    fontWeight: '500',
     color: '#64748b',
     marginBottom: 24,
     textAlign: 'center',
@@ -308,15 +305,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metaLabel: {
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#94a3b8',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     marginBottom: 6,
   },
   extValue: {
-    fontSize: 22,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 20,
+    fontWeight: '700',
     color: '#0090e7',
   },
   verticalDivider: {
@@ -325,8 +324,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   deptValue: {
-    fontSize: 20,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY,
+    fontSize: 18,
+    fontWeight: '700',
     color: '#0f172a',
   },
   otaCard: {

@@ -29,34 +29,36 @@ function mapContact(c: BackendContactResponse): Contact {
   };
 }
 
-function parseDurationString(durationStr?: string | null): number {
-  if (!durationStr) return 45;
+function parseDuration(durationStr?: string | null): number {
+  if (!durationStr) return 0;
   if (durationStr.includes(':')) {
-    const parts = durationStr.split(':');
-    const min = parseInt(parts[0], 10) || 0;
-    const sec = parseInt(parts[1], 10) || 0;
-    const total = min * 60 + sec;
-    return total > 0 ? total : 45;
+    const parts = durationStr.split(':').map((p) => parseInt(p, 10) || 0);
+    if (parts.length === 2) {
+      return parts[0] * 60 + parts[1];
+    } else if (parts.length === 3) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
   }
-  const num = parseInt(durationStr, 10);
-  return isNaN(num) || num <= 0 ? 45 : num;
+  const dur = parseInt(durationStr, 10);
+  return isNaN(dur) || dur < 0 ? 0 : dur;
 }
 
 function mapCallRecord(r: BackendCallHistoryResponse): CallRecord {
   let callType: 'INCOMING' | 'OUTGOING' | 'MISSED' = 'OUTGOING';
-  if (r.status === 'Nhỡ cuộc' || r.status === 'MISSED') {
+  const statusLower = (r.status || '').toLowerCase();
+  if (statusLower.includes('nhỡ') || statusLower === 'missed') {
     callType = 'MISSED';
-  } else if (r.status === 'INCOMING') {
+  } else if (statusLower.includes('đến') || statusLower === 'incoming') {
     callType = 'INCOMING';
   }
 
-  const dur = callType === 'MISSED' ? 0 : parseDurationString(r.duration);
+  const durationSeconds = callType === 'MISSED' ? 0 : parseDuration(r.duration);
   return {
     id: r.id,
     contactName: r.name,
     extension: r.extension,
     timestamp: r.time,
-    durationSeconds: dur,
+    durationSeconds,
     type: callType,
   };
 }
@@ -106,7 +108,7 @@ export async function recordCallApi(payload: {
   try {
     const res = await apiClient.post<BackendCallHistoryResponse>('/api/calls/history', {
       ...payload,
-      duration: payload.duration && payload.duration > 0 ? payload.duration : 45,
+      duration: payload.duration !== undefined && payload.duration > 0 ? payload.duration : 45,
       status: payload.status !== undefined && payload.status > 0 ? payload.status : 1,
     });
     return mapCallRecord(res.data);
@@ -124,9 +126,17 @@ export async function recordSosCallApi(hotline: string, location?: string): Prom
     });
     return mapCallRecord(res.data);
   } catch (err) {
-    // Hoạt động offline qua sóng di động GSM không phụ thuộc internet
     console.warn('Gửi log SOS tới máy chủ không thành công (hoạt động offline GSM):', err);
     return null;
   }
 }
 
+export async function deleteCallRecordApi(id: string): Promise<boolean> {
+  try {
+    const res = await apiClient.delete(`/api/calls/history/${id}`);
+    return res.status === 200;
+  } catch (err) {
+    console.warn('Lỗi xóa lịch sử cuộc gọi trên máy chủ:', err);
+    return false;
+  }
+}

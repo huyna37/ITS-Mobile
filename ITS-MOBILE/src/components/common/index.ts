@@ -7,3 +7,4 @@ export * from './FloatingSOS';
 export * from './EmptyState';
 export * from './LoadingSpinner';
 export * from './AppToast';
+export * from './SkeletonLoading';
