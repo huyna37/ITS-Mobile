@@ -81,11 +81,13 @@ export async function capturePhoto(): Promise<PickedMedia | null> {
     }
   }
 
-  // 3. Trường hợp đang dùng bản APK cũ chưa có NativeModule Camera
+  // 3. Fallback khi NativeModule chưa khả dụng
   showAppToast(
     'warning',
     'Cập nhật ứng dụng',
-    'Chức năng máy ảnh yêu cầu bản cài đặt APK v1.0.4 có quyền Camera. Vui lòng tải bản APK mới nhất từ TMC VEC.'
+    Platform.OS === 'ios'
+      ? 'Chức năng máy ảnh trên iOS đang được cập nhật ở phiên bản tiếp theo.'
+      : 'Chức năng máy ảnh yêu cầu bản cài đặt APK v1.0.4 có quyền Camera. Vui lòng tải bản APK mới nhất từ TMC VEC.'
   );
   return null;
 }
@@ -158,7 +160,9 @@ export async function captureVideo(): Promise<PickedMedia | null> {
   showAppToast(
     'warning',
     'Cập nhật ứng dụng',
-    'Chức năng quay video yêu cầu bản cài đặt APK v1.0.4 có quyền Camera. Vui lòng tải bản APK mới nhất.'
+    Platform.OS === 'ios'
+      ? 'Chức năng quay video trên iOS đang được cập nhật ở phiên bản tiếp theo.'
+      : 'Chức năng quay video yêu cầu bản cài đặt APK v1.0.4 có quyền Camera. Vui lòng tải bản APK mới nhất.'
   );
   return null;
 }
@@ -250,7 +254,9 @@ export async function pickDocument(mediaType: 'image' | 'video' | 'all' = 'all')
   showAppToast(
     'warning',
     'Cập nhật ứng dụng',
-    'Chức năng đính kèm tệp yêu cầu bản cài đặt APK v1.0.4. Vui lòng tải bản APK mới nhất.'
+    Platform.OS === 'ios'
+      ? 'Chức năng chọn tệp từ thư viện trên iOS đang được cập nhật ở phiên bản tiếp theo.'
+      : 'Chức năng đính kèm tệp yêu cầu bản cài đặt APK v1.0.4. Vui lòng tải bản APK mới nhất.'
   );
   return null;
 }

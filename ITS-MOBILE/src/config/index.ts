@@ -11,18 +11,7 @@ export interface AppConfig {
  * Hỗ trợ cả Vite (import.meta.env) và React Native / Node (process.env)
  */
 const getEnvVar = (key: string, viteKey?: string): string | undefined => {
-  // 1. Kiểm tra Vite import.meta.env
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-    const metaEnv = (import.meta as any).env;
-    if (viteKey && metaEnv[viteKey]) {
-      return metaEnv[viteKey];
-    }
-    if (metaEnv[key]) {
-      return metaEnv[key];
-    }
-  }
-
-  // 2. Kiểm tra process.env
+  // Kiểm tra process.env (hỗ trợ bởi cả React Native / Metro và Vite qua define)
   if (typeof process !== 'undefined' && process.env) {
     if (process.env[key]) {
       return process.env[key];
