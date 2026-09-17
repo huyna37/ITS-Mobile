@@ -29,7 +29,7 @@ const getEnvVar = (key: string, viteKey?: string): string | undefined => {
  * - Ưu tiên 1: Đọc từ file .env (VITE_API_BASE_URL hoặc API_BASE_URL)
  * - Ưu tiên 2: Tự resolve theo Hostname nếu đang chạy trình duyệt Web (localhost / LAN IP)
  * - Ưu tiên 3: Localhost khi chạy Debug Mobile
- * - Mặc định: Server thật 10.0.229.55:32281
+ * - Mặc định: Server thật 10.150.192.104:32281
  */
 const resolveApiBaseUrl = (): string => {
   // 1. Đọc từ file .env
@@ -53,7 +53,7 @@ const resolveApiBaseUrl = (): string => {
   }
 
   // 4. Mặc định cho bản Release Production
-  return 'http://10.0.229.55:32281';
+  return 'http://10.150.192.104:32281';
 };
 
 const rawTimeout = getEnvVar('API_TIMEOUT_MS');
