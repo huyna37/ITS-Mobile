@@ -31,14 +31,14 @@ $ReleaseDate = (Get-Date).ToString("yyyy-MM-dd HH:mm")
 # -------------------------------------------------------------
 if ($Platform -eq "all" -or $Platform -eq "android") {
     Write-Host ""
-    Write-Host "[1] Bundling Android JS Bundle (Metro/Hermes)..." -ForegroundColor Yellow
+    Write-Host "[1] Bundling Android JS Bundle (Metro)..." -ForegroundColor Yellow
     $AndroidBundle = Join-Path $OutputDir "index.android.bundle"
 
     Set-Location $MobileDir
-    npx @react-native/community-cli bundle --platform android --dev false --entry-file index.js --bundle-output $AndroidBundle --assets-dest $OutputDir
+    npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output dist-ota/index.android.bundle --assets-dest dist-ota
 
-    if ($LASTEXITCODE -ne 0) {
-        npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output $AndroidBundle --assets-dest $OutputDir
+    if (Test-Path (Join-Path $MobileDir "dist-ota\index.android.bundle")) {
+        Copy-Item -Path (Join-Path $MobileDir "dist-ota\index.android.bundle") -Destination $AndroidBundle -Force
     }
 
     if (Test-Path $AndroidBundle) {
@@ -79,14 +79,14 @@ if ($Platform -eq "all" -or $Platform -eq "android") {
 # -------------------------------------------------------------
 if ($Platform -eq "all" -or $Platform -eq "ios") {
     Write-Host ""
-    Write-Host "[2] Bundling iOS JS Bundle (Metro/Hermes)..." -ForegroundColor Yellow
+    Write-Host "[2] Bundling iOS JS Bundle (Metro)..." -ForegroundColor Yellow
     $IosBundle = Join-Path $OutputDir "main.jsbundle"
 
     Set-Location $MobileDir
-    npx @react-native/community-cli bundle --platform ios --dev false --entry-file index.js --bundle-output $IosBundle --assets-dest $OutputDir
+    npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output dist-ota/main.jsbundle --assets-dest dist-ota
 
-    if ($LASTEXITCODE -ne 0) {
-        npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output $IosBundle --assets-dest $OutputDir
+    if (Test-Path (Join-Path $MobileDir "dist-ota\main.jsbundle")) {
+        Copy-Item -Path (Join-Path $MobileDir "dist-ota\main.jsbundle") -Destination $IosBundle -Force
     }
 
     if (Test-Path $IosBundle) {

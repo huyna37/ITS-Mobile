@@ -36,8 +36,16 @@ public class OtaController : ControllerBase
         var manifestPath = Path.Combine(otaFolder, isIos ? "manifest-ios.json" : "manifest.json");
         if (isIos && !System.IO.File.Exists(manifestPath))
         {
-            // Fallback sang manifest.json nếu chưa có manifest riêng cho iOS
-            manifestPath = Path.Combine(otaFolder, "manifest.json");
+            // Tuyệt đối không fallback sang manifest.json của Android khi thiết bị là iOS
+            return Ok(new OtaCheckResponse
+            {
+                HasUpdate = false,
+                LatestVersion = currentVersion ?? "1.0.0-base",
+                BundleUrl = "",
+                ChangeLog = "Chưa có bản cập nhật OTA riêng cho iOS.",
+                Mandatory = false,
+                ReleaseDate = DateTime.UtcNow.ToString("yyyy-MM-dd")
+            });
         }
 
         string latestVersion = "1.0.1";
@@ -105,9 +113,15 @@ public class OtaController : ControllerBase
             {
                 return PhysicalFile(iosBundle, "application/octet-stream", "main.jsbundle");
             }
+            return NotFound(new { error = "Chưa có file bundle OTA dành riêng cho iOS trên máy chủ." });
         }
 
-        var zipFile = Path.Combine(otaFolder, "bundle.zip");
+        // Android
+        var zipFile = Path.Combine(otaFolder, "bundle-android.zip");
+        if (!System.IO.File.Exists(zipFile))
+        {
+            zipFile = Path.Combine(otaFolder, "bundle.zip");
+        }
         var bundleFile = Path.Combine(otaFolder, "index.android.bundle");
 
         if (System.IO.File.Exists(zipFile))
@@ -120,6 +134,6 @@ public class OtaController : ControllerBase
             return PhysicalFile(bundleFile, "application/octet-stream", "index.android.bundle");
         }
 
-        return NotFound(new { error = "Chưa có file bundle OTA trên máy chủ." });
+        return NotFound(new { error = "Chưa có file bundle OTA dành cho Android trên máy chủ." });
     }
 }

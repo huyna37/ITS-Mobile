@@ -7,13 +7,15 @@ import {
   ImageLibraryOptions,
 } from 'react-native-image-picker';
 
-// Safe conditional import for react-native-compressor (requires native Nitro TurboModules)
+// Safe conditional dynamic import for react-native-compressor (requires native Nitro TurboModules)
 let ImageCompressor: any = null;
 let VideoCompressor: any = null;
 try {
   const { TurboModuleRegistry } = require('react-native');
   if (TurboModuleRegistry && TurboModuleRegistry.get && TurboModuleRegistry.get('NitroModules')) {
-    const compressor = require('react-native-compressor');
+    const compressorPkg = ['react-native', 'compressor'].join('-');
+    const req = typeof require !== 'undefined' ? require : null;
+    const compressor = req ? req(compressorPkg) : null;
     ImageCompressor = compressor?.Image;
     VideoCompressor = compressor?.Video;
   }

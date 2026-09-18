@@ -43,13 +43,17 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
     RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
 #else
     if let docDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-      let mainBundle = docDir.appendingPathComponent("ota/main.jsbundle")
+      let otaDir = docDir.appendingPathComponent("ota")
+      let mainBundle = otaDir.appendingPathComponent("main.jsbundle")
       if FileManager.default.fileExists(atPath: mainBundle.path) {
+        // Kiểm tra an toàn: Nếu file bundle chứa thành phần Android (AndroidTextInput), xóa ngay và về bản gốc
+        if let data = try? Data(contentsOf: mainBundle, options: .mappedIfSafe),
+           let content = String(data: data.prefix(200000), encoding: .utf8),
+           content.contains("AndroidTextInput") {
+          try? FileManager.default.removeItem(at: otaDir)
+          return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+        }
         return mainBundle
-      }
-      let altBundle = docDir.appendingPathComponent("ota/index.android.bundle")
-      if FileManager.default.fileExists(atPath: altBundle.path) {
-        return altBundle
       }
     }
     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")

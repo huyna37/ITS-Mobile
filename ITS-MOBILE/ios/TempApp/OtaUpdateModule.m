@@ -154,6 +154,24 @@ didFinishDownloadingToURL:(NSURL *)location
         [fm copyItemAtURL:location toURL:destFile error:&error];
     }
     
+    // Kiểm tra tính tương thích: Nếu bundle chứa AndroidTextInput, từ chối áp dụng ngay
+    if ([fm fileExistsAtPath:[destFile path]]) {
+        NSData *bundleData = [NSData dataWithContentsOfURL:destFile options:NSDataReadingMappedIfSafe error:nil];
+        if (bundleData.length > 0) {
+            NSUInteger checkLen = MIN(bundleData.length, (NSUInteger)200000);
+            NSString *sample = [[NSString alloc] initWithData:[bundleData subdataWithRange:NSMakeRange(0, checkLen)] encoding:NSUTF8StringEncoding];
+            if (sample && [sample containsString:@"AndroidTextInput"]) {
+                [fm removeItemAtURL:destFile error:nil];
+                if (self.downloadReject) {
+                    self.downloadReject(@"ERR_INCOMPATIBLE_BUNDLE", @"Gói bundle không tương thích với iOS (phát hiện Android bundle)!", nil);
+                    self.downloadResolve = nil;
+                    self.downloadReject = nil;
+                }
+                return;
+            }
+        }
+    }
+    
     NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
     [prefs setObject:self.targetVersion forKey:kOtaPrefsKeyVersion];
     [prefs setDouble:[[NSDate date] timeIntervalSince1970] * 1000.0 forKey:kOtaPrefsKeyUpdatedAt];

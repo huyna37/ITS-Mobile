@@ -93,10 +93,26 @@ export const LoginScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo Squircle xanh với phi thuyền trắng căn chính tâm 100% */}
-          <View style={styles.logoSquircle}>
+          {/* Logo Squircle xanh - Nhấn giữ 2s để khôi phục bản gốc khẩn cấp nếu gặp lỗi bundle */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onLongPress={async () => {
+              try {
+                const { resetOtaToFactory } = require('../../services/otaService');
+                showAppToast({
+                  type: 'info',
+                  title: 'Khôi phục bản gốc',
+                  message: 'Đang xóa bản cập nhật lỗi và khởi động lại ứng dụng...',
+                });
+                await resetOtaToFactory();
+              } catch (e) {
+                // Fallback
+              }
+            }}
+            style={styles.logoSquircle}
+          >
             <PaperPlaneIcon size={48} color="#ffffff" />
-          </View>
+          </TouchableOpacity>
 
           {/* Tiêu đề ứng dụng */}
           <Text style={styles.titleLine1}>VẬN HÀNH CAO TỐC</Text>
