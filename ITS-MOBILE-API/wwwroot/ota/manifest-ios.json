@@ -1,8 +1,8 @@
 ﻿{
-    "latestVersion":  "1.0.1",
+    "latestVersion":  "1.7.0",
     "mandatory":  false,
-    "releaseDate":  "2026-09-18 09:45",
+    "releaseDate":  "2026-09-18 10:13",
     "hasUpdate":  true,
-    "changeLog":  "Cap nhat truc tuyen: Toi uu hieu nang va giao dien ca truc.",
+    "changeLog":  "Ban cap nhat v1.7: Toi uu ca truc va chuan hoa giao dien nhap lieu iOS/Android",
     "bundleUrl":  "/api/ota/bundle/latest?platform=ios"
 }
