@@ -24,9 +24,7 @@ workflows:
       xcode: latest
       cocoapods: default
     triggering:
-      events:
-        - push
-        - pull_request
+      events: [] # Đã tắt tự động khi push, chỉ trigger thủ công qua URL / API
       branch_patterns:
         - pattern: main
           include: true
