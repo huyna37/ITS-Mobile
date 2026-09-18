@@ -58,6 +58,13 @@ export const TasksScreen: React.FC = () => {
 
   const q = searchQuery.trim().toLowerCase();
 
+  const getTaskTimestamp = (t: IncidentTask): number => {
+    const raw = t.updatedAt || t.createdAt;
+    if (!raw) return 0;
+    const parsed = new Date(raw).getTime();
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
   const activeTasks: IncidentTask[] = tasks
     .filter((t: IncidentTask) => t.step === 'RECEIVED' || t.step === 'IN_PROGRESS')
     .filter((t: IncidentTask) => {
@@ -70,7 +77,8 @@ export const TasksScreen: React.FC = () => {
         t.description.toLowerCase().includes(q) ||
         t.direction.toLowerCase().includes(q)
       );
-    });
+    })
+    .sort((a, b) => getTaskTimestamp(b) - getTaskTimestamp(a));
 
   const completedTasks: IncidentTask[] = tasks
     .filter((t: IncidentTask) => t.step === 'COMPLETED')
@@ -82,7 +90,8 @@ export const TasksScreen: React.FC = () => {
         t.title.toLowerCase().includes(q) ||
         kmStr.includes(q)
       );
-    });
+    })
+    .sort((a, b) => getTaskTimestamp(b) - getTaskTimestamp(a));
 
   const filteredEvents: ExpresswayEvent[] = events.filter((e: ExpresswayEvent) => {
     if (!q) return true;
