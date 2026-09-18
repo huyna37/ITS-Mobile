@@ -55,6 +55,7 @@ trigger-build.ps1
 # .NET / C#
 bin/
 obj/
+publish/
 *.user
 *.suo
 *.userprefs
