@@ -5,8 +5,6 @@ import {
   Platform,
   ScrollView,
   Alert,
-  Image,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -21,7 +19,6 @@ import {
   PaperPlaneIcon,
 } from '../../components/icons/SvgIcons';
 import { APP_CONFIG } from '../../config';
-import { FONT_FAMILY } from '../../constants';
 import {
   authenticateWithBiometrics,
   BiometricType,
@@ -30,7 +27,7 @@ import {
 } from '../../services/biometricService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppToast } from '../../store/useToastStore';
-import appBannerImg from '../../assets/images/app-banner.png';
+import { styles } from './LoginScreen.styles';
 
 export const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -51,43 +48,70 @@ export const LoginScreen: React.FC = () => {
 
   const { login, loginWithBiometrics, isLoading, error, clearError } = useAuthStore();
 
+  const autoPromptedRef = useRef<boolean>(false);
+
+  // Xử lý đăng nhập bằng Face ID / vân tay
+  const handleBiometricLogin = useCallback(
+    async (isAuto = false, overrideType?: BiometricType) => {
+      if (!isAuto) {
+        // Hiệu ứng nhấn
+        Animated.sequence([
+          Animated.timing(biometricScale, { toValue: 0.92, duration: 100, useNativeDriver: true }),
+          Animated.timing(biometricScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+        ]).start();
+      }
+
+      const activeType = overrideType ?? biometricType;
+      const label = activeType === 'FaceID' ? 'Face ID' : 'vân tay';
+      const authResult = await authenticateWithBiometrics(`Đăng nhập bằng ${label}`);
+      if (authResult.success) {
+        const loggedIn = loginWithBiometrics();
+        if (loggedIn) {
+          showAppToast('success', 'Thành công', 'Đăng nhập thành công');
+        } else {
+          showAppToast(
+            'warning',
+            'Chưa kích hoạt',
+            'Vui lòng đăng nhập mật khẩu và bật sinh trắc học'
+          );
+        }
+      } else {
+        // Nếu là thao tác chủ động bấm tay, hiển thị thông báo lỗi
+        if (!isAuto) {
+          const msg = authResult.error?.includes('Cancel')
+            ? 'Đã hủy thao tác xác thực'
+            : `Không nhận diện được ${label}`;
+          showAppToast('error', 'Thất bại', msg);
+        }
+      }
+    },
+    [biometricType, biometricScale, loginWithBiometrics]
+  );
+
   // Kiểm tra biometric và trạng thái kích hoạt trong cài đặt khi mở màn hình
   useEffect(() => {
+    let isMounted = true;
     checkBiometricAvailable().then(({ available, type }) => {
+      if (!isMounted) return;
       setBiometricType(type);
       const enabled = isBiometricEnabled();
       setShowBiometric(available && enabled);
-    });
-  }, []);
 
-  // Xử lý đăng nhập bằng Face ID / vân tay
-  const handleBiometricLogin = useCallback(async () => {
-    // Hiệu ứng nhấn
-    Animated.sequence([
-      Animated.timing(biometricScale, { toValue: 0.92, duration: 100, useNativeDriver: true }),
-      Animated.timing(biometricScale, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
-
-    const label = biometricType === 'FaceID' ? 'Face ID' : 'vân tay';
-    const authResult = await authenticateWithBiometrics(`Đăng nhập bằng ${label}`);
-    if (authResult.success) {
-      const loggedIn = loginWithBiometrics();
-      if (loggedIn) {
-        showAppToast('success', 'Thành công', 'Đăng nhập thành công');
-      } else {
-        showAppToast(
-          'warning',
-          'Chưa kích hoạt',
-          'Vui lòng đăng nhập mật khẩu và bật sinh trắc học'
-        );
+      // Tự động kích hoạt Face ID 1 lần khi vừa mở màn hình nếu đã bật
+      if (available && enabled && !autoPromptedRef.current) {
+        autoPromptedRef.current = true;
+        setTimeout(() => {
+          if (isMounted) {
+            handleBiometricLogin(true, type);
+          }
+        }, 300);
       }
-    } else {
-      const msg = authResult.error?.includes('Cancel')
-        ? 'Đã hủy thao tác xác thực'
-        : `Không nhận diện được ${label}`;
-      showAppToast('error', 'Thất bại', msg);
-    }
-  }, [biometricType, biometricScale, loginWithBiometrics]);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [handleBiometricLogin]);
 
   const validateForm = (): boolean => {
     const errors: { username?: string; extension?: string; password?: string } = {};
@@ -136,8 +160,6 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const bannerSource = typeof appBannerImg === 'string' ? { uri: appBannerImg } : appBannerImg;
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -148,7 +170,7 @@ export const LoginScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo Squircle với hình ảnh giám sát cao tốc ITS - Nhấn giữ 2s để khôi phục bản gốc khẩn cấp nếu gặp lỗi bundle */}
+          {/* Logo Squircle hệ thống ITS - Nhấn giữ 2s để khôi phục bản gốc khẩn cấp nếu gặp lỗi bundle */}
           <TouchableOpacity
             activeOpacity={0.85}
             onLongPress={async () => {
@@ -166,11 +188,7 @@ export const LoginScreen: React.FC = () => {
             }}
             style={styles.logoSquircle}
           >
-            <Image
-              source={bannerSource}
-              style={styles.logoImage}
-              resizeMode="cover"
-            />
+            <PaperPlaneIcon size={48} color="#ffffff" />
           </TouchableOpacity>
 
           {/* Tiêu đề ứng dụng */}
@@ -301,7 +319,7 @@ export const LoginScreen: React.FC = () => {
                 <TouchableOpacity
                   style={styles.biometricButton}
                   activeOpacity={0.8}
-                  onPress={handleBiometricLogin}
+                  onPress={() => handleBiometricLogin(false)}
                 >
                   {biometricType === 'FaceID' ? (
                     <FaceIdIcon size={28} color="#0090e7" />
@@ -322,208 +340,3 @@ export const LoginScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 36,
-    paddingBottom: 40,
-    alignItems: 'center',
-  },
-  logoSquircle: {
-    width: 104,
-    height: 104,
-    borderRadius: 28,
-    backgroundColor: '#0090e7',
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0090e7',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 8,
-    marginBottom: 20,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-  },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  titleLine1: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0090e7',
-    letterSpacing: 0.3,
-    textAlign: 'center',
-  },
-  titleLine2: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0090e7',
-    letterSpacing: 0.3,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  subtitle: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748b',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 32,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  inputLabel: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  textInput: {
-    height: 52,
-    backgroundColor: '#f8fafc',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0f172a',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-    marginBottom: 16,
-  },
-  passwordWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 52,
-    backgroundColor: '#f8fafc',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-    marginBottom: 16,
-  },
-  passwordInput: {
-    flex: 1,
-    height: '100%',
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  eyeButton: {
-    padding: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inputErrorBorder: {
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    backgroundColor: '#fffcfb',
-  },
-  inlineErrorText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#f87171',
-    marginTop: -8,
-    marginBottom: 14,
-    marginLeft: 4,
-  },
-  loginButton: {
-    height: 54,
-    backgroundColor: '#0090e7',
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    shadowColor: '#0090e7',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#94a3b8',
-    shadowOpacity: 0.1,
-  },
-  loginButtonText: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#ffffff',
-    letterSpacing: 0.5,
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 20,
-  },
-  errorIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  errorText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#b91c1c',
-    lineHeight: 18,
-  },
-  biometricRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  biometricDivider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e2e8f0',
-  },
-  biometricDividerText: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#94a3b8',
-    marginHorizontal: 12,
-    letterSpacing: 0.5,
-  },
-  biometricButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 52,
-    backgroundColor: '#f0f9ff',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#bae6fd',
-    gap: 10,
-  },
-  biometricButtonText: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0090e7',
-  },
-});
