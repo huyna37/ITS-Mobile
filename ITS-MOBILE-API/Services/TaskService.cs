@@ -58,7 +58,7 @@ public class TaskService
         // 2. IncidentLogs
         var logs = await _db.IncidentLogs
             .Where(l => (l.TaskId.HasValue && taskIds.Contains(l.TaskId.Value)) || (l.IncidentProfileId > 0 && incProfileIds.Contains(l.IncidentProfileId)))
-            .OrderBy(l => l.CreationTime)
+            .OrderByDescending(l => l.CreationTime)
             .ToListAsync();
 
         var notesByTaskId = new Dictionary<long, List<TaskNoteDto>>();
@@ -107,7 +107,7 @@ public class TaskService
             Level: GetLevel(t.IncidentProfile?.Level ?? 0),             // [dbo].[IncidentProfiles].[Level] (Cấp độ sự cố: 0=Thấp/Thông tin, 1=Nghiêm trọng, 2=Trung bình)
             Location: FormatLocation(t.IncidentProfile),                // [dbo].[IncidentProfiles].[PositionKM] + [PositionM] (Lý trình: Km xxx+xxx)
             Direction: GetDirectionText(t.IncidentProfile?.Direction ?? 0), // [dbo].[IncidentProfiles].[Direction] (Quy ước: 1=Hà Nội -> Lào Cai, 2=Lào Cai -> Hà Nội)
-            Time: t.StartDate.ToString("dd/MM"),                        // [dbo].[TaskOfIncidents].[StartDate]
+            Time: t.StartDate.ToString("yyyy-MM-ddTHH:mm:ssZ"),        // [dbo].[TaskOfIncidents].[StartDate]
             Status: t.Status,                                           // [dbo].[TaskOfIncidents].[Status] (0: Đã giao, 1: Đã nhận, 2: Đang xử lý, 3: Hoàn thành)
             Description: t.IncidentProfile?.Description,                // [dbo].[IncidentProfiles].[Description] (Mô tả chi tiết sự cố)
             Script: t.IncidentProfile?.Script,                          // [dbo].[IncidentProfiles].[Script] / [ScriptId] (Kịch bản phương án xử lý)
@@ -126,7 +126,8 @@ public class TaskService
         var query = _db.TaskOfIncidents
             .Where(t => !t.IsDeleted && t.Status == 3)
             .Include(t => t.IncidentProfile)
-            .OrderByDescending(t => t.EndDate);
+            .OrderByDescending(t => t.EndDate)
+            .ThenByDescending(t => t.CreationTime);
 
         var tasks = count.HasValue
             ? await query.Take(count.Value).ToListAsync()
@@ -141,7 +142,7 @@ public class TaskService
             Level: GetLevel(t.IncidentProfile?.Level ?? 0),
             Location: FormatLocation(t.IncidentProfile),
             Direction: GetDirectionText(t.IncidentProfile?.Direction ?? 0),
-            Time: t.EndDate.ToString("dd/MM"),
+            Time: t.EndDate.ToString("yyyy-MM-ddTHH:mm:ssZ"),
             Status: 3,
             Description: t.IncidentProfile?.Description,
             Script: t.IncidentProfile?.Script,
@@ -185,7 +186,7 @@ public class TaskService
                 );
             }).ToList();
 
-        logs.Insert(0, new StatusLogEntry(
+        logs.Add(new StatusLogEntry(
             Time: task.StartDate.ToString("HH:mm dd/MM/yyyy"),
             Text: "Phân công nhiệm vụ từ ITS/TMC",
             Actor: "Hệ thống",

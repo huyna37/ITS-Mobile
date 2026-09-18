@@ -52,6 +52,7 @@ interface ParsedLogItem {
   author: string;
   content: string;
   time: string;
+  createdAt?: string;
   oldStatus?: string;
   newStatus?: string;
   isStatusChange: boolean;
@@ -265,6 +266,7 @@ function parseTaskNote(note: {
     author,
     content,
     time,
+    createdAt: note.createdAt,
     oldStatus,
     newStatus,
     isStatusChange,
@@ -281,7 +283,13 @@ export const TaskDetailScreen: React.FC = () => {
   const currentTask = tasks.find((t) => t.id === initialTask.id);
   const task = currentTask !== undefined ? currentTask : initialTask;
 
-  const allParsedNotes = (task.notes || []).map(parseTaskNote);
+  // Sắp xếp ghi nhận và lịch sử trạng thái từ MỚI ĐẾN CŨ (thời gian mới nhất ở trên đầu)
+  const sortedNotes = [...(task.notes || [])].sort((a, b) => {
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return timeB - timeA;
+  });
+  const allParsedNotes = sortedNotes.map(parseTaskNote);
   const statusHistory = allParsedNotes.filter((n) => n.isStatusChange);
   const fieldNotes = allParsedNotes.filter((n) => n.isFieldNote);
 
@@ -653,8 +661,8 @@ export const TaskDetailScreen: React.FC = () => {
                 statusHistory.map((item, idx) => (
                   <React.Fragment key={item.id || idx}>
                     <View style={styles.timelineItem}>
-                      <View style={idx === statusHistory.length - 1 ? styles.dotWithRing : styles.solidDot}>
-                        {idx === statusHistory.length - 1 ? <View style={styles.innerDot} /> : null}
+                      <View style={idx === 0 ? styles.dotWithRing : styles.solidDot}>
+                        {idx === 0 ? <View style={styles.innerDot} /> : null}
                       </View>
                       <View style={styles.timelineContent}>
                         <View style={styles.statusTransitionCard}>
@@ -683,9 +691,36 @@ export const TaskDetailScreen: React.FC = () => {
                 ))
               ) : (
                 <>
+                  {currentStepNum > 1 && (
+                    <>
+                      <View style={styles.timelineItem}>
+                        <View style={styles.dotWithRing}>
+                          <View style={styles.innerDot} />
+                        </View>
+                        <View style={styles.timelineContent}>
+                          <View style={styles.statusTransitionCard}>
+                            <View style={styles.statusTransitionRow}>
+                              <View style={styles.statusBadgeOld}>
+                                <Text style={styles.statusBadgeOldText}>Đã tiếp nhận</Text>
+                              </View>
+                              <Text style={styles.statusTransitionArrow}>➔</Text>
+                              <View style={styles.statusBadgeNew}>
+                                <Text style={styles.statusBadgeNewText}>{cleanStatusLabel(statusLabel)}</Text>
+                              </View>
+                            </View>
+                            <View style={styles.timelineMetaRow}>
+                              <Text style={styles.timelineTime}>{formatFullDateTime(task.updatedAt) || '14:30 20/04/2026'}</Text>
+                              <Text style={styles.timelineActor}>• Tuần kiểm tra VEC</Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.verticalLine} />
+                    </>
+                  )}
                   <View style={styles.timelineItem}>
-                    <View style={styles.dotWithRing}>
-                      <View style={styles.innerDot} />
+                    <View style={currentStepNum > 1 ? styles.solidDot : styles.dotWithRing}>
+                      {currentStepNum <= 1 ? <View style={styles.innerDot} /> : null}
                     </View>
                     <View style={styles.timelineContent}>
                       <View style={styles.statusTransitionCard}>
@@ -705,31 +740,6 @@ export const TaskDetailScreen: React.FC = () => {
                       </View>
                     </View>
                   </View>
-                  {currentStepNum > 1 && (
-                    <>
-                      <View style={styles.verticalLine} />
-                      <View style={styles.timelineItem}>
-                        <View style={styles.solidDot} />
-                        <View style={styles.timelineContent}>
-                          <View style={styles.statusTransitionCard}>
-                            <View style={styles.statusTransitionRow}>
-                              <View style={styles.statusBadgeOld}>
-                                <Text style={styles.statusBadgeOldText}>Đã tiếp nhận</Text>
-                              </View>
-                              <Text style={styles.statusTransitionArrow}>➔</Text>
-                              <View style={styles.statusBadgeNew}>
-                                <Text style={styles.statusBadgeNewText}>{cleanStatusLabel(statusLabel)}</Text>
-                              </View>
-                            </View>
-                            <View style={styles.timelineMetaRow}>
-                              <Text style={styles.timelineTime}>{formatFullDateTime(task.updatedAt) || '14:30 20/04/2026'}</Text>
-                              <Text style={styles.timelineActor}>• Tuần kiểm tra VEC</Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    </>
-                  )}
                 </>
               )}
             </View>
@@ -1101,8 +1111,8 @@ export const TaskDetailScreen: React.FC = () => {
         onRequestClose={() => setPreviewMediaItem(null)}
       >
         <View style={styles.previewModalOverlay}>
-          {/* Header modal */}
-          <View style={styles.previewModalHeader}>
+          {/* Header modal với safe area top để nút X không bị đè bởi tai thỏ / Dynamic Island */}
+          <View style={[styles.previewModalHeader, { paddingTop: topInset, height: 54 + topInset }]}>
             <Text style={styles.previewModalTitle} numberOfLines={1}>
               {previewMediaItem?.name || 'Xem trước tệp'}
             </Text>
@@ -1124,14 +1134,19 @@ export const TaskDetailScreen: React.FC = () => {
                 style={styles.previewCloseBtn}
                 activeOpacity={0.7}
                 onPress={() => setPreviewMediaItem(null)}
+                hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
               >
-                <CloseIcon size={20} color="#ffffff" />
+                <CloseIcon size={22} color="#ffffff" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Vùng hiển thị nội dung tệp */}
-          <View style={styles.previewContentContainer}>
+          {/* Vùng hiển thị nội dung tệp - Bấm vào nền tối để đóng modal */}
+          <TouchableOpacity
+            style={styles.previewContentContainer}
+            activeOpacity={1}
+            onPress={() => setPreviewMediaItem(null)}
+          >
             {previewMediaItem?.type === 'video' ? (
               Platform.OS === 'web' ? (
                 // @ts-ignore: HTML5 video on web
@@ -1140,9 +1155,9 @@ export const TaskDetailScreen: React.FC = () => {
                   controls
                   autoPlay
                   style={{
-                    maxWidth: '92%',
-                    maxHeight: '75vh',
-                    borderRadius: 12,
+                    maxWidth: '85%',
+                    maxHeight: '60vh',
+                    borderRadius: 14,
                     boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
                   }}
                 />
@@ -1181,14 +1196,31 @@ export const TaskDetailScreen: React.FC = () => {
               </View>
             ) : (
               previewMediaItem && (
-                <Image
-                  source={{ uri: previewMediaItem.uri }}
-                  style={styles.previewFullImage}
-                  resizeMode="contain"
-                />
+                <View
+                  style={styles.previewImageCard}
+                  onStartShouldSetResponder={() => true}
+                >
+                  <Image
+                    source={{ uri: previewMediaItem.uri }}
+                    style={styles.previewFullImage}
+                    resizeMode="contain"
+                  />
+                </View>
               )
             )}
-          </View>
+
+            {/* Nút đóng phụ thuận tiện ở phía dưới màn hình */}
+            <View style={[styles.previewBottomBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+              <TouchableOpacity
+                style={styles.previewBottomCloseBtn}
+                activeOpacity={0.8}
+                onPress={() => setPreviewMediaItem(null)}
+              >
+                <CloseIcon size={16} color="#ffffff" />
+                <Text style={styles.previewBottomCloseText}>Đóng xem trước</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -1592,11 +1624,9 @@ const styles = StyleSheet.create({
   },
   previewModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.94)',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
   },
   previewModalHeader: {
-    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1628,19 +1658,63 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   previewCloseBtn: {
-    padding: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   previewContentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  previewImageCard: {
+    width: '86%',
+    height: '64%',
+    maxWidth: 400,
+    maxHeight: 480,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 10,
   },
   previewFullImage: {
-    width: '96%',
-    height: '86%',
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+  },
+  previewBottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
+  },
+  previewBottomCloseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  previewBottomCloseText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
   },
   previewUnsupportedBox: {
     alignItems: 'center',
