@@ -8,3 +8,5 @@ docs
 .vscode
 ITS-MOBILE-API/bin
 ITS-MOBILE-API/obj
+dist-ota
+ITS-MOBILE/dist-ota

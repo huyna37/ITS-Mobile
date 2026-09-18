@@ -1,8 +1,8 @@
-﻿{
-    "latestVersion":  "1.8.2",
-    "mandatory":  false,
-    "releaseDate":  "2026-09-18 10:52",
-    "hasUpdate":  true,
-    "changeLog":  "Ban cap nhat v1.8.2: Nang cap fallback passcode va toi uu xac thuc Face ID tren iOS",
-    "bundleUrl":  "/api/ota/bundle/latest?platform=ios"
+{
+    "latestVersion": "1.8.20260918.1414",
+    "mandatory": false,
+    "releaseDate": "2026-09-18 14:14",
+    "hasUpdate": true,
+    "changeLog": "Bản cập nhật tự động v1.8.20260918.1414 (Build: 2026-09-18 14:14): Tối ưu hiệu năng và cập nhật mới nhất.",
+    "bundleUrl": "/api/ota/bundle/latest?platform=ios"
 }

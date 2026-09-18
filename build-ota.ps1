@@ -1,9 +1,14 @@
 param (
-    [string]$Version = "1.0.1",
+    [string]$Version = "auto",
     [string]$Notes = "Cap nhat truc tuyen: Toi uu hieu nang va giao dien ca truc.",
     [ValidateSet("all", "android", "ios")]
     [string]$Platform = "all"
 )
+
+if ($Version -eq "auto" -or [string]::IsNullOrWhiteSpace($Version)) {
+    $Now = Get-Date
+    $Version = "1.8.$($Now.ToString('yyyyMMdd.HHmm'))"
+}
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   ITS Mobile VEC - Packaging OTA Hot Update (JS Bundle)  " -ForegroundColor Cyan

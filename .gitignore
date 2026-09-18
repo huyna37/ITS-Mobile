@@ -14,6 +14,10 @@ out/
 web-build/
 build-output/
 dist-ota/
+**/dist-ota/
+ITS-MOBILE-API/wwwroot/ota/*.bundle
+ITS-MOBILE-API/wwwroot/ota/*.jsbundle
+ITS-MOBILE-API/wwwroot/ota/*.zip
 trigger-build.ps1
 
 # React Native & Metro
