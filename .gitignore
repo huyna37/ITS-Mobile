@@ -14,6 +14,7 @@ out/
 web-build/
 build-output/
 dist-ota/
+trigger-build.ps1
 
 # React Native & Metro
 .metro-health-check*
