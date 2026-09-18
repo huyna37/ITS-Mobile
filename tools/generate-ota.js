@@ -18,34 +18,16 @@ if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
 }
 
-// 1. Trích xuất prefix version từ manifest cũ (ví dụ: "1.8.2" -> "1.8")
-let basePrefix = '1.8';
-if (fs.existsSync(manifestRefPath)) {
-    try {
-        let raw = fs.readFileSync(manifestRefPath, 'utf8');
-        raw = raw.replace(/^\uFEFF/, '').trim();
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.latestVersion) {
-            const parts = parsed.latestVersion.split('.');
-            if (parts.length >= 2) {
-                basePrefix = `${parts[0]}.${parts[1]}`;
-            }
-        }
-    } catch (e) {
-        console.warn('[OTA] Không đọc được manifest cũ, sử dụng prefix mặc định:', basePrefix);
-    }
-}
-
-// 2. Tính toán thời gian theo múi giờ Việt Nam (UTC+7)
+// 1. Tính toán thời gian theo múi giờ Việt Nam (UTC+7)
 const now = new Date(Date.now() + 7 * 3600 * 1000);
 const pad = (n) => String(n).padStart(2, '0');
 const timestamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}.${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}`;
 const releaseDate = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}`;
 
-// 3. Xác định phiên bản (ưu tiên OTA_VERSION nếu được chỉ định cụ thể)
+// 2. Xác định phiên bản: lấy trực tiếp đuôi timestamp dạng YYYYMMDD.HHmm (bỏ tiền tố 1.8)
 let version = process.env.OTA_VERSION;
 if (!version || version === 'auto' || version.trim() === '') {
-    version = `${basePrefix}.${timestamp}`;
+    version = timestamp;
 } else {
     version = version.trim();
 }
@@ -53,7 +35,7 @@ if (!version || version === 'auto' || version.trim() === '') {
 // 4. Xác định nội dung ghi chú cập nhật
 let notes = process.env.OTA_NOTES;
 if (!notes || notes.trim() === '') {
-    notes = `Bản cập nhật tự động v${version} (Build: ${releaseDate}): Tối ưu hiệu năng và cập nhật mới nhất.`;
+    notes = `Bản cập nhật v${version}: Nâng cấp hiệu năng, đồng bộ quy trình nghiệp vụ ca trực và tối ưu hệ thống.`;
 } else {
     notes = notes.trim();
 }

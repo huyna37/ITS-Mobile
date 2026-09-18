@@ -66,8 +66,24 @@ builder.Services.AddScoped<IncidentService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<OtaVersionService>();
 
 var app = builder.Build();
+
+// Đảm bảo bảng dbo.AppVersions tồn tại trong Database và đồng bộ dữ liệu ban đầu
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var otaService = scope.ServiceProvider.GetRequiredService<OtaVersionService>();
+        await otaService.EnsureTableAndSyncAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(ex, "[OTA] Không thể khởi tạo bảng AppVersions khi khởi động ứng dụng.");
+    }
+}
 
 // Global exception handler
 app.UseExceptionHandler(errorApp =>

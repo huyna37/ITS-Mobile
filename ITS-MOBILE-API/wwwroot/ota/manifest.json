@@ -1,8 +1,8 @@
 {
-    "latestVersion": "1.8.20260918.1414",
+    "latestVersion": "20260918.1440",
     "mandatory": false,
-    "releaseDate": "2026-09-18 14:14",
+    "releaseDate": "2026-09-18 14:40",
     "hasUpdate": true,
-    "changeLog": "Bản cập nhật tự động v1.8.20260918.1414 (Build: 2026-09-18 14:14): Tối ưu hiệu năng và cập nhật mới nhất.",
+    "changeLog": "Bản cập nhật v20260918.1440: Nâng cấp hiệu năng, đồng bộ quy trình nghiệp vụ ca trực và tối ưu hệ thống.",
     "bundleUrl": "/api/ota/bundle/latest?platform=android"
 }

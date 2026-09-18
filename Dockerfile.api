@@ -3,7 +3,7 @@
 # - Tự động bundle mã nguồn React Native (Android: index.android.bundle, iOS: main.jsbundle)
 # - Tự động nén bundle-android.zip, bundle-ios.zip, bundle.zip
 # - Tự động sinh OTA version mới theo timestamp (ví dụ: 1.8.YYYYMMDD.HHmm)
-# - Tự động cập nhật manifest.json & manifest-ios.json vào wwwroot/ota
+# - Tự động đồng bộ manifest & bundle vào wwwroot/ota (kể cả khi mount volume từ host)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -67,8 +67,9 @@ WORKDIR "/src/ITS-MOBILE-API"
 # Publish bản Release tối ưu hiệu năng
 RUN dotnet publish "ITS-MOBILE-API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Ghi đè toàn bộ các file OTA bundle và manifest mới sinh từ Stage 1 vào wwwroot/ota
+# Lưu trữ các file OTA bundle và manifest mới sinh vào cả wwwroot/ota và ota-dist
 COPY --from=ota-builder /output/ /app/publish/wwwroot/ota/
+COPY --from=ota-builder /output/ /app/publish/ota-dist/
 
 # ------------------------------------------------------------------------------
 # Stage 3: Runtime Image nhẹ với .NET 10 ASP.NET Core
@@ -83,8 +84,13 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 32281
 EXPOSE 8080
 
-# Copy sản phẩm đã publish từ stage build (đã chứa wwwroot/ota với version mới)
+# Copy sản phẩm đã publish từ stage build (đã chứa wwwroot/ota và ota-dist)
 COPY --from=build /app/publish .
 
-# Khởi chạy dịch vụ API
-ENTRYPOINT ["dotnet", "ITS-MOBILE-API.dll"]
+# Tạo entrypoint tự động đồng bộ file sang wwwroot/ota khi container chạy
+# (Đảm bảo tự động ghi đè ra thư mục host nếu chạy qua Docker Compose có mount volume)
+RUN printf '#!/bin/sh\nmkdir -p /app/wwwroot/ota\ncp -rf /app/ota-dist/* /app/wwwroot/ota/ 2>/dev/null || true\nexec dotnet ITS-MOBILE-API.dll "$@"\n' > /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+# Khởi chạy dịch vụ API qua entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]

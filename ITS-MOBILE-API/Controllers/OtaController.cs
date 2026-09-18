@@ -1,3 +1,4 @@
+using ITS_MOBILE_API.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ITS_MOBILE_API.Controllers;
@@ -12,71 +13,105 @@ public class OtaCheckResponse
     public string ReleaseDate { get; set; } = string.Empty;
 }
 
+public class PublishVersionDto
+{
+    public string Version { get; set; } = string.Empty;
+    public string Platform { get; set; } = "all"; // all, android, ios
+    public string ChangeLog { get; set; } = string.Empty;
+    public bool Mandatory { get; set; } = false;
+    public string? ReleaseDate { get; set; }
+}
+
 [ApiController]
 [Route("api/[controller]")]
 public class OtaController : ControllerBase
 {
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
+    private readonly OtaVersionService _otaVersionService;
 
-    public OtaController(IWebHostEnvironment env, IConfiguration config)
+    public OtaController(IWebHostEnvironment env, IConfiguration config, OtaVersionService otaVersionService)
     {
         _env = env;
         _config = config;
+        _otaVersionService = otaVersionService;
     }
 
     [HttpGet("check")]
-    public ActionResult<OtaCheckResponse> CheckUpdate(
+    public async Task<ActionResult<OtaCheckResponse>> CheckUpdate(
         [FromQuery] string currentVersion = "1.0.0-base",
         [FromQuery] string platform = "android")
     {
-        var otaFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "ota");
         bool isIos = string.Equals(platform, "ios", StringComparison.OrdinalIgnoreCase);
+        string normPlatform = isIos ? "ios" : "android";
 
-        var manifestPath = Path.Combine(otaFolder, isIos ? "manifest-ios.json" : "manifest.json");
-        if (isIos && !System.IO.File.Exists(manifestPath))
-        {
-            // Tuyệt đối không fallback sang manifest.json của Android khi thiết bị là iOS
-            return Ok(new OtaCheckResponse
-            {
-                HasUpdate = false,
-                LatestVersion = currentVersion ?? "1.0.0-base",
-                BundleUrl = "",
-                ChangeLog = "Chưa có bản cập nhật OTA riêng cho iOS.",
-                Mandatory = false,
-                ReleaseDate = DateTime.UtcNow.ToString("yyyy-MM-dd")
-            });
-        }
-
-        string latestVersion = "1.0.1";
-        string changeLog = "Cập nhật tối ưu giao diện ca trực, sửa lỗi hiển thị màu và cải thiện tốc độ xử lý sự cố.";
+        string latestVersion = "";
+        string changeLog = "";
         bool mandatory = false;
-        string releaseDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        string releaseDate = "";
 
-        if (System.IO.File.Exists(manifestPath))
+        // 1. Ưu tiên tra cứu từ bảng AppVersions trong Database
+        var dbVersion = await _otaVersionService.GetLatestActiveVersionAsync(normPlatform);
+        if (dbVersion != null)
         {
-            try
+            latestVersion = dbVersion.Version;
+            changeLog = dbVersion.ChangeLog;
+            mandatory = dbVersion.Mandatory;
+            releaseDate = dbVersion.ReleaseDate;
+        }
+        else
+        {
+            // 2. Fallback sang file manifest tĩnh nếu Database chưa có
+            var otaFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "ota");
+            var manifestPath = Path.Combine(otaFolder, isIos ? "manifest-ios.json" : "manifest.json");
+
+            if (isIos && !System.IO.File.Exists(manifestPath))
             {
-                var json = System.IO.File.ReadAllText(manifestPath);
-                var parsed = System.Text.Json.JsonSerializer.Deserialize<OtaCheckResponse>(json, new System.Text.Json.JsonSerializerOptions
+                return Ok(new OtaCheckResponse
                 {
-                    PropertyNameCaseInsensitive = true
+                    HasUpdate = false,
+                    LatestVersion = currentVersion ?? "1.0.0-base",
+                    BundleUrl = "",
+                    ChangeLog = "Chưa có bản cập nhật OTA riêng cho iOS.",
+                    Mandatory = false,
+                    ReleaseDate = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm")
                 });
-                if (parsed != null)
+            }
+
+            if (System.IO.File.Exists(manifestPath))
+            {
+                try
                 {
-                    latestVersion = parsed.LatestVersion;
-                    changeLog = parsed.ChangeLog;
-                    mandatory = parsed.Mandatory;
-                    releaseDate = parsed.ReleaseDate;
+                    var json = System.IO.File.ReadAllText(manifestPath).TrimStart('\uFEFF').Trim();
+                    var parsed = System.Text.Json.JsonSerializer.Deserialize<OtaCheckResponse>(json, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    if (parsed != null)
+                    {
+                        latestVersion = parsed.LatestVersion;
+                        changeLog = parsed.ChangeLog;
+                        mandatory = parsed.Mandatory;
+                        releaseDate = parsed.ReleaseDate;
+                    }
+                }
+                catch
+                {
+                    // Fallback to default
                 }
             }
-            catch
-            {
-                // Fallback to default
-            }
         }
 
-        bool hasUpdate = !string.Equals(currentVersion?.Trim(), latestVersion?.Trim(), StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(latestVersion))
+        {
+            latestVersion = "1.0.0-base";
+        }
+        if (string.IsNullOrWhiteSpace(releaseDate))
+        {
+            releaseDate = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm");
+        }
+
+        bool hasUpdate = !string.Equals(currentVersion?.Trim(), latestVersion.Trim(), StringComparison.OrdinalIgnoreCase);
 
         var request = HttpContext.Request;
         var baseUrl = $"{request.Scheme}://{request.Host}";
@@ -87,12 +122,31 @@ public class OtaController : ControllerBase
         return Ok(new OtaCheckResponse
         {
             HasUpdate = hasUpdate,
-            LatestVersion = latestVersion ?? "1.0.1",
+            LatestVersion = latestVersion,
             BundleUrl = bundleUrl,
-            ChangeLog = changeLog ?? "",
+            ChangeLog = changeLog,
             Mandatory = mandatory,
             ReleaseDate = releaseDate
         });
+    }
+
+    [HttpPost("publish")]
+    public async Task<IActionResult> PublishVersion([FromBody] PublishVersionDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Version))
+        {
+            return BadRequest(new { error = "Version không được để trống" });
+        }
+
+        var record = await _otaVersionService.PublishVersionAsync(
+            dto.Version,
+            dto.Platform,
+            dto.ChangeLog,
+            dto.Mandatory,
+            dto.ReleaseDate
+        );
+
+        return Ok(new { success = true, version = record });
     }
 
     [HttpGet("bundle/latest")]

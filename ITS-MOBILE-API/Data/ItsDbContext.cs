@@ -38,6 +38,9 @@ public class ItsDbContext : DbContext
     // Attachments
     public DbSet<FilesOfIncident> FilesOfIncidents => Set<FilesOfIncident>();
 
+    // OTA Versions
+    public DbSet<AppVersion> AppVersions => Set<AppVersion>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

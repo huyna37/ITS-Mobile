@@ -7,7 +7,7 @@ param (
 
 if ($Version -eq "auto" -or [string]::IsNullOrWhiteSpace($Version)) {
     $Now = Get-Date
-    $Version = "1.8.$($Now.ToString('yyyyMMdd.HHmm'))"
+    $Version = "$($Now.ToString('yyyyMMdd.HHmm'))"
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan

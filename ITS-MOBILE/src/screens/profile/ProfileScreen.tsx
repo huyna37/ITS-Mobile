@@ -29,6 +29,7 @@ import {
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppDialog, showAppToast } from '../../store/useToastStore';
 import { getProfileApi, ProfileData } from '../../api/profileApi';
+import { storage } from '../../utils/storage';
 
 export const ProfileScreen: React.FC = () => {
   const { user, token, logout } = useAuthStore();
@@ -38,6 +39,7 @@ export const ProfileScreen: React.FC = () => {
   const [bundleInfo, setBundleInfo] = useState<OtaBundleInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<OtaCheckResult | null>(null);
+  const [otaChangeLog, setOtaChangeLog] = useState<string>(() => storage.getItem('its_current_changelog') || '');
   const [showOtaModal, setShowOtaModal] = useState(false);
 
   // Trạng thái cài đặt sinh trắc học
@@ -112,6 +114,15 @@ export const ProfileScreen: React.FC = () => {
   const loadBundleInfo = async () => {
     const info = await getCurrentBundleInfo();
     setBundleInfo(info);
+    try {
+      const res = await checkOtaUpdate();
+      if (res?.changeLog) {
+        setOtaChangeLog(res.changeLog);
+        storage.setItem('its_current_changelog', res.changeLog);
+      }
+    } catch {
+      // Bỏ qua lỗi kết nối nền nếu offline
+    }
   };
 
   const handleCheckUpdate = async () => {
@@ -119,6 +130,10 @@ export const ProfileScreen: React.FC = () => {
     try {
       const result = await checkOtaUpdate();
       setUpdateResult(result);
+      if (result?.changeLog) {
+        setOtaChangeLog(result.changeLog);
+        storage.setItem('its_current_changelog', result.changeLog);
+      }
       if (result.hasUpdate) {
         setShowOtaModal(true);
       } else {
@@ -252,7 +267,7 @@ export const ProfileScreen: React.FC = () => {
           </View>
 
           <Text style={styles.otaDesc}>
-            Cập nhật tức thì giao diện, xử lý nghiệp vụ và sửa lỗi trực tuyến mà không cần cài lại ứng dụng.
+            {otaChangeLog || updateResult?.changeLog || 'Tự động kiểm tra và đồng bộ phiên bản mới nhất của hệ thống điều hành tác nghiệp ITS trực tuyến mà không cần cài đặt lại ứng dụng.'}
           </Text>
 
           <View style={styles.otaActionRow}>
