@@ -70,7 +70,7 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
               <Text style={styles.iconText}>⚡</Text>
             </View>
             <View style={styles.headerText}>
-              <Text style={styles.title}>Cập nhật trực tuyến (OTA)</Text>
+              <Text style={styles.title}>Cập nhật trực tuyến</Text>
               <Text style={styles.subtitle}>
                 Bản phát hành mới v{updateInfo.latestVersion}
               </Text>
@@ -80,7 +80,7 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
           {/* Badge & Info */}
           <View style={styles.badgeContainer}>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>Không cần cài lại APK</Text>
+              <Text style={styles.badgeText}>Không cần cài lại ứng dụng</Text>
             </View>
             <Text style={styles.releaseDate}>Ngày: {updateInfo.releaseDate}</Text>
           </View>

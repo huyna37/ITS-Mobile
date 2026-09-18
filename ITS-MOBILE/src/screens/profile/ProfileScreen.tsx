@@ -254,14 +254,14 @@ export const ProfileScreen: React.FC = () => {
               <Text style={styles.otaIconText}>⚡</Text>
             </View>
             <View style={styles.otaTitleContainer}>
-              <Text style={styles.otaTitle}>Cập nhật trực tuyến (OTA)</Text>
+              <Text style={styles.otaTitle}>Cập nhật trực tuyến</Text>
               <Text style={styles.otaSub}>
                 Phiên bản Bundle: {bundleInfo?.bundleVersion || '1.0.0-base'}
               </Text>
             </View>
             {bundleInfo?.isOtaActive && (
               <View style={styles.activeOtaBadge}>
-                <Text style={styles.activeOtaText}>Đang dùng OTA</Text>
+                <Text style={styles.activeOtaText}>Đã cập nhật</Text>
               </View>
             )}
           </View>
