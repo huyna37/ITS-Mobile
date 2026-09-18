@@ -1,8 +1,8 @@
 ﻿{
-    "latestVersion":  "1.8.0",
+    "latestVersion":  "1.8.2",
     "mandatory":  false,
-    "releaseDate":  "2026-09-18 10:19",
+    "releaseDate":  "2026-09-18 10:52",
     "hasUpdate":  true,
-    "changeLog":  "Ban cap nhat v1.8: Hoan thien module dang nhap, sinh trac hoc va thong bao",
+    "changeLog":  "Ban cap nhat v1.8.2: Nang cap fallback passcode va toi uu xac thuc Face ID tren iOS",
     "bundleUrl":  "/api/ota/bundle/latest?platform=ios"
 }

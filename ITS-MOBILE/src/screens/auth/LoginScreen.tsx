@@ -66,8 +66,8 @@ export const LoginScreen: React.FC = () => {
     ]).start();
 
     const label = biometricType === 'FaceID' ? 'Face ID' : 'vân tay';
-    const success = await authenticateWithBiometrics(`Đăng nhập bằng ${label}`);
-    if (success) {
+    const authResult = await authenticateWithBiometrics(`Đăng nhập bằng ${label}`);
+    if (authResult.success) {
       const loggedIn = loginWithBiometrics();
       if (loggedIn) {
         showAppToast('success', 'Thành công', 'Đăng nhập thành công');
@@ -79,7 +79,10 @@ export const LoginScreen: React.FC = () => {
         );
       }
     } else {
-      showAppToast('error', 'Thất bại', `Không nhận diện được ${label}`);
+      const msg = authResult.error?.includes('Cancel')
+        ? 'Đã hủy thao tác xác thực'
+        : `Không nhận diện được ${label}`;
+      showAppToast('error', 'Thất bại', msg);
     }
   }, [biometricType, biometricScale, loginWithBiometrics]);
 
@@ -146,11 +149,11 @@ export const LoginScreen: React.FC = () => {
             onLongPress={async () => {
               try {
                 const { resetOtaToFactory } = require('../../services/otaService');
-                showAppToast({
-                  type: 'info',
-                  title: 'Khôi phục bản gốc',
-                  message: 'Đang xóa bản cập nhật lỗi và khởi động lại ứng dụng...',
-                });
+                showAppToast(
+                  'info',
+                  'Khôi phục bản gốc',
+                  'Đang xóa bản cập nhật lỗi và khởi động lại ứng dụng...'
+                );
                 await resetOtaToFactory();
               } catch (e) {
                 // Fallback
