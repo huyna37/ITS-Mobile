@@ -112,7 +112,7 @@ class MediaPickerModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
-    override fun onActivityResult(activity: Activity?, requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
         val promise = activePromise ?: return
 
         if (resultCode != Activity.RESULT_OK) {
@@ -191,7 +191,7 @@ class MediaPickerModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {}
+    override fun onNewIntent(intent: Intent) {}
 
     private fun copyContentUriToCache(uri: Uri, targetFileName: String): File {
         val cacheDir = File(reactContext.cacheDir, "media_attachments").apply { mkdirs() }

@@ -138,7 +138,7 @@ workflows:
   its-mobile-vec-android:
     name: ITS Mobile VEC - Android
     max_build_duration: 120
-    instance_type: mac_mini_m2
+    instance_type: linux
     cache:
       cache_paths:
         - $CM_BUILD_DIR/ITS-MOBILE/node_modules
@@ -186,6 +186,7 @@ workflows:
           echo "org.gradle.vfs.watch=false" >> $HOME/.gradle/gradle.properties
       - name: Build Android Release (APK & AAB)
         script: |
+          set -e
           cd ITS-MOBILE/android
           chmod +x gradlew
           # Chạy gộp song song assembleRelease và bundleRelease để tái sử dụng build graph
@@ -193,8 +194,8 @@ workflows:
 
           # Chuẩn hóa tên file artifact ra thư mục build/android
           mkdir -p "$CM_BUILD_DIR/build/android"
-          find app/build/outputs/apk/release -name "*.apk" -exec cp {} "$CM_BUILD_DIR/build/android/${APP_NAME}-release.apk" \; 2>/dev/null || true
-          find app/build/outputs/bundle/release -name "*.aab" -exec cp {} "$CM_BUILD_DIR/build/android/${APP_NAME}-release.aab" \; 2>/dev/null || true
+          find app/build/outputs/apk/release -name "*.apk" -exec cp {} "$CM_BUILD_DIR/build/android/${APP_NAME}-release.apk" \;
+          find app/build/outputs/bundle/release -name "*.aab" -exec cp {} "$CM_BUILD_DIR/build/android/${APP_NAME}-release.aab" \;
       - name: Send Android APK to Telegram
         script: |
           APK_FILE="$CM_BUILD_DIR/build/android/${APP_NAME}-release.apk"
@@ -204,6 +205,9 @@ workflows:
               --platform "Android" \
               --bot-token "$TELEGRAM_BOT_TOKEN" \
               --chat-id "$TELEGRAM_CHAT_ID"
+          else
+            echo "ERROR: File APK không tồn tại tại $APK_FILE"
+            exit 1
           fi
     artifacts:
       - build/android/*.apk
