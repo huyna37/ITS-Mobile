@@ -135,9 +135,7 @@ workflows:
       node: v22.13.1
       java: 17
     triggering:
-      events:
-        - push
-        - pull_request
+      events: [] # Đã tắt trigger tự động cho Android (chỉ build iOS)
       branch_patterns:
         - pattern: main
           include: true
