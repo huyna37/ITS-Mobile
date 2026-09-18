@@ -1,6 +1,7 @@
 package vn.etc.its.mobile.ota
 
 import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import com.facebook.react.ReactApplication
@@ -98,8 +99,17 @@ class OtaUpdateModule(private val reactContext: ReactApplicationContext) :
                             lastReportedPercent = percent
                             sendDownloadProgress(percent, downloadedBytes, totalBytes)
                         }
+                    } else {
+                        val estimatedTotal = 2_500_000
+                        val percent = Math.min(99, ((downloadedBytes.toDouble() / estimatedTotal.toDouble()) * 100).toInt())
+                        if (percent != lastReportedPercent) {
+                            lastReportedPercent = percent
+                            sendDownloadProgress(percent, downloadedBytes, estimatedTotal)
+                        }
                     }
                 }
+
+                sendDownloadProgress(100, downloadedBytes, if (totalBytes > 0) totalBytes else downloadedBytes)
 
                 output.flush()
                 output.close()
@@ -140,15 +150,30 @@ class OtaUpdateModule(private val reactContext: ReactApplicationContext) :
     fun reloadApp(promise: Promise) {
         Handler(Looper.getMainLooper()).post {
             try {
-                val app = reactContext.currentActivity?.application as? ReactApplication
-                    ?: reactContext.applicationContext as? ReactApplication
+                val context = reactContext.currentActivity ?: reactContext
+                val packageManager = context.packageManager
+                val intent = packageManager.getLaunchIntentForPackage(context.packageName)
 
-                val reactHost = app?.reactHost
-                if (reactHost != null) {
-                    reactHost.reload("OTA Update Activated")
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    context.startActivity(intent)
                     promise.resolve(true)
+
+                    // Khởi động lại process để MainApplication khởi tạo lại reactHost với file bundle OTA mới
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        android.os.Process.killProcess(android.os.Process.myPid())
+                        System.exit(0)
+                    }, 350)
                 } else {
-                    promise.reject("ERR_NO_REACT_HOST", "ReactHost is not available to reload.")
+                    val app = reactContext.currentActivity?.application as? ReactApplication
+                        ?: reactContext.applicationContext as? ReactApplication
+                    val reactHost = app?.reactHost
+                    if (reactHost != null) {
+                        reactHost.reload("OTA Update Activated")
+                        promise.resolve(true)
+                    } else {
+                        promise.reject("ERR_NO_REACT_HOST", "ReactHost is not available to reload.")
+                    }
                 }
             } catch (e: Exception) {
                 promise.reject("ERR_RELOAD_FAILED", e.message, e)

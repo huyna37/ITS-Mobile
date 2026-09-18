@@ -13,12 +13,14 @@ interface OtaUpdateModalProps {
   visible: boolean;
   updateInfo: OtaCheckResult | null;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
   visible,
   updateInfo,
   onClose,
+  onSuccess,
 }) => {
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -54,6 +56,7 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
   };
 
   const handleReload = async () => {
+    onSuccess?.();
     await reloadApp();
   };
 

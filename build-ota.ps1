@@ -1,11 +1,14 @@
 param (
     [string]$Version = "1.0.1",
-    [string]$Notes = "Cap nhat truc tuyen: Toi uu hieu nang va giao dien ca truc."
+    [string]$Notes = "Cap nhat truc tuyen: Toi uu hieu nang va giao dien ca truc.",
+    [ValidateSet("all", "android", "ios")]
+    [string]$Platform = "all"
 )
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   ITS Mobile VEC - Packaging OTA Hot Update (JS Bundle)  " -ForegroundColor Cyan
-Write-Host "   Version: $Version                                      " -ForegroundColor Cyan
+Write-Host "   Version : $Version                                     " -ForegroundColor Cyan
+Write-Host "   Platform: $Platform                                    " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 $WorkspaceRoot = $PSScriptRoot
@@ -21,56 +24,109 @@ if (-not (Test-Path $ApiWwwrootOta)) {
     New-Item -ItemType Directory -Path $ApiWwwrootOta | Out-Null
 }
 
-$BundleOutput = Join-Path $OutputDir "index.android.bundle"
+$ReleaseDate = (Get-Date).ToString("yyyy-MM-dd HH:mm")
 
-Write-Host "[1/3] Bundling React Native JS via Metro/Hermes..." -ForegroundColor Yellow
+# -------------------------------------------------------------
+# 1. Build Android Bundle
+# -------------------------------------------------------------
+if ($Platform -eq "all" -or $Platform -eq "android") {
+    Write-Host ""
+    Write-Host "[1] Bundling Android JS Bundle (Metro/Hermes)..." -ForegroundColor Yellow
+    $AndroidBundle = Join-Path $OutputDir "index.android.bundle"
 
-Set-Location $MobileDir
-npx @react-native/community-cli bundle --platform android --dev false --entry-file index.js --bundle-output $BundleOutput --assets-dest $OutputDir
+    Set-Location $MobileDir
+    npx @react-native/community-cli bundle --platform android --dev false --entry-file index.js --bundle-output $AndroidBundle --assets-dest $OutputDir
 
-if ($LASTEXITCODE -ne 0) {
-    npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output $BundleOutput --assets-dest $OutputDir
+    if ($LASTEXITCODE -ne 0) {
+        npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output $AndroidBundle --assets-dest $OutputDir
+    }
+
+    if (Test-Path $AndroidBundle) {
+        $SizeMB = [math]::Round((Get-Item $AndroidBundle).Length / 1MB, 2)
+        Write-Host " -> Android Bundle: $AndroidBundle ($SizeMB MB)" -ForegroundColor Green
+
+        # Copy raw bundle to backend
+        Copy-Item -Path $AndroidBundle -Destination (Join-Path $ApiWwwrootOta "index.android.bundle") -Force
+
+        # Manifest Android
+        $ManifestAndroid = @{
+            hasUpdate = $true
+            latestVersion = $Version
+            bundleUrl = "/api/ota/bundle/latest?platform=android"
+            changeLog = $Notes
+            mandatory = $false
+            releaseDate = $ReleaseDate
+        } | ConvertTo-Json -Depth 4
+
+        Set-Content -Path (Join-Path $ApiWwwrootOta "manifest.json") -Value $ManifestAndroid -Encoding UTF8
+        Set-Content -Path (Join-Path $OutputDir "manifest.json") -Value $ManifestAndroid -Encoding UTF8
+
+        # Zip Android
+        $ZipAndroid = Join-Path $OutputDir "bundle-android-v$Version.zip"
+        if (Test-Path $ZipAndroid) { Remove-Item $ZipAndroid -Force }
+        Compress-Archive -Path $AndroidBundle -DestinationPath $ZipAndroid
+
+        Copy-Item -Path $ZipAndroid -Destination (Join-Path $ApiWwwrootOta "bundle.zip") -Force
+        Copy-Item -Path $ZipAndroid -Destination (Join-Path $ApiWwwrootOta "bundle-android.zip") -Force
+        Write-Host " -> Android ZIP ready: (bundle.zip & bundle-android.zip)" -ForegroundColor Green
+    } else {
+        Write-Host "[ERROR] Android bundle creation failed!" -ForegroundColor Red
+    }
 }
 
-if (-not (Test-Path $BundleOutput)) {
-    Write-Host "[ERROR] Bundle creation failed!" -ForegroundColor Red
-    Set-Location $WorkspaceRoot
-    exit 1
+# -------------------------------------------------------------
+# 2. Build iOS Bundle
+# -------------------------------------------------------------
+if ($Platform -eq "all" -or $Platform -eq "ios") {
+    Write-Host ""
+    Write-Host "[2] Bundling iOS JS Bundle (Metro/Hermes)..." -ForegroundColor Yellow
+    $IosBundle = Join-Path $OutputDir "main.jsbundle"
+
+    Set-Location $MobileDir
+    npx @react-native/community-cli bundle --platform ios --dev false --entry-file index.js --bundle-output $IosBundle --assets-dest $OutputDir
+
+    if ($LASTEXITCODE -ne 0) {
+        npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output $IosBundle --assets-dest $OutputDir
+    }
+
+    if (Test-Path $IosBundle) {
+        $IosSizeMB = [math]::Round((Get-Item $IosBundle).Length / 1MB, 2)
+        Write-Host " -> iOS Bundle: $IosBundle ($IosSizeMB MB)" -ForegroundColor Green
+
+        # Copy raw bundle to backend
+        Copy-Item -Path $IosBundle -Destination (Join-Path $ApiWwwrootOta "main.jsbundle") -Force
+
+        # Manifest iOS
+        $ManifestIos = @{
+            hasUpdate = $true
+            latestVersion = $Version
+            bundleUrl = "/api/ota/bundle/latest?platform=ios"
+            changeLog = $Notes
+            mandatory = $false
+            releaseDate = $ReleaseDate
+        } | ConvertTo-Json -Depth 4
+
+        Set-Content -Path (Join-Path $ApiWwwrootOta "manifest-ios.json") -Value $ManifestIos -Encoding UTF8
+        Set-Content -Path (Join-Path $OutputDir "manifest-ios.json") -Value $ManifestIos -Encoding UTF8
+
+        # Zip iOS
+        $ZipIos = Join-Path $OutputDir "bundle-ios-v$Version.zip"
+        if (Test-Path $ZipIos) { Remove-Item $ZipIos -Force }
+        Compress-Archive -Path $IosBundle -DestinationPath $ZipIos
+
+        Copy-Item -Path $ZipIos -Destination (Join-Path $ApiWwwrootOta "bundle-ios.zip") -Force
+        Write-Host " -> iOS ZIP ready: (bundle-ios.zip & main.jsbundle)" -ForegroundColor Green
+    } else {
+        Write-Host "[ERROR] iOS bundle creation failed!" -ForegroundColor Red
+    }
 }
-
-$BundleSizeMB = [math]::Round((Get-Item $BundleOutput).Length / 1MB, 2)
-Write-Host "[SUCCESS] Bundle generated: $BundleOutput ($BundleSizeMB MB)" -ForegroundColor Green
-
-Write-Host "[2/3] Syncing to API Backend OTA folder..." -ForegroundColor Yellow
-Copy-Item -Path $BundleOutput -Destination (Join-Path $ApiWwwrootOta "index.android.bundle") -Force
-
-# Create manifest.json
-$Manifest = @{
-    hasUpdate = $true
-    latestVersion = $Version
-    bundleUrl = "/api/ota/bundle/latest"
-    changeLog = $Notes
-    mandatory = $false
-    releaseDate = (Get-Date).ToString("yyyy-MM-dd HH:mm")
-} | ConvertTo-Json -Depth 4
-
-Set-Content -Path (Join-Path $ApiWwwrootOta "manifest.json") -Value $Manifest -Encoding UTF8
-Set-Content -Path (Join-Path $OutputDir "manifest.json") -Value $Manifest -Encoding UTF8
-
-Write-Host "[3/3] Archiving zip package for CDN / Server..." -ForegroundColor Yellow
-$ZipPath = Join-Path $OutputDir "bundle-v$Version.zip"
-if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
-Compress-Archive -Path $BundleOutput -DestinationPath $ZipPath
-
-Copy-Item -Path $ZipPath -Destination (Join-Path $ApiWwwrootOta "bundle.zip") -Force
 
 Set-Location $WorkspaceRoot
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host " [SUCCESS] OTA Update Package is Ready!                   " -ForegroundColor Green
+Write-Host " [SUCCESS] OTA Packaging Finished for Platform: $Platform" -ForegroundColor Green
 Write-Host " Version : v$Version" -ForegroundColor Green
-Write-Host " Size    : $BundleSizeMB MB" -ForegroundColor Green
 Write-Host " Output  : $OutputDir" -ForegroundColor Cyan
 Write-Host " Backend : $ApiWwwrootOta" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Green

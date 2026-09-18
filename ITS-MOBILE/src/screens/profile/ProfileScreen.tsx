@@ -17,7 +17,6 @@ import {
   getCurrentBundleInfo,
   OtaBundleInfo,
   OtaCheckResult,
-  resetOtaToFactory,
 } from '../../services/otaService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppDialog, showAppToast } from '../../store/useToastStore';
@@ -71,32 +70,15 @@ export const ProfileScreen: React.FC = () => {
         showAppToast(
           'info',
           'ĐÃ LÀ BẢN MỚI NHẤT',
-          `Ứng dụng đang hoạt động với mã nguồn mới nhất (Phiên bản: ${bundleInfo?.bundleVersion || '1.0.0-base'}).`
+          `Ứng dụng đang hoạt động với phiên bản mới nhất (v${bundleInfo?.bundleVersion || '1.0.0-base'}). Không cần cập nhật.`
         );
       }
-    } catch {
-      showAppToast('warning', 'THÔNG BÁO', 'Không thể kiểm tra bản cập nhật vào lúc này.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể kiểm tra bản cập nhật vào lúc này.';
+      showAppToast('warning', 'LỖI KẾT NỐI', msg);
     } finally {
       setCheckingUpdate(false);
     }
-  };
-
-  const handleResetFactory = () => {
-    showAppDialog(
-      'KHÔI PHỤC BẢN GỐC',
-      'Bạn có muốn xóa toàn bộ bản cập nhật OTA và quay về mã nguồn gốc được đóng gói trong file APK không?',
-      [
-        { text: 'Hủy bỏ', style: 'cancel' },
-        {
-          text: 'Khôi phục',
-          style: 'destructive',
-          onPress: async () => {
-            await resetOtaToFactory();
-          },
-        },
-      ],
-      'warning'
-    );
   };
 
   const handleLogout = () => {
@@ -182,8 +164,7 @@ export const ProfileScreen: React.FC = () => {
           </View>
 
           <Text style={styles.otaDesc}>
-            Cập nhật tức thì giao diện, xử lý nghiệp vụ và sửa lỗi trực tuyến mà không cần cài lại
-            file APK.
+            Cập nhật tức thì giao diện, xử lý nghiệp vụ và sửa lỗi trực tuyến mà không cần cài lại ứng dụng.
           </Text>
 
           <View style={styles.otaActionRow}>
@@ -199,16 +180,6 @@ export const ProfileScreen: React.FC = () => {
                 <Text style={styles.otaButtonText}>Kiểm tra cập nhật ngay</Text>
               )}
             </TouchableOpacity>
-
-            {bundleInfo?.isOtaActive && (
-              <TouchableOpacity
-                style={styles.resetButton}
-                activeOpacity={0.8}
-                onPress={handleResetFactory}
-              >
-                <Text style={styles.resetButtonText}>Về bản gốc</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
 
@@ -224,6 +195,10 @@ export const ProfileScreen: React.FC = () => {
         visible={showOtaModal}
         updateInfo={updateResult}
         onClose={() => setShowOtaModal(false)}
+        onSuccess={() => {
+          setShowOtaModal(false);
+          loadBundleInfo();
+        }}
       />
     </View>
   );

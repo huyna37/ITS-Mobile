@@ -26,11 +26,19 @@ public class OtaController : ControllerBase
     }
 
     [HttpGet("check")]
-    public ActionResult<OtaCheckResponse> CheckUpdate([FromQuery] string currentVersion = "1.0.0-base")
+    public ActionResult<OtaCheckResponse> CheckUpdate(
+        [FromQuery] string currentVersion = "1.0.0-base",
+        [FromQuery] string platform = "android")
     {
-        // Read manifest or return latest OTA update config
         var otaFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "ota");
-        var manifestPath = Path.Combine(otaFolder, "manifest.json");
+        bool isIos = string.Equals(platform, "ios", StringComparison.OrdinalIgnoreCase);
+
+        var manifestPath = Path.Combine(otaFolder, isIos ? "manifest-ios.json" : "manifest.json");
+        if (isIos && !System.IO.File.Exists(manifestPath))
+        {
+            // Fallback sang manifest.json nếu chưa có manifest riêng cho iOS
+            manifestPath = Path.Combine(otaFolder, "manifest.json");
+        }
 
         string latestVersion = "1.0.1";
         string changeLog = "Cập nhật tối ưu giao diện ca trực, sửa lỗi hiển thị màu và cải thiện tốc độ xử lý sự cố.";
@@ -64,7 +72,9 @@ public class OtaController : ControllerBase
 
         var request = HttpContext.Request;
         var baseUrl = $"{request.Scheme}://{request.Host}";
-        var bundleUrl = $"{baseUrl}/api/ota/bundle/latest";
+        var bundleUrl = isIos
+            ? $"{baseUrl}/api/ota/bundle/latest?platform=ios"
+            : $"{baseUrl}/api/ota/bundle/latest?platform=android";
 
         return Ok(new OtaCheckResponse
         {
@@ -78,11 +88,27 @@ public class OtaController : ControllerBase
     }
 
     [HttpGet("bundle/latest")]
-    public IActionResult DownloadLatestBundle()
+    public IActionResult DownloadLatestBundle([FromQuery] string platform = "android")
     {
         var otaFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "ota");
-        var bundleFile = Path.Combine(otaFolder, "index.android.bundle");
+        bool isIos = string.Equals(platform, "ios", StringComparison.OrdinalIgnoreCase);
+
+        if (isIos)
+        {
+            var iosZip = Path.Combine(otaFolder, "bundle-ios.zip");
+            var iosBundle = Path.Combine(otaFolder, "main.jsbundle");
+            if (System.IO.File.Exists(iosZip))
+            {
+                return PhysicalFile(iosZip, "application/zip", "bundle-ios.zip");
+            }
+            if (System.IO.File.Exists(iosBundle))
+            {
+                return PhysicalFile(iosBundle, "application/octet-stream", "main.jsbundle");
+            }
+        }
+
         var zipFile = Path.Combine(otaFolder, "bundle.zip");
+        var bundleFile = Path.Combine(otaFolder, "index.android.bundle");
 
         if (System.IO.File.Exists(zipFile))
         {
