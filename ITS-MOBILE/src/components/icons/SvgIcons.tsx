@@ -6,11 +6,11 @@ interface IconProps {
   color?: string;
 }
 
-/** Biểu tượng phi thuyền / Paper Airplane chuẩn thiết kế VEC (cân đối chính tâm 100%) */
+/** Biểu tượng phi thuyền / Paper Airplane chuẩn thiết kế VEC */
 export const PaperPlaneIcon: React.FC<IconProps> = ({ size = 20, color = '#ffffff' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
-      d="M21.286 3.164a1 1 0 00-1.077-.225l-17.5 6.806a1 1 0 00.041 1.882l6.81 2.553 2.553 6.81a1 1 0 001.882.041l6.806-17.5a1 1 0 00-.225-1.077z"
+      d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434z"
       fill={color}
     />
   </Svg>
