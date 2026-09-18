@@ -1,0 +1,158 @@
+name: ITS Mobile VEC - iOS Build (GitHub Actions)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Git Branch to build'
+        required: true
+        default: 'main'
+      app_name:
+        description: 'Output Application Name'
+        required: false
+        default: 'ITSMobileVEC'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-ios:
+    name: Build iOS IPA Package
+    runs-on: macos-14
+    timeout-minutes: 90
+
+    env:
+      XCODE_WORKSPACE: "TempApp.xcworkspace"
+      XCODE_SCHEME: "TempApp"
+      APP_NAME: ${{ github.event.inputs.app_name || 'ITSMobileVEC' }}
+      BUNDLE_ID: "vn.etc.its.mobile"
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || '8526357603:AAGgWE4GdQg3TDOWxChJnzmdIb5i3-Tr-VQ' }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '-1003868007273' }}
+
+    steps:
+      - name: Checkout repository source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: ITS-MOBILE/package-lock.json
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Prepare environment configuration
+        run: |
+          cd ITS-MOBILE
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+      - name: Install npm dependencies
+        run: |
+          cd ITS-MOBILE
+          if [ -f package-lock.json ]; then
+            npm ci --legacy-peer-deps
+          else
+            npm install --legacy-peer-deps
+          fi
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ITS-MOBILE/ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ITS-MOBILE/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install CocoaPods
+        run: |
+          cd ITS-MOBILE/ios
+          pod install --repo-update=false || pod install
+
+      - name: Bundle React Native iOS JS Bundle & Assets
+        run: |
+          cd ITS-MOBILE
+          mkdir -p ios/TempApp/assets
+          echo "==> Bundling React Native for iOS..."
+          npx react-native bundle \
+            --platform ios \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output ios/TempApp/main.jsbundle \
+            --assets-dest ios/TempApp
+
+      - name: Build iOS Application & Package IPA
+        run: |
+          cd ITS-MOBILE/ios
+          mkdir -p "$GITHUB_WORKSPACE/build/ios/ipa"
+
+          echo "==> Building unsigned Release (.app) with optimization flags..."
+          xcodebuild -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$GITHUB_WORKSPACE/build/DerivedData" \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+          APP_PATH=$(find "$GITHUB_WORKSPACE/build/DerivedData/Build/Products/Release-iphoneos" -name "*.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find "$GITHUB_WORKSPACE/build/DerivedData" -name "*.app" -type d | head -n 1)
+          fi
+
+          if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
+            echo "Found App Bundle at: $APP_PATH"
+            # Tiêm trực tiếp main.jsbundle chuẩn iOS và assets vào .app
+            if [ -f "$GITHUB_WORKSPACE/ITS-MOBILE/ios/TempApp/main.jsbundle" ]; then
+              echo "==> Injecting iOS main.jsbundle and assets into .app payload..."
+              cp -f "$GITHUB_WORKSPACE/ITS-MOBILE/ios/TempApp/main.jsbundle" "$APP_PATH/main.jsbundle"
+              cp -rf "$GITHUB_WORKSPACE/ITS-MOBILE/ios/TempApp/assets" "$APP_PATH/" 2>/dev/null || true
+            fi
+
+            if [ -f "$GITHUB_WORKSPACE/tools/app_to_ipa.py" ]; then
+              python3 "$GITHUB_WORKSPACE/tools/app_to_ipa.py" --app "$APP_PATH" --output "$GITHUB_WORKSPACE/build/ios/ipa/${APP_NAME}.ipa"
+            else
+              PAYLOAD_DIR="/tmp/Payload"
+              rm -rf "$PAYLOAD_DIR"
+              mkdir -p "$PAYLOAD_DIR"
+              cp -R "$APP_PATH" "$PAYLOAD_DIR/"
+              cd /tmp && zip -qry "$GITHUB_WORKSPACE/build/ios/ipa/${APP_NAME}.ipa" Payload
+            fi
+          else
+            echo "ERROR: Could not find .app in DerivedData!"
+            exit 1
+          fi
+
+      - name: Send iOS IPA to Telegram
+        if: always()
+        run: |
+          IPA_FILE="$GITHUB_WORKSPACE/build/ios/ipa/${APP_NAME}.ipa"
+          if [ -f "$IPA_FILE" ] && [ -f "$GITHUB_WORKSPACE/tools/send_telegram.py" ]; then
+            python3 "$GITHUB_WORKSPACE/tools/send_telegram.py" \
+              --file "$IPA_FILE" \
+              --platform "iOS" \
+              --bot-token "$TELEGRAM_BOT_TOKEN" \
+              --chat-id "$TELEGRAM_CHAT_ID"
+          fi
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-IPA
+          path: build/ios/ipa/*.ipa
+          if-no-files-found: error
+          retention-days: 7
