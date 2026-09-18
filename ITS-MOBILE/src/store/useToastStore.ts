@@ -37,11 +37,11 @@ export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   dialog: null,
 
-  showToast: (type, title, message, duration = 4000) => {
+  showToast: (type, title, message, duration = 2500) => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 6);
-    set((state) => ({
-      // Giữ tối đa 2 toast cùng lúc để không chiếm màn hình
-      toasts: [...state.toasts.slice(-1), { id, type, title, message, duration }],
+    set(() => ({
+      // Giữ duy nhất 1 toast mới nhất để không chiếm diện tích màn hình
+      toasts: [{ id, type, title, message, duration }],
     }));
 
     if (duration > 0) {

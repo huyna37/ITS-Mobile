@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 interface IconProps {
   size?: number;
@@ -38,7 +38,12 @@ export const PhoneHandsetIcon: React.FC<IconProps> = ({ size = 22, color = '#fff
 export const TaskClipboardIcon: React.FC<IconProps> = ({ size = 24, color = '#94a3b8' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Rect x="5" y="4" width="14" height="17" rx="2.5" stroke={color} strokeWidth="2" />
-    <Path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    <Path
+      d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
     <Path d="M9 9h6M9 13h6M9 17h4" stroke={color} strokeWidth="2" strokeLinecap="round" />
   </Svg>
 );
@@ -73,14 +78,26 @@ export const UserIcon: React.FC<IconProps> = ({ size = 24, color = '#94a3b8' }) 
 /** Biểu tượng Mũi tên qua phải Chevron */
 export const ChevronRightIcon: React.FC<IconProps> = ({ size = 18, color = '#cbd5e1' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M9 18l6-6-6-6" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <Path
+      d="M9 18l6-6-6-6"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </Svg>
 );
 
 /** Biểu tượng Quay lại Mũi tên trái */
 export const ChevronLeftIcon: React.FC<IconProps> = ({ size = 22, color = '#0f172a' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M15 19l-7-7 7-7" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <Path
+      d="M15 19l-7-7 7-7"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </Svg>
 );
 
@@ -88,19 +105,30 @@ export const ChevronLeftIcon: React.FC<IconProps> = ({ size = 22, color = '#0f17
 export const CheckCircleIcon: React.FC<IconProps> = ({ size = 28, color = '#16a34a' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2.2" />
-    <Path d="M8 12.5l2.5 2.5 5.5-5.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path
+      d="M8 12.5l2.5 2.5 5.5-5.5"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </Svg>
 );
 
-/** Biểu tượng Rào chắn bảo trì 🚧 */
+/** Biểu tượng Rào chắn bảo trì */
 export const BarrierIcon: React.FC<IconProps> = ({ size = 22, color = '#f59e0b' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M4 6h16M4 12h16M7 6v12M17 6v12M5 18h4M15 18h4" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
+    <Path
+      d="M4 6h16M4 12h16M7 6v12M17 6v12M5 18h4M15 18h4"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
     <Path d="M8 6l4 6M12 6l4 6M8 12l4 6" stroke={color} strokeWidth="1.8" />
   </Svg>
 );
 
-/** Biểu tượng Đám mây mưa thời tiết 🌧️ */
+/** Biểu tượng Đám mây mưa thời tiết */
 export const CloudRainIcon: React.FC<IconProps> = ({ size = 22, color = '#0284c7' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
@@ -204,7 +232,15 @@ export const EyeIcon: React.FC<IconProps> = ({ size = 20, color = '#64748b' }) =
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Circle
+      cx="12"
+      cy="12"
+      r="3"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </Svg>
 );
 
@@ -237,6 +273,94 @@ export const RefreshCwIcon: React.FC<IconProps> = ({ size = 16, color = '#0284c7
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+/** Biểu tượng Face ID / khuôn mặt xác thực sinh trắc học */
+export const FaceIdIcon: React.FC<IconProps> = ({ size = 24, color = '#0090e7' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect
+      x="2"
+      y="2"
+      width="7"
+      height="4"
+      rx="1.5"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Rect
+      x="15"
+      y="2"
+      width="7"
+      height="4"
+      rx="1.5"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Rect
+      x="2"
+      y="18"
+      width="7"
+      height="4"
+      rx="1.5"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Rect
+      x="15"
+      y="18"
+      width="7"
+      height="4"
+      rx="1.5"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Path
+      d="M9 9v0a1 1 0 011-1h0a1 1 0 011 1v0"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Path
+      d="M13 9v0a1 1 0 011-1h0a1 1 0 011 1v0"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Path
+      d="M9 15c.83.63 1.79.97 3 .97s2.17-.34 3-.97"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
+/** Biểu tượng Vân tay xác thực sinh trắc học */
+export const FingerprintIcon: React.FC<IconProps> = ({ size = 24, color = '#0090e7' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M12 2a9 9 0 00-9 9c0 2.4.96 4.58 2.5 6.18M21 11a9 9 0 00-6-8.48M18.5 17.18A8.96 8.96 0 0021 11"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Path
+      d="M12 6a5 5 0 00-5 5c0 1.66.67 3.16 1.76 4.24M17 11a5 5 0 00-2.5-4.33"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <Path
+      d="M12 10a1 1 0 00-1 1c0 .83.34 1.58.88 2.12M12 14v4M8 18v2M16 18v1"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
     />
   </Svg>
 );

@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Platform,
+  Animated,
   Dimensions,
+  Modal,
+  PanResponder,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
-import { useToastStore, ToastItem, DialogItem, ToastType } from '../../store/useToastStore';
-import { COLORS } from '../../constants/colors';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { FONT_FAMILY } from '../../constants';
+import { DialogItem, ToastItem, ToastType, useToastStore } from '../../store/useToastStore';
 
 // ==========================================
-// Vector Icons cho Thông báo & Dialog
+// Vector Icons Cao Cấp Cho Toast
 // ==========================================
-const ToastIcon: React.FC<{ type: ToastType; size?: number }> = ({ type, size = 20 }) => {
+const ToastIcon: React.FC<{ type: ToastType; size?: number }> = ({ type, size = 22 }) => {
   switch (type) {
     case 'error':
       return (
@@ -28,101 +30,216 @@ const ToastIcon: React.FC<{ type: ToastType; size?: number }> = ({ type, size = 
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
           <Circle cx="12" cy="12" r="10" fill="#10B981" />
-          <Path d="M8 12l2.5 2.5L16 9" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <Path
+            d="M8 12.2l2.6 2.6L16.2 9"
+            stroke="#ffffff"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </Svg>
       );
     case 'warning':
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
           <Circle cx="12" cy="12" r="10" fill="#F59E0B" />
-          <Path d="M12 8v5M12 16v.5" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+          <Path d="M12 8v5M12 16.2v.5" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
         </Svg>
       );
     case 'info':
     default:
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <Circle cx="12" cy="12" r="10" fill="#0284C7" />
+          <Circle cx="12" cy="12" r="10" fill="#0090E7" />
           <Path d="M12 8v.5M12 11.5v5" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
         </Svg>
       );
   }
 };
 
-const CloseIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = '#64748b' }) => (
+const CloseIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = '#94a3b8' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M18 6L6 18M6 6l12 12" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path
+      d="M18 6L6 18M6 6l12 12"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </Svg>
 );
 
 // ==========================================
-// Toast Item Component (Thẻ thông báo nổi)
+// Swipeable Toast Card (Vuốt trái / phải để xóa)
 // ==========================================
-const ToastCard: React.FC<{ toast: ToastItem; onDismiss: () => void }> = ({ toast, onDismiss }) => {
-  const isError = toast.type === 'error';
-  const isSuccess = toast.type === 'success';
-  const isWarning = toast.type === 'warning';
+const SwipeableToastCard: React.FC<{ toast: ToastItem; onDismiss: () => void }> = ({
+  toast,
+  onDismiss,
+}) => {
+  const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(-60)).current;
+  const isDismissing = useRef(false);
 
-  const borderColor = isError
-    ? '#FCA5A5'
-    : isSuccess
-    ? '#86EFAC'
-    : isWarning
-    ? '#FDE68A'
-    : '#BAE6FD';
+  // Hiệu ứng trượt mượt mà từ trên xuống khi xuất hiện
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(translateY, {
+        toValue: 0,
+        tension: 70,
+        friction: 9,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
-  const bgColor = isError
-    ? '#FFF1F2'
-    : isSuccess
-    ? '#F0FDF4'
-    : isWarning
-    ? '#FFFBEB'
-    : '#F0F9FF';
+  const triggerDismiss = (direction: 'left' | 'right' | 'up' = 'right') => {
+    if (isDismissing.current) return;
+    isDismissing.current = true;
 
-  const titleColor = isError
-    ? '#991B1B'
-    : isSuccess
-    ? '#065F46'
-    : isWarning
-    ? '#92400E'
-    : '#075985';
+    const targetX = direction === 'right' ? 500 : direction === 'left' ? -500 : 0;
+    const targetY = direction === 'up' ? -100 : 0;
+
+    Animated.parallel([
+      Animated.timing(pan, {
+        toValue: { x: targetX, y: targetY },
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDismiss();
+    });
+  };
+
+  // Cấu hình cử chỉ vuốt ngang / vuốt lên
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Chỉ nhận khi kéo ngang đáng kể (> 8px) hoặc kéo lên
+        return Math.abs(gestureState.dx) > 8 || gestureState.dy < -8;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (isDismissing.current) return;
+        // Cho phép trượt tự do theo chiều ngang, giới hạn chiều dọc chỉ kéo lên
+        const dy = gestureState.dy < 0 ? gestureState.dy : gestureState.dy * 0.15;
+        pan.setValue({ x: gestureState.dx, y: dy });
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (isDismissing.current) return;
+        const { dx, dy, vx } = gestureState;
+
+        const isQuickFlingRight = dx > 25 && vx > 0.35;
+        const isQuickFlingLeft = dx < -25 && vx < -0.35;
+        const isDragRight = dx > 70;
+        const isDragLeft = dx < -70;
+        const isDragUp = dy < -35;
+
+        if (isQuickFlingRight || isDragRight) {
+          triggerDismiss('right');
+        } else if (isQuickFlingLeft || isDragLeft) {
+          triggerDismiss('left');
+        } else if (isDragUp) {
+          triggerDismiss('up');
+        } else {
+          // Bật trở lại vị trí cũ khi chưa đạt ngưỡng vuốt
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            tension: 80,
+            friction: 8,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  // Kiểu màu sắc theo từng loại Toast (chỉ giữ màu sắc cho Icon và Tiêu đề)
+  const theme = {
+    error: {
+      badgeBg: '#fef2f2',
+      titleColor: '#ef4444',
+    },
+    success: {
+      badgeBg: '#f0fdf4',
+      titleColor: '#10b981',
+    },
+    warning: {
+      badgeBg: '#fffbeb',
+      titleColor: '#f59e0b',
+    },
+    info: {
+      badgeBg: '#f0f9ff',
+      titleColor: '#0090e7',
+    },
+  }[toast.type || 'info'];
 
   return (
-    <View style={[styles.toastCard, { backgroundColor: bgColor, borderColor }]}>
-      <View style={styles.toastIconWrap}>
-        <ToastIcon type={toast.type} size={24} />
+    <Animated.View
+      {...panResponder.panHandlers}
+      style={[
+        styles.toastCard,
+        {
+          transform: [
+            { translateX: pan.x },
+            { translateY: Animated.add(translateY, pan.y) },
+          ],
+          opacity,
+        },
+      ]}
+    >
+      {/* Icon squircle bo tròn */}
+      <View
+        style={[
+          styles.toastIconWrap,
+          { backgroundColor: theme.badgeBg },
+        ]}
+      >
+        <ToastIcon type={toast.type} size={22} />
       </View>
 
+      {/* Nội dung thông báo */}
       <View style={styles.toastContent}>
-        <Text style={[styles.toastTitle, { color: titleColor }]} numberOfLines={1}>
+        <Text style={[styles.toastTitle, { color: theme.titleColor }]} numberOfLines={1}>
           {toast.title}
         </Text>
         <Text style={styles.toastMessage}>{toast.message}</Text>
       </View>
 
+      {/* Nút đóng nhanh */}
       <TouchableOpacity
         style={styles.toastCloseBtn}
-        onPress={onDismiss}
-        activeOpacity={0.7}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        onPress={() => triggerDismiss('right')}
+        activeOpacity={0.6}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
-        <CloseIcon size={16} color="#64748b" />
+        <CloseIcon size={16} color="#94a3b8" />
       </TouchableOpacity>
-    </View>
+
+      {/* Vạch nhỏ chỉ dẫn vuốt tắt ở cạnh dưới */}
+      <View style={styles.swipeIndicatorWrap}>
+        <View style={styles.swipeIndicatorBar} />
+      </View>
+    </Animated.View>
   );
 };
 
 // ==========================================
-// Dialog Modal Component (Hộp thoại xác nhận sang trọng)
+// Dialog Modal Component (Hộp thoại xác nhận)
 // ==========================================
 const DialogCard: React.FC<{ dialog: DialogItem; onClose: () => void }> = ({ dialog, onClose }) => {
   return (
-    <Modal
-      transparent
-      visible={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible={true} animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
@@ -180,11 +297,11 @@ export const AppToast: React.FC = () => {
 
   return (
     <>
-      {/* Toast Banner ở góc trên cùng */}
+      {/* Toast Notification Container nổi ở đỉnh màn hình */}
       {toasts.length > 0 ? (
         <View style={styles.toastContainer} pointerEvents="box-none">
           {toasts.map((toast) => (
-            <ToastCard
+            <SwipeableToastCard
               key={toast.id}
               toast={toast}
               onDismiss={() => hideToast(toast.id)}
@@ -204,58 +321,87 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   toastContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 52 : 24,
-    left: 16,
-    right: 16,
+    top: Platform.OS === 'ios' ? 56 : Platform.OS === 'web' ? 24 : 36,
+    left: 0,
+    right: 0,
     alignItems: 'center',
     zIndex: 999999,
   },
   toastCard: {
-    width: Math.min(width - 32, 460),
+    width: Math.min(width - 32, 420),
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    marginBottom: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    overflow: 'hidden',
+    position: 'relative',
     ...Platform.select({
       web: {
-        boxShadow: '0 12px 28px -4px rgba(0, 0, 0, 0.16), 0 4px 10px -2px rgba(0, 0, 0, 0.08)',
+        boxShadow:
+          '0 20px 32px -8px rgba(15, 23, 42, 0.12), 0 6px 14px -4px rgba(15, 23, 42, 0.05)',
+        cursor: 'pointer',
+        userSelect: 'none',
       },
       default: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.18,
-        shadowRadius: 12,
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
         elevation: 8,
       },
     }),
   },
   toastIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
-    marginTop: 1,
+    marginLeft: 2,
   },
   toastContent: {
     flex: 1,
-    paddingRight: 6,
+    paddingRight: 8,
   },
   toastTitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
     fontWeight: '700',
-    marginBottom: 3,
-    letterSpacing: 0.2,
+    marginBottom: 2,
+    letterSpacing: 0.1,
   },
   toastMessage: {
+    fontFamily: FONT_FAMILY,
     fontSize: 13,
-    color: '#334155',
+    color: '#475569',
     lineHeight: 18,
     fontWeight: '500',
   },
   toastCloseBtn: {
-    padding: 4,
-    marginTop: -2,
-    borderRadius: 6,
+    padding: 6,
+    borderRadius: 10,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swipeIndicatorWrap: {
+    position: 'absolute',
+    bottom: 3,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swipeIndicatorBar: {
+    width: 28,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: '#e2e8f0',
   },
 
   // Modal Dialog
@@ -270,7 +416,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: Math.min(width - 48, 420),
     backgroundColor: '#ffffff',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 24,
     ...Platform.select({
       web: {
@@ -294,12 +440,14 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   modalTitle: {
+    fontFamily: FONT_FAMILY,
     fontSize: 17,
     fontWeight: '700',
     color: '#0f172a',
     flex: 1,
   },
   modalMessage: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
     color: '#475569',
     lineHeight: 22,
@@ -311,10 +459,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   modalBtn: {
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 18,
-    borderRadius: 10,
-    backgroundColor: '#0097f0',
+    borderRadius: 12,
+    backgroundColor: '#0090e7',
   },
   modalBtnDestructive: {
     backgroundColor: '#ef4444',
@@ -323,8 +471,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   modalBtnText: {
+    fontFamily: FONT_FAMILY,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#ffffff',
   },
   modalBtnTextDestructive: {

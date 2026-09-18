@@ -211,6 +211,82 @@ interface ContactListSkeletonProps {
   type?: 'DIRECTORY' | 'HISTORY';
 }
 
+interface NotificationItemSkeletonProps {
+  rowIndex?: number;
+}
+
+const NOTIFICATION_ROW_PRESETS = [
+  { titleWidth: '62%', timeWidth: 42, body1Width: '95%', body2Width: '68%' },
+  { titleWidth: '78%', timeWidth: 38, body1Width: '88%', body2Width: '54%' },
+  { titleWidth: '52%', timeWidth: 46, body1Width: '92%', body2Width: '70%' },
+  { titleWidth: '70%', timeWidth: 40, body1Width: '86%', body2Width: '58%' },
+  { titleWidth: '58%', timeWidth: 44, body1Width: '90%', body2Width: '48%' },
+];
+
+export const NotificationItemSkeleton: React.FC<NotificationItemSkeletonProps> = ({
+  rowIndex = 0,
+}) => {
+  const preset = NOTIFICATION_ROW_PRESETS[rowIndex % NOTIFICATION_ROW_PRESETS.length];
+
+  return (
+    <View style={styles.notifCard}>
+      {/* Icon Squircle chuông thông báo */}
+      <ShimmerElement
+        width={48}
+        height={48}
+        borderRadius={16}
+        variant="call"
+        style={styles.notifIcon}
+      />
+
+      {/* Nội dung thông báo (Tiêu đề + Giờ + 2 dòng nội dung) */}
+      <View style={styles.notifContent}>
+        <View style={styles.notifTopRow}>
+          <ShimmerElement
+            width={preset.titleWidth}
+            height={16}
+            borderRadius={6}
+            style={styles.notifTitle}
+          />
+          <ShimmerElement
+            width={preset.timeWidth}
+            height={12}
+            borderRadius={5}
+          />
+        </View>
+
+        <ShimmerElement
+          width={preset.body1Width}
+          height={12}
+          borderRadius={5}
+          style={styles.notifBodyLine1}
+        />
+        <ShimmerElement
+          width={preset.body2Width}
+          height={12}
+          borderRadius={5}
+        />
+      </View>
+    </View>
+  );
+};
+
+interface NotificationListSkeletonProps {
+  count?: number;
+}
+
+export const NotificationListSkeleton: React.FC<NotificationListSkeletonProps> = ({
+  count = 5,
+}) => {
+  return (
+    <View style={styles.listContainer}>
+      {Array.from({ length: count }).map((_, index) => (
+        <NotificationItemSkeleton key={index} rowIndex={index} />
+      ))}
+    </View>
+  );
+};
+
 export const ContactListSkeleton: React.FC<ContactListSkeletonProps> = ({
   count = 6,
   type = 'DIRECTORY',
@@ -276,6 +352,34 @@ const styles = StyleSheet.create({
   rowDivider: {
     height: 1,
     backgroundColor: '#f1f5f9',
+  },
+  notifCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: '#f1f5f9',
+  },
+  notifIcon: {
+    marginRight: 14,
+  },
+  notifContent: {
+    flex: 1,
+  },
+  notifTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  notifTitle: {
+    marginRight: 8,
+  },
+  notifBodyLine1: {
+    marginBottom: 6,
   },
   shimmerDefault: {
     backgroundColor: '#e2e8f0',

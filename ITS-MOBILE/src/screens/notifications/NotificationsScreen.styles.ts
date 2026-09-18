@@ -137,4 +137,19 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94a3b8',
   },
+  endListNotice: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  endListNoticeText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+  loadingMoreContainer: {
+    paddingTop: 4,
+    paddingBottom: 16,
+  },
 });
