@@ -20,6 +20,8 @@ workflows:
         XCODE_SCHEME: "TempApp"
         APP_NAME: "ITSMobileVEC"
         BUNDLE_ID: "vn.etc.its.mobile"
+        TELEGRAM_BOT_TOKEN: "8526357603:AAGgWE4GdQg3TDOWxChJnzmdIb5i3-Tr-VQ"
+        TELEGRAM_CHAT_ID: "-1003868007273"
       node: v22.13.1
       xcode: latest
       cocoapods: default
@@ -105,7 +107,9 @@ workflows:
           if [ -f "$IPA_FILE" ]; then
             python3 "$CM_BUILD_DIR/tools/send_telegram.py" \
               --file "$IPA_FILE" \
-              --platform "iOS"
+              --platform "iOS" \
+              --bot-token "$TELEGRAM_BOT_TOKEN" \
+              --chat-id "$TELEGRAM_CHAT_ID"
           fi
     artifacts:
       - build/ios/ipa/*.ipa
@@ -130,6 +134,8 @@ workflows:
       vars:
         PACKAGE_NAME: "vn.etc.its.mobile"
         APP_NAME: "ITSMobileVEC"
+        TELEGRAM_BOT_TOKEN: "8526357603:AAGgWE4GdQg3TDOWxChJnzmdIb5i3-Tr-VQ"
+        TELEGRAM_CHAT_ID: "-1003868007273"
       node: v22.13.1
       java: 17
     triggering:
@@ -178,7 +184,9 @@ workflows:
           if [ -f "$APK_FILE" ]; then
             python3 "$CM_BUILD_DIR/tools/send_telegram.py" \
               --file "$APK_FILE" \
-              --platform "Android"
+              --platform "Android" \
+              --bot-token "$TELEGRAM_BOT_TOKEN" \
+              --chat-id "$TELEGRAM_CHAT_ID"
           fi
     artifacts:
       - build/android/*.apk

@@ -150,8 +150,11 @@ def main():
 
     args = parser.parse_args()
 
-    bot_token = args.bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = args.chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    DEFAULT_BOT_TOKEN = "8526357603:AAGgWE4GdQg3TDOWxChJnzmdIb5i3-Tr-VQ"
+    DEFAULT_CHAT_ID = "-1003868007273"
+
+    bot_token = args.bot_token or os.environ.get("TELEGRAM_BOT_TOKEN") or DEFAULT_BOT_TOKEN
+    chat_id = args.chat_id or os.environ.get("TELEGRAM_CHAT_ID") or DEFAULT_CHAT_ID
     thread_id = args.thread_id or os.environ.get("TELEGRAM_THREAD_ID")
 
     if not bot_token or not chat_id:
