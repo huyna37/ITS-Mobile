@@ -7,6 +7,14 @@ on:
         description: 'Git Branch to build'
         required: true
         default: 'main'
+      delivery_target:
+        description: 'Mục tiêu xuất bản (ipa hoặc testflight)'
+        required: false
+        default: 'ipa'
+        type: choice
+        options:
+          - ipa
+          - testflight
       app_name:
         description: 'Output Application Name'
         required: false
@@ -161,3 +169,30 @@ jobs:
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 7
+
+      - name: Upload to Apple TestFlight
+        if: ${{ github.event.inputs.delivery_target == 'testflight' && success() }}
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+        run: |
+          echo "==> Đang kiểm tra điều kiện tải lên TestFlight..."
+          IPA_FILE="$GITHUB_WORKSPACE/build/ios/ipa/${APP_NAME}.ipa"
+
+          if [ -n "$APP_STORE_CONNECT_API_KEY_KEY_ID" ] && [ -n "$APP_STORE_CONNECT_API_KEY_KEY" ]; then
+            KEY_DIR="$HOME/.appstoreconnect/private_keys"
+            mkdir -p "$KEY_DIR"
+            echo "$APP_STORE_CONNECT_API_KEY_KEY" > "$KEY_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_KEY_ID}.p8"
+
+            echo "==> Đang đẩy file IPA lên TestFlight qua App Store Connect API..."
+            xcrun altool --upload-app \
+              -f "$IPA_FILE" \
+              -t ios \
+              --apiKey "$APP_STORE_CONNECT_API_KEY_KEY_ID" \
+              --apiIssuer "$APP_STORE_CONNECT_API_KEY_ISSUER_ID"
+            echo "✅ Đã tải lên TestFlight thành công!"
+          else
+            echo "⚠️ Chưa cấu hình Secrets App Store Connect API Key (APP_STORE_CONNECT_API_KEY_KEY_ID, APP_STORE_CONNECT_API_KEY_ISSUER_ID, APP_STORE_CONNECT_API_KEY_KEY) trên GitHub Repo!"
+            echo "File .IPA vẫn được tạo thành công và gửi qua Telegram / lưu trên GitHub Artifacts."
+          fi

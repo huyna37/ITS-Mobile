@@ -1,0 +1,118 @@
+name: ITS Mobile VEC - Android Build (GitHub Actions)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Git Branch to build'
+        required: true
+        default: 'main'
+      app_name:
+        description: 'Output Application Name'
+        required: false
+        default: 'ITSMobileVEC'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-android:
+    name: Build Android APK Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      APP_NAME: ${{ github.event.inputs.app_name || 'ITSMobileVEC' }}
+      PACKAGE_NAME: "vn.etc.its.mobile"
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || '8526357603:AAGgWE4GdQg3TDOWxChJnzmdIb5i3-Tr-VQ' }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '-1003868007273' }}
+      GIT_BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+      GIT_COMMIT: ${{ github.sha }}
+
+    steps:
+      - name: Checkout repository source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: ITS-MOBILE/package-lock.json
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Prepare environment configuration
+        run: |
+          cd ITS-MOBILE
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+      - name: Install npm dependencies
+        run: |
+          cd ITS-MOBILE
+          if [ -f package-lock.json ]; then
+            npm ci --legacy-peer-deps
+          else
+            npm install --legacy-peer-deps
+          fi
+
+      - name: Setup Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Configure Gradle properties
+        run: |
+          mkdir -p $HOME/.gradle
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError" >> $HOME/.gradle/gradle.properties
+          echo "org.gradle.parallel=true" >> $HOME/.gradle/gradle.properties
+          echo "org.gradle.caching=true" >> $HOME/.gradle/gradle.properties
+          echo "org.gradle.vfs.watch=false" >> $HOME/.gradle/gradle.properties
+
+      - name: Build Android Release (APK & AAB)
+        run: |
+          cd ITS-MOBILE/android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --parallel --stacktrace
+
+          mkdir -p "$GITHUB_WORKSPACE/build/android"
+          find app/build/outputs/apk/release -name "*.apk" -exec cp {} "$GITHUB_WORKSPACE/build/android/${APP_NAME}-release.apk" \;
+
+      - name: Send Android APK to Telegram
+        if: always()
+        run: |
+          APK_FILE="$GITHUB_WORKSPACE/build/android/${APP_NAME}-release.apk"
+          if [ -f "$APK_FILE" ] && [ -f "$GITHUB_WORKSPACE/tools/send_telegram.py" ]; then
+            python3 "$GITHUB_WORKSPACE/tools/send_telegram.py" \
+              --file "$APK_FILE" \
+              --platform "Android" \
+              --bot-token "$TELEGRAM_BOT_TOKEN" \
+              --chat-id "$TELEGRAM_CHAT_ID"
+          fi
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-APK
+          path: build/android/*.apk
+          if-no-files-found: error
+          retention-days: 7
