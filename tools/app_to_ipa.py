@@ -88,11 +88,13 @@ def convert_app_to_ipa(app_dir: Path, output_ipa: Path) -> Path:
     with zipfile.ZipFile(temp_output, 'w', zipfile.ZIP_DEFLATED) as zipf:
         # 1. Tạo thư mục gốc Payload/ với quyền Unix 0755
         p_info = zipfile.ZipInfo('Payload/')
+        p_info.create_system = 3  # 3 = UNIX (Bắt buộc để Sideloadly / iOS nhận diện đúng quyền Unix)
         p_info.external_attr = 0o40755 << 16
         zipf.writestr(p_info, '')
 
         # 2. Tạo thư mục Payload/<App>.app/ với quyền Unix 0755
         app_info = zipfile.ZipInfo(f'Payload/{app_name}/')
+        app_info.create_system = 3
         app_info.external_attr = 0o40755 << 16
         zipf.writestr(app_info, '')
 
@@ -104,6 +106,7 @@ def convert_app_to_ipa(app_dir: Path, output_ipa: Path) -> Path:
             else:
                 prefix = f'Payload/{app_name}/{rel_root}'
                 d_info = zipfile.ZipInfo(f'{prefix}/')
+                d_info.create_system = 3
                 d_info.external_attr = 0o40755 << 16
                 zipf.writestr(d_info, '')
 
@@ -119,6 +122,7 @@ def convert_app_to_ipa(app_dir: Path, output_ipa: Path) -> Path:
                     continue
 
                 info = zipfile.ZipInfo(arc_name)
+                info.create_system = 3  # 3 = UNIX
                 is_exec = is_macho_executable(str(full_path), file, content)
 
                 if is_exec:
