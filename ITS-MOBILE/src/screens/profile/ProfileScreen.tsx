@@ -70,16 +70,20 @@ export const ProfileScreen: React.FC = () => {
       }
 
       setSwitchingBiometric(true);
-      const success = await enableBiometricLogin(currentToken, currentUser);
+      const res = await enableBiometricLogin(currentToken, currentUser);
       setSwitchingBiometric(false);
 
-      if (success) {
+      if (res.success) {
         setBiometricActive(true);
         const name = biometricType === 'FaceID' ? 'Face ID' : 'vân tay';
         showAppToast('success', 'Thành công', `Đã bật ${name}`);
       } else {
         setBiometricActive(false);
-        showAppToast('error', 'Thất bại', 'Xác thực không thành công');
+        const name = biometricType === 'FaceID' ? 'Face ID' : 'sinh trắc học';
+        const msg = res.error?.includes('Cancel')
+          ? 'Đã hủy thao tác xác thực'
+          : `Không thể xác thực ${name}. Vui lòng kiểm tra quyền Face ID trong Cài đặt iPhone`;
+        showAppToast('error', 'Thất bại', msg);
       }
     } else {
       disableBiometricLogin();
