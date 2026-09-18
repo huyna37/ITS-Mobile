@@ -8,7 +8,7 @@ import {
   THEME_CONSTANTS,
   FONT_FAMILY,
 } from '../../constants';
-import { formatMilestone, formatTime } from '../../utils/formatting';
+import { formatMilestone, formatFullDateTime } from '../../utils/formatting';
 
 interface CompletedTaskCardProps {
   task: IncidentTask;
@@ -16,6 +16,8 @@ interface CompletedTaskCardProps {
 }
 
 export const CompletedTaskCard: React.FC<CompletedTaskCardProps> = ({ task, onPress }) => {
+  const displayTime = formatFullDateTime(task.updatedAt) || '14:30 20/04/2026';
+
   const content = (
     <View style={styles.completedCard}>
       <View style={styles.completedAccent} />
@@ -33,7 +35,7 @@ export const CompletedTaskCard: React.FC<CompletedTaskCardProps> = ({ task, onPr
           {task.title}
         </Text>
         <Text style={styles.completedMeta}>
-          {UI_ICONS.LOCATION_PIN} {formatMilestone(task.milestoneKm, task.milestoneM, task.direction)} · {formatTime(task.updatedAt)}
+          {UI_ICONS.LOCATION_PIN} {formatMilestone(task.milestoneKm, task.milestoneM, task.direction)} · {displayTime}
         </Text>
       </View>
     </View>

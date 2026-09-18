@@ -25,7 +25,7 @@ public class IncidentService
             Kind: GetIncidentKind(e.Description),
             Title: e.Description ?? string.Empty,
             Location: $"Km {e.PositionKM}+{e.PositionM:000}",
-            Time: e.TimeDetect.ToString("HH:mm dd/MM"),
+            Time: e.TimeDetect.ToString("HH:mm dd/MM/yyyy"),
             Tag: GetTagText(e)
         )).ToList();
     }
@@ -43,7 +43,7 @@ public class IncidentService
         var logs = profile.IncidentLogs
             ?.OrderByDescending(l => l.CreationTime)
             .Select(l => new StatusLogEntry(
-                Time: l.CreationTime.ToString("HH:mm dd/MM"),
+                Time: l.CreationTime.ToString("HH:mm dd/MM/yyyy"),
                 Text: l.Title,
                 Actor: l.RefInfomation ?? "Hệ thống"
             )).ToList() ?? new List<StatusLogEntry>();
@@ -51,7 +51,7 @@ public class IncidentService
         if (logs.Count == 0)
         {
             logs.Add(new StatusLogEntry(
-                Time: task.StartDate.ToString("HH:mm dd/MM"),
+                Time: task.StartDate.ToString("HH:mm dd/MM/yyyy"),
                 Text: "Phân công nhiệm vụ từ ITS/TMC",
                 Actor: "Hệ thống"
             ));
@@ -59,7 +59,7 @@ public class IncidentService
         else
         {
             logs.Insert(0, new StatusLogEntry(
-                Time: task.StartDate.ToString("HH:mm dd/MM"),
+                Time: task.StartDate.ToString("HH:mm dd/MM/yyyy"),
                 Text: "Phân công nhiệm vụ từ ITS/TMC",
                 Actor: "Hệ thống"
             ));
@@ -70,7 +70,7 @@ public class IncidentService
             Kind: "incident",
             Title: task.Name,
             Location: FormatLocation(profile),
-            Time: task.StartDate.ToString("dd/MM"),
+            Time: task.StartDate.ToString("dd/MM/yyyy"),
             Tag: GetTagText(profile.Status),
             Description: profile.Description ?? "Chưa có mô tả",
             Script: profile.Script ?? "Chưa có phương án",
@@ -93,7 +93,7 @@ public class IncidentService
         var logs = profile.IncidentLogs
             ?.OrderByDescending(l => l.CreationTime)
             .Select(l => new StatusLogEntry(
-                Time: l.CreationTime.ToString("HH:mm dd/MM"),
+                Time: l.CreationTime.ToString("HH:mm dd/MM/yyyy"),
                 Text: l.Title,
                 Actor: l.RefInfomation ?? "Hệ thống"
             )).ToList() ?? new List<StatusLogEntry>();
@@ -101,7 +101,7 @@ public class IncidentService
         if (logs.Count == 0)
         {
             logs.Add(new StatusLogEntry(
-                Time: task.StartDate.ToString("HH:mm dd/MM"),
+                Time: task.StartDate.ToString("HH:mm dd/MM/yyyy"),
                 Text: "Phân công nhiệm vụ từ ITS/TMC",
                 Actor: "Hệ thống"
             ));
@@ -109,7 +109,7 @@ public class IncidentService
         else
         {
             logs.Insert(0, new StatusLogEntry(
-                Time: task.StartDate.ToString("HH:mm dd/MM"),
+                Time: task.StartDate.ToString("HH:mm dd/MM/yyyy"),
                 Text: "Phân công nhiệm vụ từ ITS/TMC",
                 Actor: "Hệ thống"
             ));
@@ -208,9 +208,9 @@ public class IncidentService
     /// </summary>
     private string GetStatusText(int status) => status switch
     {
-        1 => "Đã tiếp nhận (1)",
-        2 => "Đang xử lý (2)",
-        3 => "Hoàn thành (3)",
+        1 => "Đã tiếp nhận",
+        2 => "Đang xử lý",
+        3 => "Hoàn thành",
         _ => $"Trạng thái {status}"
     };
 }

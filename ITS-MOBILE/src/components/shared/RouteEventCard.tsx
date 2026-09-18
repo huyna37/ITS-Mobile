@@ -8,6 +8,7 @@ import {
   EVENT_TAG_LABELS,
   FONT_FAMILY,
 } from '../../constants';
+import { formatFullDateTime } from '../../utils/formatting';
 
 interface RouteEventCardProps {
   event: ExpresswayEvent;
@@ -39,6 +40,8 @@ export const RouteEventCard: React.FC<RouteEventCardProps> = ({ event }) => {
     }
   };
 
+  const displayTime = formatFullDateTime(event.time) || event.time;
+
   return (
     <View style={styles.eventCard}>
       <View style={styles.eventIconBox}>
@@ -58,7 +61,7 @@ export const RouteEventCard: React.FC<RouteEventCardProps> = ({ event }) => {
             📍 {event.location}
           </Text>
           <Text style={styles.eventTime}>
-            🕒 {event.time}
+            🕒 {displayTime}
           </Text>
         </View>
       </View>
@@ -129,6 +132,7 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 12,
   },
   eventLocation: {

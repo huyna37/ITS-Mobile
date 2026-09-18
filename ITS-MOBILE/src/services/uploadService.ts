@@ -9,6 +9,7 @@ export interface UploadCallbacks {
 
 export interface UploadOptions {
   incidentId?: string;
+  taskId?: string;
   maxRetries?: number;
   retryDelayMs?: number;
 }
@@ -20,7 +21,7 @@ export async function uploadMediaWithRetry(
   mediaFile: MediaFile,
   options: UploadOptions = {},
   callbacks: UploadCallbacks = {}
-): Promise<string> {
+): Promise<{ url: string; id: string }> {
   const maxRetries = options.maxRetries ?? 3;
   const retryDelayMs = options.retryDelayMs ?? 1500;
 
@@ -75,6 +76,9 @@ export async function uploadMediaWithRetry(
       if (options.incidentId) {
         formData.append('incidentId', options.incidentId);
       }
+      if (options.taskId) {
+        formData.append('taskId', options.taskId);
+      }
 
       const res = await apiClient.post<{ url?: string; id?: string }>('/api/files/upload', formData, {
         headers: Platform.OS === 'web' ? {} : { 'Content-Type': 'multipart/form-data' },
@@ -89,7 +93,7 @@ export async function uploadMediaWithRetry(
       const fileUrl = res.data.url || `/api/files/${res.data.id}/download`;
       callbacks.onStatusChange?.('success');
       callbacks.onProgress?.(100);
-      return fileUrl;
+      return { url: fileUrl, id: res.data.id ? String(res.data.id) : '' };
     } catch (err: any) {
       lastError = err;
       console.warn(`Lần upload ${attempt}/${maxRetries} thất bại:`, err?.message);

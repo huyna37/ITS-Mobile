@@ -4,6 +4,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +30,7 @@ import {
 } from '../../services/biometricService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppToast } from '../../store/useToastStore';
+import appBannerImg from '../../assets/images/app-banner.png';
 
 export const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -133,6 +136,8 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
+  const bannerSource = typeof appBannerImg === 'string' ? { uri: appBannerImg } : appBannerImg;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -143,7 +148,7 @@ export const LoginScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo Squircle xanh - Nhấn giữ 2s để khôi phục bản gốc khẩn cấp nếu gặp lỗi bundle */}
+          {/* Logo Squircle với hình ảnh giám sát cao tốc ITS - Nhấn giữ 2s để khôi phục bản gốc khẩn cấp nếu gặp lỗi bundle */}
           <TouchableOpacity
             activeOpacity={0.85}
             onLongPress={async () => {
@@ -161,7 +166,11 @@ export const LoginScreen: React.FC = () => {
             }}
             style={styles.logoSquircle}
           >
-            <PaperPlaneIcon size={48} color="#ffffff" />
+            <Image
+              source={bannerSource}
+              style={styles.logoImage}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
 
           {/* Tiêu đề ứng dụng */}
@@ -330,10 +339,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoSquircle: {
-    width: 96,
-    height: 96,
+    width: 104,
+    height: 104,
     borderRadius: 28,
     backgroundColor: '#0090e7',
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#0090e7',
@@ -341,7 +351,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 16,
     elevation: 8,
-    marginBottom: 24,
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: '#ffffff',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   titleLine1: {
     fontFamily: FONT_FAMILY,

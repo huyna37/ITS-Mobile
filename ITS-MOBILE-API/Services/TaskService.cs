@@ -7,10 +7,80 @@ namespace ITS_MOBILE_API.Services;
 public class TaskService
 {
     private readonly ItsDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public TaskService(ItsDbContext db)
+    public TaskService(ItsDbContext db, IHttpContextAccessor httpContextAccessor)
     {
         _db = db;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    private string GetBaseUrl()
+    {
+        var request = _httpContextAccessor.HttpContext?.Request;
+        return request != null ? $"{request.Scheme}://{request.Host}" : "";
+    }
+
+    private async Task<(Dictionary<long, List<TaskAttachmentDto>> attachments, Dictionary<long, List<TaskNoteDto>> notes)> GetAttachmentsAndNotesForTasks(List<TaskOfIncident> tasks)
+    {
+        var taskIds = tasks.Select(t => t.Id).ToList();
+        var incProfileIds = tasks.Where(t => t.IncidentProfileId > 0).Select(t => t.IncidentProfileId!.Value).Distinct().ToList();
+
+        // 1. FilesOfIncidents
+        var files = await _db.FilesOfIncidents
+            .Where(f => !f.IsDeleted && (taskIds.Contains(f.TaskId) || (f.IncidentProfileId > 0 && incProfileIds.Contains(f.IncidentProfileId))))
+            .OrderByDescending(f => f.CreationTime)
+            .ToListAsync();
+
+        var baseUrl = GetBaseUrl();
+        var attachmentsByTaskId = new Dictionary<long, List<TaskAttachmentDto>>();
+        foreach (var task in tasks)
+        {
+            var taskFiles = files.Where(f => f.TaskId == task.Id || (task.IncidentProfileId > 0 && f.IncidentProfileId == task.IncidentProfileId && f.TaskId == 0)).ToList();
+            attachmentsByTaskId[task.Id] = taskFiles.Select(f =>
+            {
+                var ext = Path.GetExtension(f.FileName ?? f.PathFile ?? "").ToLowerInvariant();
+                var isImg = f.TypeFile == 1 || ext is ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp" or ".jfif" or ".bmp" or ".svg" or ".heic" or ".heif" or ".ico";
+                var isVid = f.TypeFile == 2 || ext is ".mp4" or ".mov" or ".avi" or ".mkv" or ".3gp" or ".webm";
+                var type = isImg ? "image" : isVid ? "video" : "document";
+                var downloadUri = string.IsNullOrEmpty(baseUrl) ? $"/api/files/{f.Id}/download" : $"{baseUrl}/api/files/{f.Id}/download";
+                return new TaskAttachmentDto(
+                    Id: f.Id.ToString(),
+                    Name: f.FileName ?? Path.GetFileName(f.PathFile ?? "") ?? "file",
+                    Uri: downloadUri,
+                    Type: type,
+                    SizeBytes: f.Size,
+                    UploadedAt: f.CreationTime.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                );
+            }).ToList();
+        }
+
+        // 2. IncidentLogs
+        var logs = await _db.IncidentLogs
+            .Where(l => (l.TaskId.HasValue && taskIds.Contains(l.TaskId.Value)) || (l.IncidentProfileId > 0 && incProfileIds.Contains(l.IncidentProfileId)))
+            .OrderBy(l => l.CreationTime)
+            .ToListAsync();
+
+        var notesByTaskId = new Dictionary<long, List<TaskNoteDto>>();
+        foreach (var task in tasks)
+        {
+            var taskLogs = logs.Where(l => (l.TaskId.HasValue && l.TaskId.Value == task.Id) || (task.IncidentProfileId > 0 && l.IncidentProfileId == task.IncidentProfileId && (!l.TaskId.HasValue || l.TaskId.Value == 0))).ToList();
+            notesByTaskId[task.Id] = taskLogs.Select(l =>
+            {
+                var parsed = ParseIncidentLog(l);
+                return new TaskNoteDto(
+                    Id: l.Id.ToString(),
+                    Author: parsed.Author,
+                    Content: parsed.Content,
+                    CreatedAt: l.CreationTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    OldStatus: parsed.OldStatus,
+                    NewStatus: parsed.NewStatus,
+                    LogType: parsed.LogType
+                );
+            }).ToList();
+        }
+
+        return (attachmentsByTaskId, notesByTaskId);
     }
 
     /// <summary>
@@ -28,6 +98,8 @@ public class TaskService
             .OrderByDescending(t => t.CreationTime)
             .ToListAsync();
 
+        var (attachments, notes) = await GetAttachmentsAndNotesForTasks(tasks);
+
         return tasks.Select(t => new TaskResponse(
             Id: t.Id.ToString(),                                         // [dbo].[TaskOfIncidents].[Id] (Khóa chính Task)
             Code: t.Code ?? "N/A",                                      // [dbo].[TaskOfIncidents].[Code] (Mã nhiệm vụ, nếu NULL hiển thị N/A)
@@ -39,7 +111,9 @@ public class TaskService
             Status: t.Status,                                           // [dbo].[TaskOfIncidents].[Status] (0: Đã giao, 1: Đã nhận, 2: Đang xử lý, 3: Hoàn thành)
             Description: t.IncidentProfile?.Description,                // [dbo].[IncidentProfiles].[Description] (Mô tả chi tiết sự cố)
             Script: t.IncidentProfile?.Script,                          // [dbo].[IncidentProfiles].[Script] / [ScriptId] (Kịch bản phương án xử lý)
-            IncidentCode: t.IncidentProfile?.Code                       // [dbo].[IncidentProfiles].[Code] (Mã hồ sơ sự cố liên kết, ví dụ: MS.250826.HS23)
+            IncidentCode: t.IncidentProfile?.Code,                      // [dbo].[IncidentProfiles].[Code] (Mã hồ sơ sự cố liên kết)
+            Attachments: attachments.GetValueOrDefault(t.Id, new()),
+            Notes: notes.GetValueOrDefault(t.Id, new())
         )).ToList();
     }
 
@@ -58,6 +132,8 @@ public class TaskService
             ? await query.Take(count.Value).ToListAsync()
             : await query.ToListAsync();
 
+        var (attachments, notes) = await GetAttachmentsAndNotesForTasks(tasks);
+
         return tasks.Select(t => new TaskResponse(
             Id: t.Id.ToString(),
             Code: t.Code ?? "N/A",
@@ -69,7 +145,9 @@ public class TaskService
             Status: 3,
             Description: t.IncidentProfile?.Description,
             Script: t.IncidentProfile?.Script,
-            IncidentCode: t.IncidentProfile?.Code
+            IncidentCode: t.IncidentProfile?.Code,
+            Attachments: attachments.GetValueOrDefault(t.Id, new()),
+            Notes: notes.GetValueOrDefault(t.Id, new())
         )).ToList();
     }
 
@@ -95,18 +173,27 @@ public class TaskService
         // Lấy lịch sử biến động từ bảng [dbo].[IncidentLogs]
         var logs = (task.IncidentProfile?.IncidentLogs ?? new List<IncidentLog>())
             .OrderByDescending(l => l.CreationTime)
-            .Select(l => new StatusLogEntry(
-                Time: l.CreationTime.ToString("HH:mm dd/MM"), // [dbo].[IncidentLogs].[CreationTime]
-                Text: l.Title,                               // [dbo].[IncidentLogs].[Title] (Tên hành động cập nhật)
-                Actor: l.RefInfomation ?? "Hệ thống"        // [dbo].[IncidentLogs].[RefInfomation] hoặc CreatorUserId
-            )).ToList();
+            .Select(l =>
+            {
+                var parsed = ParseIncidentLog(l);
+                return new StatusLogEntry(
+                    Time: l.CreationTime.ToString("HH:mm dd/MM/yyyy"),
+                    Text: parsed.Content,
+                    Actor: parsed.Author,
+                    OldStatus: parsed.OldStatus,
+                    NewStatus: parsed.NewStatus
+                );
+            }).ToList();
 
-        // Mốc khởi tạo ban đầu phân công từ hệ thống ITS/TMC
         logs.Insert(0, new StatusLogEntry(
-            Time: task.StartDate.ToString("HH:mm dd/MM"),
+            Time: task.StartDate.ToString("HH:mm dd/MM/yyyy"),
             Text: "Phân công nhiệm vụ từ ITS/TMC",
-            Actor: "Hệ thống"
+            Actor: "Hệ thống",
+            OldStatus: "Khởi tạo",
+            NewStatus: "Đã phân công"
         ));
+
+        var (attachments, notes) = await GetAttachmentsAndNotesForTasks(new List<TaskOfIncident> { task });
 
         return new TaskDetailResponse(
             Id: task.Id.ToString(),
@@ -115,13 +202,67 @@ public class TaskService
             Level: GetLevel(task.IncidentProfile!.Level),                  // [dbo].[IncidentProfiles].[Level]
             Location: FormatLocation(task.IncidentProfile),                // [dbo].[IncidentProfiles].[PositionKM]+[PositionM]
             Direction: GetDirectionText(task.IncidentProfile.Direction),   // [dbo].[IncidentProfiles].[Direction]
-            Time: task.StartDate.ToString("dd/MM"),
+            Time: task.StartDate.ToString("dd/MM/yyyy"),
             Status: task.Status,
             Description: task.IncidentProfile.Description ?? "Chưa có mô tả",
             Script: task.IncidentProfile.Script ?? "Chưa có phương án",
             StatusLog: logs,
-            IncidentCode: task.IncidentProfile.Code                        // [dbo].[IncidentProfiles].[Code] (Mã hồ sơ sự cố)
+            IncidentCode: task.IncidentProfile.Code,                       // [dbo].[IncidentProfiles].[Code] (Mã hồ sơ sự cố)
+            Attachments: attachments.GetValueOrDefault(task.Id, new()),
+            Notes: notes.GetValueOrDefault(task.Id, new())
         );
+    }
+
+    /// <summary>
+    /// Gửi báo cáo hiện trường (ghi chú + liên kết tệp đính kèm)
+    /// </summary>
+    public async Task<bool> SubmitReport(string taskId, SubmitReportRequest request, string username)
+    {
+        if (!long.TryParse(taskId, out var id)) return false;
+
+        var task = await _db.TaskOfIncidents
+            .Include(t => t.IncidentProfile)
+            .FirstOrDefaultAsync(t => t.Id == id && !t.IsDeleted);
+
+        if (task == null) return false;
+
+        if (!string.IsNullOrWhiteSpace(request.Note))
+        {
+            var log = new IncidentLog
+            {
+                Title = "Ghi nhận hiện trường",
+                Description = request.Note.Trim(),
+                ActionType = 4,
+                IncidentProfileId = task.IncidentProfileId ?? 0,
+                TaskId = task.Id,
+                TaskStatus = task.Status,
+                RefInfomation = string.IsNullOrWhiteSpace(request.Actor) ? username : request.Actor,
+                CreationTime = DateTime.UtcNow
+            };
+            _db.IncidentLogs.Add(log);
+        }
+
+        if (request.FileIds != null && request.FileIds.Any())
+        {
+            foreach (var fileIdStr in request.FileIds)
+            {
+                if (long.TryParse(fileIdStr, out var fileId))
+                {
+                    var file = await _db.FilesOfIncidents.FirstOrDefaultAsync(f => f.Id == fileId);
+                    if (file != null)
+                    {
+                        file.TaskId = task.Id;
+                        if (task.IncidentProfileId.HasValue && task.IncidentProfileId.Value > 0)
+                        {
+                            file.IncidentProfileId = task.IncidentProfileId.Value;
+                        }
+                    }
+                }
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -137,7 +278,6 @@ public class TaskService
             .FirstOrDefaultAsync(t => t.Id == id && !t.IsDeleted);
 
         if (task == null) return false;
-
         if (newStatus == task.Status) return true;
 
         task.Status = newStatus;
@@ -196,9 +336,164 @@ public class TaskService
     /// </summary>
     private string GetStatusText(int status) => status switch
     {
-        1 => "Đã tiếp nhận (1)",
-        2 => "Đang xử lý (2)",
-        3 => "Hoàn thành (3)",
+        1 => "Đã tiếp nhận",
+        2 => "Đang xử lý",
+        3 => "Hoàn thành",
         _ => $"Trạng thái {status}"
     };
+
+    private static string CleanHtmlAndJson(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+        var stripped = System.Text.RegularExpressions.Regex.Replace(input, "<.*?>", string.Empty);
+        return stripped.Trim();
+    }
+
+    private static (string Content, string Author, string? OldStatus, string? NewStatus, string LogType) ParseIncidentLog(IncidentLog log)
+    {
+        var author = "Hệ thống";
+        if (!string.IsNullOrWhiteSpace(log.RefInfomation))
+        {
+            if (log.RefInfomation.TrimStart().StartsWith("{"))
+            {
+                author = "Điều hành TMC";
+            }
+            else
+            {
+                author = log.RefInfomation.Trim();
+            }
+        }
+
+        // 1. Ghi nhận hiện trường gửi từ mobile (ActionType = 4 hoặc Title = "Ghi nhận hiện trường")
+        if (log.ActionType == 4 || log.Title == "Ghi nhận hiện trường")
+        {
+            return (
+                Content: !string.IsNullOrWhiteSpace(log.Description) ? log.Description.Trim() : log.Title,
+                Author: author,
+                OldStatus: null,
+                NewStatus: null,
+                LogType: "FIELD_NOTE"
+            );
+        }
+
+        // 2. Chuyển trạng thái nhiệm vụ
+        if (log.ActionType == 1 || log.ActionType == 2 || log.ActionType == 3)
+        {
+            string oldSt = log.ActionType switch
+            {
+                1 => "Chờ tiếp nhận",
+                2 => "Đã tiếp nhận",
+                3 => "Đang xử lý",
+                _ => "Khởi tạo"
+            };
+            string newSt = log.ActionType switch
+            {
+                1 => "Đã tiếp nhận",
+                2 => "Đang xử lý",
+                3 => "Hoàn thành",
+                _ => $"Bước {log.ActionType}"
+            };
+
+            return (
+                Content: $"{oldSt} ➔ {newSt}",
+                Author: author,
+                OldStatus: oldSt,
+                NewStatus: newSt,
+                LogType: "STATUS_CHANGE"
+            );
+        }
+
+        // 3. Phân tích nội dung JSON từ TMC (Description_ChangeStatusProfile)
+        var rawDesc = log.Description ?? string.Empty;
+        var rawTitle = log.Title ?? string.Empty;
+        var combined = rawDesc + " " + rawTitle;
+
+        if (combined.Contains("Description_ChangeStatusProfile"))
+        {
+            try
+            {
+                var jsonStr = rawDesc.TrimStart().StartsWith("{") ? rawDesc : rawTitle;
+                using var doc = System.Text.Json.JsonDocument.Parse(jsonStr);
+                if (doc.RootElement.TryGetProperty("Param", out var paramEl) && paramEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    var pList = paramEl.EnumerateArray().ToList();
+                    var oldVal = pList.Count > 0 ? CleanHtmlAndJson(pList[0].GetString()) : "Chờ xử lý";
+                    var newVal = pList.Count > 1 ? CleanHtmlAndJson(pList[1].GetString()) : "Đang xử lý";
+
+                    if (string.IsNullOrWhiteSpace(oldVal)) oldVal = "Chờ xử lý";
+                    if (string.IsNullOrWhiteSpace(newVal)) newVal = "Đang xử lý";
+
+                    return (
+                        Content: $"{oldVal} ➔ {newVal}",
+                        Author: author,
+                        OldStatus: oldVal,
+                        NewStatus: newVal,
+                        LogType: "STATUS_CHANGE"
+                    );
+                }
+            }
+            catch
+            {
+                return (
+                    Content: "Chờ xử lý ➔ Đang xử lý",
+                    Author: author,
+                    OldStatus: "Chờ xử lý",
+                    NewStatus: "Đang xử lý",
+                    LogType: "STATUS_CHANGE"
+                );
+            }
+        }
+
+        if (combined.Contains("Description_AddTasks"))
+        {
+            try
+            {
+                var jsonStr = rawDesc.TrimStart().StartsWith("{") ? rawDesc : rawTitle;
+                using var doc = System.Text.Json.JsonDocument.Parse(jsonStr);
+                if (doc.RootElement.TryGetProperty("Param", out var paramEl) && paramEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    var taskName = paramEl.EnumerateArray().FirstOrDefault().GetString();
+                    return (
+                        Content: $"Giao nhiệm vụ: {taskName}",
+                        Author: author,
+                        OldStatus: null,
+                        NewStatus: null,
+                        LogType: "FIELD_NOTE"
+                    );
+                }
+            }
+            catch {}
+            return ("Giao nhiệm vụ hiện trường", author, null, null, "FIELD_NOTE");
+        }
+
+        if (combined.Contains("Description_SetUpProcessingScripts"))
+        {
+            return ("Thiết lập phương án xử lý sự cố", author, null, null, "FIELD_NOTE");
+        }
+
+        if (combined.Contains("Description_UpdateMissionInformation"))
+        {
+            return ("Cập nhật thông tin nhiệm vụ", author, null, null, "FIELD_NOTE");
+        }
+
+        if (combined.Contains("Description_AddEventInProfile"))
+        {
+            return ("Ghi nhận sự cố vào hồ sơ", author, null, null, "FIELD_NOTE");
+        }
+
+        // Mặc định làm sạch chuỗi
+        var cleanContent = CleanHtmlAndJson(string.IsNullOrWhiteSpace(log.Description) ? log.Title : log.Description);
+        if (cleanContent.StartsWith("{"))
+        {
+            cleanContent = "Cập nhật thông tin sự cố";
+        }
+
+        return (
+            Content: cleanContent,
+            Author: author,
+            OldStatus: null,
+            NewStatus: null,
+            LogType: "FIELD_NOTE"
+        );
+    }
 }

@@ -27,7 +27,6 @@ interface SwipeableCallRowProps {
   onOpen: () => void;
   onClose: () => void;
 }
-
 const SwipeableCallRow: React.FC<SwipeableCallRowProps> = ({
   children,
   onDelete,
@@ -227,7 +226,6 @@ export const ContactsScreen: React.FC = () => {
     outputRange: [0, 3],
     extrapolate: 'clamp',
   });
-
   const handleRefresh = async () => {
     await Promise.all([fetchContacts(), fetchHistory()]);
   };

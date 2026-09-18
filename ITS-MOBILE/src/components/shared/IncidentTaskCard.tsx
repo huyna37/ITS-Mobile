@@ -9,7 +9,7 @@ import {
   THEME_CONSTANTS,
   FONT_FAMILY,
 } from '../../constants';
-import { formatMilestone, formatTime } from '../../utils/formatting';
+import { formatMilestone, formatFullDateTime } from '../../utils/formatting';
 
 interface IncidentTaskCardProps {
   task: IncidentTask;
@@ -94,7 +94,7 @@ export const IncidentTaskCard: React.FC<IncidentTaskCardProps> = ({ task, onPres
             </View>
             <View style={styles.metaPill}>
               <Text style={styles.metaPillText}>
-                🕒 14:20 20/04
+                🕒 {formatFullDateTime(task.createdAt) || '14:20 20/04/2026'}
               </Text>
             </View>
           </View>

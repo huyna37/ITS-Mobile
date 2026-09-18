@@ -16,6 +16,9 @@ export interface TaskNote {
   author: string;
   content: string;
   createdAt: string;
+  oldStatus?: string;
+  newStatus?: string;
+  logType?: 'STATUS_CHANGE' | 'FIELD_NOTE' | 'SYSTEM';
 }
 
 export interface IncidentTask {

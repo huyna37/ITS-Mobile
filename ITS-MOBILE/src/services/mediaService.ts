@@ -34,6 +34,7 @@ export interface MediaFile {
   status: 'idle' | 'compressing' | 'uploading' | 'success' | 'error';
   errorMessage?: string;
   uploadedUrl?: string;
+  uploadedId?: string;
   fileObj?: File | Blob; // For web platform
 }
 
@@ -203,8 +204,9 @@ function pickWebFile(accept: string): Promise<MediaFile | null> {
       }
 
       const url = URL.createObjectURL(file);
-      const isVideo = file.type.startsWith('video');
-      const isImg = file.type.startsWith('image');
+      const ext = (file.name || '').split('.').pop()?.toLowerCase() || '';
+      const isImg = file.type.startsWith('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif', 'bmp', 'svg', 'heic', 'heif', 'ico'].includes(ext);
+      const isVideo = file.type.startsWith('video') || ['mp4', 'mov', 'avi', 'mkv', '3gp', 'webm'].includes(ext);
 
       resolve({
         id: `web_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,

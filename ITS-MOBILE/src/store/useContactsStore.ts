@@ -53,7 +53,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
   recordCall: async (contact: Contact, duration = 45, status = 1): Promise<CallRecord> => {
     const pad = (n: number) => String(n).padStart(2, '0');
     const now = new Date();
-    const fallbackTimeStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const fallbackTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
 
     const fallbackRecord: CallRecord = {
       id: `CALL-${Date.now()}`,

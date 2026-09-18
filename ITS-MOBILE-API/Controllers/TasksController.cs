@@ -2,6 +2,7 @@ using ITS_MOBILE_API.Models;
 using ITS_MOBILE_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ITS_MOBILE_API.Controllers;
 
@@ -74,6 +75,26 @@ public class TasksController : ControllerBase
             var success = await _taskService.UpdateStatus(id, request.Status, request.Actor);
             if (!success)
                 return BadRequest(new { error = "Không thể cập nhật trạng thái" });
+
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Lỗi kết nối cơ sở dữ liệu", detail = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPost("{id}/report")]
+    public async Task<ActionResult> SubmitReport(string id, [FromBody] SubmitReportRequest request)
+    {
+        try
+        {
+            var username = User.FindFirst("username")?.Value;
+
+            var success = await _taskService.SubmitReport(id, request, username);
+            if (!success)
+                return BadRequest(new { error = "Không thể gửi báo cáo hiện trường" });
 
             return Ok(new { success = true });
         }

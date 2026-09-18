@@ -277,6 +277,61 @@ export const RefreshCwIcon: React.FC<IconProps> = ({ size = 16, color = '#0284c7
   </Svg>
 );
 
+/** Biểu tượng Bảng tính Excel / XLS */
+export const FileExcelIcon: React.FC<IconProps> = ({ size = 24, color = '#16a34a' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M14 2v6h6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M8 13l3 4M11 13l-3 4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M14 13h3M14 17h3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Biểu tượng Tài liệu PDF */
+export const FilePdfIcon: React.FC<IconProps> = ({ size = 24, color = '#dc2626' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M14 2v6h6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M9 13v4M9 13h2a1 1 0 011 1v0a1 1 0 01-1 1H9M15 13v4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Biểu tượng Văn bản Word / DOC */
+export const FileWordIcon: React.FC<IconProps> = ({ size = 24, color = '#2563eb' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M14 2v6h6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M8 13l1.5 4 1.5-3 1.5 3 1.5-4" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Biểu tượng Hình ảnh / Khung ảnh Image */
+export const FileImageIcon: React.FC<IconProps> = ({ size = 24, color = '#0284c7' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="3" width="18" height="18" rx="3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Circle cx="8.5" cy="8.5" r="1.8" fill={color} />
+    <Path d="M21 15l-5-5L5 21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Biểu tượng Tệp tin tài liệu chung / Generic Document */
+export const FileGenericDocIcon: React.FC<IconProps> = ({ size = 24, color = '#d97706' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M14 2v6h6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M8 13h8M8 17h5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Biểu tượng Tệp nén Zip / Archive */
+export const FileZipIcon: React.FC<IconProps> = ({ size = 24, color = '#9333ea' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M14 2v6h6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M10 7h1M10 9h1M10 11h1M10 13h1M9 15h3v2H9z" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
 /** Biểu tượng Face ID / khuôn mặt xác thực sinh trắc học */
 export const FaceIdIcon: React.FC<IconProps> = ({ size = 24, color = '#0090e7' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

@@ -16,4 +16,5 @@ public class FilesOfIncident
     public long TaskId { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime CreationTime { get; set; }
+    public long? CreatorUserId { get; set; }
 }
