@@ -2,8 +2,8 @@
 # Dockerfile cho ITS Mobile VEC API (.NET 10.0) tích hợp tự động đóng gói OTA
 # - Tự động bundle mã nguồn React Native (Android: index.android.bundle, iOS: main.jsbundle)
 # - Tự động nén bundle-android.zip, bundle-ios.zip, bundle.zip
-# - Tự động sinh OTA version mới theo timestamp (ví dụ: 1.8.YYYYMMDD.HHmm)
-# - Tự động đồng bộ manifest & bundle vào wwwroot/ota (kể cả khi mount volume từ host)
+# - Tự động sinh OTA version mới theo timestamp (YYYYMMDD.HHmm) lưu vào Database
+# - Tự động đồng bộ bundle vào wwwroot/ota (kể cả khi mount volume từ host)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -28,14 +28,13 @@ RUN npm install --legacy-peer-deps
 WORKDIR /workspace
 COPY ITS-MOBILE/ ./ITS-MOBILE/
 COPY tools/ ./tools/
-COPY ITS-MOBILE-API/wwwroot/ota/ ./manifest-ref/
 
-# Các đối số tùy chỉnh khi build (mặc định 'auto' sẽ sinh theo timestamp)
+# Các đối số tùy chỉnh khi build (mặc định 'auto' sẽ sinh theo timestamp YYYYMMDD.HHmm)
 ARG OTA_VERSION=auto
 ARG OTA_NOTES=""
 ARG CACHEBUST=""
 
-# Thực thi bundling cho cả Android và iOS, nén file zip và sinh manifest phiên bản mới
+# Thực thi bundling cho cả Android và iOS, nén file zip và sinh version.json
 WORKDIR /workspace/ITS-MOBILE
 RUN mkdir -p /output && \
     echo "===> [1/4] Bundling Android JS Bundle..." && \
@@ -47,8 +46,8 @@ RUN mkdir -p /output && \
     zip -j -9 bundle-android.zip index.android.bundle && \
     cp bundle-android.zip bundle.zip && \
     zip -j -9 bundle-ios.zip main.jsbundle && \
-    echo "===> [4/4] Generating OTA Manifests with new version..." && \
-    node /workspace/tools/generate-ota.js /output /workspace/manifest-ref/manifest.json
+    echo "===> [4/4] Generating OTA version.json for Database..." && \
+    node /workspace/tools/generate-ota.js /output
 
 # ------------------------------------------------------------------------------
 # Stage 2: Build mã nguồn backend với .NET 10 SDK
@@ -67,7 +66,7 @@ WORKDIR "/src/ITS-MOBILE-API"
 # Publish bản Release tối ưu hiệu năng
 RUN dotnet publish "ITS-MOBILE-API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Lưu trữ các file OTA bundle và manifest mới sinh vào cả wwwroot/ota và ota-dist
+# Lưu trữ các file OTA bundle và version.json vào cả wwwroot/ota và ota-dist
 COPY --from=ota-builder /output/ /app/publish/wwwroot/ota/
 COPY --from=ota-builder /output/ /app/publish/ota-dist/
 
@@ -87,8 +86,7 @@ EXPOSE 8080
 # Copy sản phẩm đã publish từ stage build (đã chứa wwwroot/ota và ota-dist)
 COPY --from=build /app/publish .
 
-# Tạo entrypoint tự động đồng bộ file sang wwwroot/ota khi container chạy
-# (Đảm bảo tự động ghi đè ra thư mục host nếu chạy qua Docker Compose có mount volume)
+# Tạo entrypoint tự động đồng bộ bundle sang wwwroot/ota khi container chạy
 RUN printf '#!/bin/sh\nmkdir -p /app/wwwroot/ota\ncp -rf /app/ota-dist/* /app/wwwroot/ota/ 2>/dev/null || true\nexec dotnet ITS-MOBILE-API.dll "$@"\n' > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 

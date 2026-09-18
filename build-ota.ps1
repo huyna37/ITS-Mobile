@@ -53,18 +53,16 @@ if ($Platform -eq "all" -or $Platform -eq "android") {
         # Copy raw bundle to backend
         Copy-Item -Path $AndroidBundle -Destination (Join-Path $ApiWwwrootOta "index.android.bundle") -Force
 
-        # Manifest Android
-        $ManifestAndroid = @{
-            hasUpdate = $true
-            latestVersion = $Version
-            bundleUrl = "/api/ota/bundle/latest?platform=android"
+        # Version info for Database
+        $VersionInfo = @{
+            version = $Version
+            releaseDate = $ReleaseDate
             changeLog = $Notes
             mandatory = $false
-            releaseDate = $ReleaseDate
         } | ConvertTo-Json -Depth 4
 
-        Set-Content -Path (Join-Path $ApiWwwrootOta "manifest.json") -Value $ManifestAndroid -Encoding UTF8
-        Set-Content -Path (Join-Path $OutputDir "manifest.json") -Value $ManifestAndroid -Encoding UTF8
+        Set-Content -Path (Join-Path $ApiWwwrootOta "version.json") -Value $VersionInfo -Encoding UTF8
+        Set-Content -Path (Join-Path $OutputDir "version.json") -Value $VersionInfo -Encoding UTF8
 
         # Zip Android
         $ZipAndroid = Join-Path $OutputDir "bundle-android-v$Version.zip"
@@ -100,19 +98,6 @@ if ($Platform -eq "all" -or $Platform -eq "ios") {
 
         # Copy raw bundle to backend
         Copy-Item -Path $IosBundle -Destination (Join-Path $ApiWwwrootOta "main.jsbundle") -Force
-
-        # Manifest iOS
-        $ManifestIos = @{
-            hasUpdate = $true
-            latestVersion = $Version
-            bundleUrl = "/api/ota/bundle/latest?platform=ios"
-            changeLog = $Notes
-            mandatory = $false
-            releaseDate = $ReleaseDate
-        } | ConvertTo-Json -Depth 4
-
-        Set-Content -Path (Join-Path $ApiWwwrootOta "manifest-ios.json") -Value $ManifestIos -Encoding UTF8
-        Set-Content -Path (Join-Path $OutputDir "manifest-ios.json") -Value $ManifestIos -Encoding UTF8
 
         # Zip iOS
         $ZipIos = Join-Path $OutputDir "bundle-ios-v$Version.zip"

@@ -1,8 +1,0 @@
-{
-    "latestVersion": "20260918.1440",
-    "mandatory": false,
-    "releaseDate": "2026-09-18 14:40",
-    "hasUpdate": true,
-    "changeLog": "Bản cập nhật v20260918.1440: Nâng cấp hiệu năng, đồng bộ quy trình nghiệp vụ ca trực và tối ưu hệ thống.",
-    "bundleUrl": "/api/ota/bundle/latest?platform=ios"
-}

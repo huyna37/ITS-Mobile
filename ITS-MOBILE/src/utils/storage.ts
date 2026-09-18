@@ -43,8 +43,8 @@ export async function initStorage(): Promise<void> {
         if (keys && keys.length > 0) {
           const entries = await AsyncStorage.getMany(keys);
           for (const [k, val] of Object.entries(entries)) {
-            if (val !== null) {
-              memoryCache[k] = val;
+            if (val !== null && val !== undefined) {
+              memoryCache[k] = typeof val === 'string' ? val : String(val);
             }
           }
         }
@@ -100,7 +100,7 @@ export const storage = {
       }
     }
 
-    AsyncStorage.setItem(key, value).catch((err) => {
+    AsyncStorage.setItem(key, value).catch((err: unknown) => {
       console.warn(`Lỗi ghi AsyncStorage cho key [${key}]:`, err);
     });
   },
@@ -119,7 +119,7 @@ export const storage = {
       }
     }
 
-    AsyncStorage.removeItem(key).catch((err) => {
+    AsyncStorage.removeItem(key).catch((err: unknown) => {
       console.warn(`Lỗi xóa AsyncStorage cho key [${key}]:`, err);
     });
   },
@@ -138,7 +138,7 @@ export const storage = {
       }
     }
 
-    AsyncStorage.clear().catch((err) => {
+    AsyncStorage.clear().catch((err: unknown) => {
       console.warn('Lỗi dọn sạch AsyncStorage:', err);
     });
   },

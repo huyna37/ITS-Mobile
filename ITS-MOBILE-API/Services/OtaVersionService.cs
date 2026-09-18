@@ -19,7 +19,7 @@ public class OtaVersionService
     }
 
     /// <summary>
-    /// Đảm bảo bảng dbo.AppVersions tồn tại trong Database và tự động nạp phiên bản ban đầu nếu trống
+    /// Đảm bảo bảng dbo.AppVersions tồn tại trong Database và tự động nạp phiên bản mới từ build vào Database
     /// </summary>
     public async Task EnsureTableAndSyncAsync()
     {
@@ -45,13 +45,30 @@ public class OtaVersionService
 
             await _db.Database.ExecuteSqlRawAsync(createTableSql);
 
-            // 2. Nếu bảng chưa có dữ liệu, đọc seed từ manifest.json và manifest-ios.json
+            // 2. Tự động đồng bộ version từ build container (version.json) nếu có
+            await TrySyncVersionJsonAsync();
+
+            // 3. Nếu bảng chưa có bất kỳ phiên bản nào, seed bản mặc định đầu tiên
             var hasAny = await _db.AppVersions.AnyAsync();
             if (!hasAny)
             {
-                var otaFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "ota");
-                await TrySeedManifestAsync(Path.Combine(otaFolder, "manifest.json"), "android");
-                await TrySeedManifestAsync(Path.Combine(otaFolder, "manifest-ios.json"), "ios");
+                var now = DateTime.UtcNow.AddHours(7);
+                string defaultVer = now.ToString("yyyyMMdd.HHmm");
+                string defaultDate = now.ToString("yyyy-MM-dd HH:mm");
+
+                _db.AppVersions.Add(new AppVersion
+                {
+                    Version = defaultVer,
+                    Platform = "all",
+                    BundleUrl = "/api/ota/bundle/latest",
+                    ChangeLog = "Bản khởi tạo hệ thống tác nghiệp ITS Mobile.",
+                    ReleaseDate = defaultDate,
+                    Mandatory = false,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
+                _logger.LogInformation("[OTA] Đã khởi tạo phiên bản mặc định v{Version} vào Database.", defaultVer);
             }
         }
         catch (Exception ex)
@@ -60,43 +77,43 @@ public class OtaVersionService
         }
     }
 
-    private async Task TrySeedManifestAsync(string manifestPath, string platform)
+    private async Task TrySyncVersionJsonAsync()
     {
-        if (!File.Exists(manifestPath)) return;
+        string[] searchPaths = new[]
+        {
+            Path.Combine(_env.ContentRootPath, "ota-dist", "version.json"),
+            Path.Combine(_env.ContentRootPath, "wwwroot", "ota", "version.json"),
+            Path.Combine(_env.ContentRootPath, "version.json")
+        };
+
+        string? foundPath = searchPaths.FirstOrDefault(File.Exists);
+        if (foundPath == null) return;
 
         try
         {
-            var raw = await File.ReadAllTextAsync(manifestPath);
+            var raw = await File.ReadAllTextAsync(foundPath);
             raw = raw.TrimStart('\uFEFF').Trim();
             var doc = JsonDocument.Parse(raw);
             var root = doc.RootElement;
 
-            string version = root.TryGetProperty("latestVersion", out var v) ? v.GetString() ?? "" : "";
+            string version = root.TryGetProperty("version", out var v) ? v.GetString() ?? "" : "";
             string changeLog = root.TryGetProperty("changeLog", out var c) ? c.GetString() ?? "" : "";
-            string bundleUrl = root.TryGetProperty("bundleUrl", out var b) ? b.GetString() ?? "" : "";
             string releaseDate = root.TryGetProperty("releaseDate", out var r) ? r.GetString() ?? "" : "";
             bool mandatory = root.TryGetProperty("mandatory", out var m) && m.GetBoolean();
 
             if (!string.IsNullOrWhiteSpace(version))
             {
-                _db.AppVersions.Add(new AppVersion
+                var exists = await _db.AppVersions.AnyAsync(x => x.Version == version);
+                if (!exists)
                 {
-                    Version = version,
-                    Platform = platform,
-                    BundleUrl = bundleUrl,
-                    ChangeLog = changeLog,
-                    ReleaseDate = releaseDate,
-                    Mandatory = mandatory,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
-                await _db.SaveChangesAsync();
-                _logger.LogInformation("[OTA] Đã seed phiên bản v{Version} ({Platform}) vào Database.", version, platform);
+                    await PublishVersionAsync(version, "all", changeLog, mandatory, releaseDate);
+                    _logger.LogInformation("[OTA] Đã đồng bộ phiên bản mới v{Version} từ {File} vào Database.", version, foundPath);
+                }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[OTA] Không thể seed file manifest {Path}", manifestPath);
+            _logger.LogWarning(ex, "[OTA] Không thể đồng bộ version.json từ {Path}", foundPath);
         }
     }
 

@@ -1,0 +1,2 @@
+# Thư mục lưu trữ các bundle OTA (index.android.bundle, main.jsbundle, bundle.zip)
+# Các file bundle và version được sinh tự động khi build Docker và lưu trực tiếp trong Database

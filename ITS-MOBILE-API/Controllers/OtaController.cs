@@ -50,7 +50,7 @@ public class OtaController : ControllerBase
         bool mandatory = false;
         string releaseDate = "";
 
-        // 1. Ưu tiên tra cứu từ bảng AppVersions trong Database
+        // 1. Tra cứu phiên bản trực tiếp từ bảng AppVersions trong Database
         var dbVersion = await _otaVersionService.GetLatestActiveVersionAsync(normPlatform);
         if (dbVersion != null)
         {
@@ -58,48 +58,6 @@ public class OtaController : ControllerBase
             changeLog = dbVersion.ChangeLog;
             mandatory = dbVersion.Mandatory;
             releaseDate = dbVersion.ReleaseDate;
-        }
-        else
-        {
-            // 2. Fallback sang file manifest tĩnh nếu Database chưa có
-            var otaFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "ota");
-            var manifestPath = Path.Combine(otaFolder, isIos ? "manifest-ios.json" : "manifest.json");
-
-            if (isIos && !System.IO.File.Exists(manifestPath))
-            {
-                return Ok(new OtaCheckResponse
-                {
-                    HasUpdate = false,
-                    LatestVersion = currentVersion ?? "1.0.0-base",
-                    BundleUrl = "",
-                    ChangeLog = "Chưa có bản cập nhật OTA riêng cho iOS.",
-                    Mandatory = false,
-                    ReleaseDate = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm")
-                });
-            }
-
-            if (System.IO.File.Exists(manifestPath))
-            {
-                try
-                {
-                    var json = System.IO.File.ReadAllText(manifestPath).TrimStart('\uFEFF').Trim();
-                    var parsed = System.Text.Json.JsonSerializer.Deserialize<OtaCheckResponse>(json, new System.Text.Json.JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-                    if (parsed != null)
-                    {
-                        latestVersion = parsed.LatestVersion;
-                        changeLog = parsed.ChangeLog;
-                        mandatory = parsed.Mandatory;
-                        releaseDate = parsed.ReleaseDate;
-                    }
-                }
-                catch
-                {
-                    // Fallback to default
-                }
-            }
         }
 
         if (string.IsNullOrWhiteSpace(latestVersion))
