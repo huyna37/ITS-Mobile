@@ -54,6 +54,17 @@ workflows:
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles --warn-only || true
+      - name: Bundle React Native iOS JS Bundle & Assets
+        script: |
+          cd ITS-MOBILE
+          mkdir -p ios/TempApp/assets
+          echo "==> Bundling React Native for iOS..."
+          npx react-native bundle \
+            --platform ios \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output ios/TempApp/main.jsbundle \
+            --assets-dest ios/TempApp
       - name: Build iOS Application & Package IPA
         script: |
           cd ITS-MOBILE/ios
@@ -87,6 +98,12 @@ workflows:
             fi
             if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
               echo "Found App Bundle at: $APP_PATH"
+              # Tiêm trực tiếp main.jsbundle chuẩn iOS và assets vào .app
+              if [ -f "$CM_BUILD_DIR/ITS-MOBILE/ios/TempApp/main.jsbundle" ]; then
+                echo "==> Injecting iOS main.jsbundle and assets into .app payload..."
+                cp -f "$CM_BUILD_DIR/ITS-MOBILE/ios/TempApp/main.jsbundle" "$APP_PATH/main.jsbundle"
+                cp -rf "$CM_BUILD_DIR/ITS-MOBILE/ios/TempApp/assets" "$APP_PATH/" 2>/dev/null || true
+              fi
               if [ -f "$CM_BUILD_DIR/tools/app_to_ipa.py" ]; then
                 python3 "$CM_BUILD_DIR/tools/app_to_ipa.py" --app "$APP_PATH" --output "$CM_BUILD_DIR/build/ios/ipa/${APP_NAME}.ipa"
               else

@@ -46,14 +46,14 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
       let otaDir = docDir.appendingPathComponent("ota")
       let mainBundle = otaDir.appendingPathComponent("main.jsbundle")
       if FileManager.default.fileExists(atPath: mainBundle.path) {
-        // Kiểm tra an toàn: Nếu file bundle chứa thành phần Android (AndroidTextInput), xóa ngay và về bản gốc
-        if let data = try? Data(contentsOf: mainBundle, options: .mappedIfSafe),
-           let content = String(data: data.prefix(200000), encoding: .utf8),
-           content.contains("AndroidTextInput") {
-          try? FileManager.default.removeItem(at: otaDir)
-          return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+        // Kiểm tra an toàn: Đọc nội dung bundle OTA để ngăn chặn bundle Android
+        if let content = try? String(contentsOf: mainBundle, encoding: .utf8) {
+          if content.contains("AndroidTextInput") || !content.contains("RCTSinglelineTextInputView") {
+            try? FileManager.default.removeItem(at: otaDir)
+            return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+          }
+          return mainBundle
         }
-        return mainBundle
       }
     }
     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
