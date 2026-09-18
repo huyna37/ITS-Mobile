@@ -120,16 +120,14 @@ export const TasksScreen: React.FC = () => {
           }}
         />
 
-        {/* Dòng ngày tháng hoặc thông tin kết quả tìm kiếm */}
-        <View style={styles.dateRow}>
-          {isSearching && searchQuery ? (
+        {/* Dòng thông tin kết quả tìm kiếm nếu đang tìm */}
+        {isSearching && searchQuery ? (
+          <View style={styles.dateRow}>
             <Text style={[styles.dateText, { color: '#0097f0', fontWeight: '700' }]}>
               Kết quả cho "{searchQuery}": {activeTasks.length + completedTasks.length + filteredEvents.length} mục
             </Text>
-          ) : (
-            <Text style={styles.dateText}>Thứ Hai, 20/04/2026</Text>
-          )}
-        </View>
+          </View>
+        ) : null}
 
         {isLoading && !isRefreshing ? (
           <LoadingSpinner message={TASK_SECTION_CONSTANTS.LOADING_MESSAGE} />

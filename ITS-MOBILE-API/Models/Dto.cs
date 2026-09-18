@@ -3,12 +3,20 @@ namespace ITS_MOBILE_API.Models;
 public record LoginRequest(string Username, string Password, string Extension);
 public record LoginResponse(string Token, string RefreshToken, string TenNhanVien, string ChucVu, string DonVi, string Extension, string Username, long ExpiresIn);
 public record ProfileResponse(string TenNhanVien, string ChucVu, string DonVi, string Extension, string Username);
-public record TaskResponse(string Id, string Code, string Type, string Level, string Location, string Direction, string Time, int Status, string? Description, string? Script, string? IncidentCode = null);
-public record TaskDetailResponse(string Id, string Code, string Type, string Level, string Location, string Direction, string Time, int Status, string Description, string Script, List<StatusLogEntry> StatusLog, string? IncidentCode = null);
-public record StatusLogEntry(string Time, string Text, string Actor);
+public record TaskAttachmentDto(string Id, string Name, string Uri, string Type, long SizeBytes, string UploadedAt);
+public record TaskNoteDto(string Id, string Author, string Content, string CreatedAt, string? OldStatus = null, string? NewStatus = null, string? LogType = null);
+public record TaskResponse(string Id, string Code, string Type, string Level, string Location, string Direction, string Time, int Status, string? Description, string? Script, string? IncidentCode = null, List<TaskAttachmentDto>? Attachments = null, List<TaskNoteDto>? Notes = null);
+public record TaskDetailResponse(string Id, string Code, string Type, string Level, string Location, string Direction, string Time, int Status, string Description, string Script, List<StatusLogEntry> StatusLog, string? IncidentCode = null, List<TaskAttachmentDto>? Attachments = null, List<TaskNoteDto>? Notes = null);
+public record StatusLogEntry(string Time, string Text, string Actor, string? OldStatus = null, string? NewStatus = null);
 public class StatusUpdateRequest
 {
     public int Status { get; set; }
+    public string? Actor { get; set; }
+}
+public class SubmitReportRequest
+{
+    public string? Note { get; set; }
+    public List<string>? FileIds { get; set; }
     public string? Actor { get; set; }
 }
 public record ContactResponse(string Id, string Name, string Ext, bool Online);

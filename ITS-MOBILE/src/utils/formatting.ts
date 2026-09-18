@@ -131,3 +131,55 @@ export function formatMilestone(
   }
   return base;
 }
+
+/**
+ * Chuẩn hóa và hiển thị thời gian đầy đủ ngày/tháng/năm 4 chữ số: HH:mm DD/MM/YYYY
+ */
+export function formatFullDateTime(dateTimeStr?: string | null): string {
+  if (!dateTimeStr) return '';
+  const trimmed = dateTimeStr.trim();
+
+  // 1. Đã có đủ định dạng HH:mm DD/MM/YYYY
+  if (/^\d{1,2}:\d{2}\s+\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  // 2. Dạng HH:mm DD/MM (chưa có năm) -> Thêm năm 4 chữ số
+  const matchNoYear = trimmed.match(/^(\d{1,2}:\d{2})\s+(\d{1,2}\/\d{1,2})$/);
+  if (matchNoYear) {
+    const year = new Date().getFullYear();
+    return `${matchNoYear[1]} ${matchNoYear[2]}/${year}`;
+  }
+
+  // 3. Dạng chỉ có ngày tháng DD/MM -> Thêm năm
+  const matchOnlyDate = trimmed.match(/^(\d{1,2}\/\d{1,2})$/);
+  if (matchOnlyDate) {
+    const year = new Date().getFullYear();
+    return `${matchOnlyDate[1]}/${year}`;
+  }
+
+  // 4. Dạng chỉ có giờ phút HH:mm -> Thêm ngày tháng năm hiện tại
+  const matchOnlyTime = trimmed.match(/^(\d{1,2}:\d{2})$/);
+  if (matchOnlyTime) {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${matchOnlyTime[1]} ${day}/${month}/${year}`;
+  }
+
+  // 5. Chuỗi chuẩn Date/ISO từ máy chủ
+  try {
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      const timePart = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${timePart} ${day}/${month}/${year}`;
+    }
+  } catch {}
+
+  return trimmed;
+}
+

@@ -48,7 +48,7 @@ public class CallHistoryService
                 Id: c.Id.ToString(),
                 Extension: c.PhoneNumber ?? string.Empty,
                 Name: name ?? "Không rõ",
-                Time: vnTime.ToString("dd/MM HH:mm"),
+                Time: vnTime.ToString("dd/MM/yyyy HH:mm"),
                 Duration: c.Duration > 0 ? FormatDuration(c.Duration) : null,
                 Status: GetStatusText(c.Status)
             );
@@ -82,7 +82,7 @@ public class CallHistoryService
                 Id: c.Id.ToString(),
                 Extension: c.PhoneNumber ?? string.Empty,
                 Name: name ?? "Không rõ",
-                Time: vnTime.ToString("dd/MM HH:mm"),
+                Time: vnTime.ToString("dd/MM/yyyy HH:mm"),
                 Duration: c.Duration > 0 ? FormatDuration(c.Duration) : null,
                 Status: GetStatusText(c.Status)
             );
@@ -122,7 +122,7 @@ public class CallHistoryService
             Id: call.Id.ToString(),
             Extension: call.PhoneNumber ?? "N/A",
             Name: call.Supporter ?? "Không rõ",
-            Time: ToVietnamTime(call.CallDate).ToString("dd/MM HH:mm"),
+            Time: ToVietnamTime(call.CallDate).ToString("dd/MM/yyyy HH:mm"),
             Duration: call.Duration > 0 ? FormatDuration(call.Duration) : null,
             Status: GetStatusText(call.Status)
         );

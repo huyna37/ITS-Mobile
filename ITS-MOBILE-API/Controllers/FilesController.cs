@@ -18,17 +18,20 @@ public class FilesController : ControllerBase
     }
 
     [HttpPost("upload")]
-    public async Task<ActionResult<FileResponse>> UploadFile([FromForm] IFormFile file, [FromForm] string? incidentId)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<FileResponse>> UploadFile([FromForm] SingleFileUploadDto dto)
     {
         try
         {
+            if (dto.File == null)
+                return BadRequest(new { error = "Chưa chọn file tải lên" });
             var username = User.FindFirst("username")?.Value
                 ?? User.FindFirst(ClaimTypes.Name)?.Value
                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                 ?? User.Identity?.Name
                 ?? "admin";
 
-            var result = await _fileService.UploadFile(file, username, incidentId);
+            var result = await _fileService.UploadFile(dto.File, username, dto.IncidentId, dto.TaskId);
             if (result == null)
                 return BadRequest(new { error = "File không hợp lệ hoặc vượt quá kích thước" });
 
@@ -41,7 +44,8 @@ public class FilesController : ControllerBase
     }
 
     [HttpPost("upload-multiple")]
-    public async Task<ActionResult<List<FileResponse>>> UploadMultiple([FromForm] IList<IFormFile> files, [FromForm] string? incidentId)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<List<FileResponse>>> UploadMultiple([FromForm] MultipleFilesUploadDto dto)
     {
         try
         {
@@ -51,13 +55,13 @@ public class FilesController : ControllerBase
                 ?? User.Identity?.Name
                 ?? "admin";
 
-            if (files == null || !files.Any())
+            if (dto.Files == null || !dto.Files.Any())
                 return BadRequest(new { error = "Chưa có file nào được chọn" });
 
             var results = new List<FileResponse>();
-            foreach (var file in files)
+            foreach (var file in dto.Files)
             {
-                var result = await _fileService.UploadFile(file, username, incidentId);
+                var result = await _fileService.UploadFile(file, username, dto.IncidentId, dto.TaskId);
                 if (result != null)
                     results.Add(result);
             }
@@ -74,7 +78,7 @@ public class FilesController : ControllerBase
     }
 
     [HttpGet("{id}/download")]
-    public async Task<IActionResult> DownloadFile(string id)
+    public async Task<IActionResult> DownloadFile(string id, [FromQuery] bool download = false)
     {
         try
         {
@@ -90,7 +94,32 @@ public class FilesController : ControllerBase
             if (fileRecord == null)
                 return NotFound(new { error = "Không tìm thấy file" });
 
-            return File(data, fileRecord.Type, fileRecord.Name);
+            var contentType = fileRecord.Type;
+            if (string.IsNullOrWhiteSpace(contentType) || contentType == "application/octet-stream")
+            {
+                var ext = Path.GetExtension(fileRecord.Name)?.ToLowerInvariant();
+                contentType = ext switch
+                {
+                    ".jfif" or ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".gif" => "image/gif",
+                    ".webp" => "image/webp",
+                    ".bmp" => "image/bmp",
+                    ".svg" => "image/svg+xml",
+                    ".mp4" => "video/mp4",
+                    ".pdf" => "application/pdf",
+                    _ => "application/octet-stream"
+                };
+            }
+
+            if (download)
+            {
+                return File(data, contentType, fileRecord.Name);
+            }
+
+            // Inline display for images, videos, and previews
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileRecord.Name}\"");
+            return File(data, contentType, enableRangeProcessing: true);
         }
         catch (Exception ex)
         {
@@ -140,3 +169,18 @@ public class FilesController : ControllerBase
         }
     }
 }
+
+public class SingleFileUploadDto
+{
+    public IFormFile? File { get; set; }
+    public string? IncidentId { get; set; }
+    public string? TaskId { get; set; }
+}
+
+public class MultipleFilesUploadDto
+{
+    public IList<IFormFile>? Files { get; set; }
+    public string? IncidentId { get; set; }
+    public string? TaskId { get; set; }
+}
+

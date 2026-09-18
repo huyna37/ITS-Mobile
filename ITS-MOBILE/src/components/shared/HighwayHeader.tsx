@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Platform, TextInput, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PaperPlaneIcon, SearchIcon, CloseIcon } from '../icons/SvgIcons';
+import { SearchIcon, CloseIcon } from '../icons/SvgIcons';
 import { HIGHWAY_CONSTANTS, FONT_FAMILY } from '../../constants';
+import appBannerImg from '../../assets/images/app-banner.png';
 
 interface HighwayHeaderProps {
   title?: string;
@@ -85,9 +86,13 @@ export const HighwayHeader: React.FC<HighwayHeaderProps> = ({
         </View>
       ) : (
         <View style={styles.headerTop}>
-          {/* Nút phi thuyền tròn xanh chuẩn thiết kế căn chính tâm */}
+          {/* Logo ứng dụng camera giám sát */}
           <View style={styles.navButton}>
-            <PaperPlaneIcon size={22} color="#ffffff" />
+            <Image
+              source={typeof appBannerImg === 'string' ? { uri: appBannerImg } : appBannerImg}
+              style={styles.navButtonImage}
+              resizeMode="cover"
+            />
           </View>
 
           {/* Tiêu đề trung tâm 2 dòng */}
@@ -129,17 +134,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   navButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#0097f0',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     shadowColor: '#0097f0',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
+  },
+  navButtonImage: {
+    width: '100%',
+    height: '100%',
   },
   titleBox: {
     flex: 1,

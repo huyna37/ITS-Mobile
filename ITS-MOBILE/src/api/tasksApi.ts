@@ -1,6 +1,25 @@
 import { IncidentTask, ExpresswayEvent, TaskStep } from '../types/tasks';
 import { apiClient } from './client';
 
+export interface BackendTaskAttachment {
+  id: string;
+  name: string;
+  uri: string;
+  type: string;
+  sizeBytes: number;
+  uploadedAt: string;
+}
+
+export interface BackendTaskNote {
+  id: string;
+  author: string;
+  content: string;
+  createdAt: string;
+  oldStatus?: string;
+  newStatus?: string;
+  logType?: 'STATUS_CHANGE' | 'FIELD_NOTE' | 'SYSTEM';
+}
+
 export interface BackendTaskResponse {
   id: string;
   code: string;
@@ -13,6 +32,8 @@ export interface BackendTaskResponse {
   status: number;
   description: string;
   script: string;
+  attachments?: BackendTaskAttachment[];
+  notes?: BackendTaskNote[];
 }
 
 export interface BackendIncidentResponse {
@@ -40,32 +61,42 @@ function parseMilestoneM(locationStr: string): number {
   return 0;
 }
 
-function mapBackendTask(item: BackendTaskResponse): IncidentTask {
-  let taskStep: TaskStep = 'RECEIVED';
-  if (item.status === 3) {
-    taskStep = 'COMPLETED';
-  } else if (item.status === 2) {
-    taskStep = 'IN_PROGRESS';
-  } else {
-    taskStep = 'RECEIVED';
-  }
+export function mapBackendTask(item: BackendTaskResponse): IncidentTask {
+  const taskStep: TaskStep = item.status === 1 ? 'RECEIVED' : item.status === 2 ? 'IN_PROGRESS' : 'COMPLETED';
 
   return {
     id: item.id,
     code: item.code,
-    incidentCode: item.incidentCode,
+    incidentCode: item.incidentCode || item.code,
     title: item.type,
     description: item.description,
     milestoneKm: parseMilestoneKm(item.location),
     milestoneM: parseMilestoneM(item.location),
-    direction: item.direction === 'LAOCAI_HANOI' ? 'LAOCAI_HANOI' : 'HANOI_LAOCAI',
+    direction: item.direction.includes('Hà Nội') && item.direction.includes('Lào Cai') && item.direction.indexOf('Hà Nội') < item.direction.indexOf('Lào Cai')
+      ? 'HANOI_LAOCAI'
+      : 'LAOCAI_HANOI',
     step: taskStep,
     priority: item.level === 'P0' ? 'P0' : item.level === 'P1' ? 'P1' : item.level === 'P2' ? 'P2' : 'P3',
     assignedTo: item.code,
     createdAt: item.time,
     updatedAt: item.time,
-    attachments: [],
-    notes: [],
+    attachments: (item.attachments || []).map((a) => ({
+      id: a.id,
+      name: a.name,
+      type: (a.type === 'video' ? 'video' : a.type === 'document' ? 'document' : 'image') as any,
+      uri: a.uri,
+      sizeBytes: a.sizeBytes,
+      uploadedAt: a.uploadedAt,
+    })),
+    notes: (item.notes || []).map((n) => ({
+      id: n.id,
+      author: n.author,
+      content: n.content,
+      createdAt: n.createdAt,
+      oldStatus: n.oldStatus,
+      newStatus: n.newStatus,
+      logType: n.logType,
+    })),
     script: item.script,
   };
 }
@@ -121,3 +152,15 @@ export async function getExpresswayEventsApi(): Promise<ExpresswayEvent[]> {
   const res = await apiClient.get<BackendIncidentResponse[]>('/api/incidents');
   return res.data.map(mapBackendIncident);
 }
+
+/**
+ * Gửi báo cáo hiện trường (ghi nhận + tệp đính kèm) về máy chủ TMC
+ */
+export async function submitTaskReportApi(
+  taskId: string,
+  data: { note?: string; fileIds?: string[]; actor?: string }
+): Promise<boolean> {
+  const res = await apiClient.post<{ success: boolean }>(`/api/tasks/${taskId}/report`, data);
+  return res.data?.success === true;
+}
+
