@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
+import {
+  createBottomTabNavigator,
+  type BottomTabNavigationOptions,
+} from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
 import { ContactsScreen } from '../screens/contacts/ContactsScreen';
 import { TasksScreen } from '../screens/tasks/TasksScreen';
@@ -15,6 +18,54 @@ import {
 } from '../components/icons/SvgIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, FONT_FAMILY } from '../constants';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+type SceneStyleInterpolator = NonNullable<BottomTabNavigationOptions['sceneStyleInterpolator']>;
+
+/**
+ * Hiệu ứng chuyển cảnh kiểu "Lật trang 3D mềm mại" (Fluid Smooth Page Turn)
+ * Góc xoay tinh tế, trượt êm ái kết hợp đường cong gia tốc Apple iOS fluid bezier
+ * Đem lại cảm giác lướt lật trang cực kỳ mượt mà, không giật cứng.
+ */
+const forPageFlip: SceneStyleInterpolator = ({ current }) => {
+  const rotateY = current.progress.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-14deg', '0deg', '14deg'],
+    extrapolate: 'clamp',
+  });
+
+  const translateX = current.progress.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [-SCREEN_WIDTH * 0.38, 0, SCREEN_WIDTH * 0.38],
+    extrapolate: 'clamp',
+  });
+
+  const scale = current.progress.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [0.96, 1, 0.96],
+    extrapolate: 'clamp',
+  });
+
+  const opacity = current.progress.interpolate({
+    inputRange: [-1, -0.2, 0, 0.2, 1],
+    outputRange: [0, 0.85, 1, 0.85, 0],
+    extrapolate: 'clamp',
+  });
+
+  return {
+    sceneStyle: {
+      opacity,
+      transform: [
+        { perspective: 1400 },
+        { translateX },
+        { rotateY },
+        { scale },
+      ],
+      backgroundColor: '#f8fafc',
+    },
+  };
+};
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -33,6 +84,15 @@ export const MainTabNavigator: React.FC = () => {
       initialRouteName="TasksTab"
       screenOptions={{
         headerShown: false,
+        animation: 'shift',
+        sceneStyleInterpolator: forPageFlip,
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: 380,
+            easing: Easing.bezier(0.16, 1, 0.3, 1),
+          },
+        },
         tabBarActiveTintColor: '#0090e7',
         tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {

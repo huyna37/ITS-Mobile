@@ -4,11 +4,12 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { LogoutIcon } from '../../components/icons/SvgIcons';
+import { FaceIdIcon, FingerprintIcon, LogoutIcon } from '../../components/icons/SvgIcons';
 import { HighwayHeader } from '../../components/shared/HighwayHeader';
 import { OtaUpdateModal } from '../../components/shared/OtaUpdateModal';
 import { FONT_FAMILY } from '../../constants';
@@ -18,12 +19,19 @@ import {
   OtaBundleInfo,
   OtaCheckResult,
 } from '../../services/otaService';
+import {
+  BiometricType,
+  checkBiometricAvailable,
+  disableBiometricLogin,
+  enableBiometricLogin,
+  isBiometricEnabled,
+} from '../../services/biometricService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppDialog, showAppToast } from '../../store/useToastStore';
 import { getProfileApi, ProfileData } from '../../api/profileApi';
 
 export const ProfileScreen: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user, token, logout } = useAuthStore();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -32,10 +40,53 @@ export const ProfileScreen: React.FC = () => {
   const [updateResult, setUpdateResult] = useState<OtaCheckResult | null>(null);
   const [showOtaModal, setShowOtaModal] = useState(false);
 
+  // Trạng thái cài đặt sinh trắc học
+  const [biometricAvailable, setBiometricAvailable] = useState<boolean>(false);
+  const [biometricType, setBiometricType] = useState<BiometricType>(null);
+  const [biometricActive, setBiometricActive] = useState<boolean>(false);
+  const [switchingBiometric, setSwitchingBiometric] = useState<boolean>(false);
+
   useEffect(() => {
     loadBundleInfo();
     loadProfile();
+    loadBiometricSettings();
   }, []);
+
+  const loadBiometricSettings = async () => {
+    const { available, type } = await checkBiometricAvailable();
+    setBiometricAvailable(available);
+    setBiometricType(type);
+    setBiometricActive(isBiometricEnabled());
+  };
+
+  const handleToggleBiometric = async (value: boolean) => {
+    if (value) {
+      const currentToken = token || useAuthStore.getState().token;
+      const currentUser = user || useAuthStore.getState().user;
+
+      if (!currentToken || !currentUser) {
+        showAppToast('warning', 'Chưa đăng nhập', 'Vui lòng đăng nhập lại');
+        return;
+      }
+
+      setSwitchingBiometric(true);
+      const success = await enableBiometricLogin(currentToken, currentUser);
+      setSwitchingBiometric(false);
+
+      if (success) {
+        setBiometricActive(true);
+        const name = biometricType === 'FaceID' ? 'Face ID' : 'vân tay';
+        showAppToast('success', 'Thành công', `Đã bật ${name}`);
+      } else {
+        setBiometricActive(false);
+        showAppToast('error', 'Thất bại', 'Xác thực không thành công');
+      }
+    } else {
+      disableBiometricLogin();
+      setBiometricActive(false);
+      showAppToast('info', 'Thông báo', 'Đã tắt sinh trắc học');
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -142,6 +193,39 @@ export const ProfileScreen: React.FC = () => {
               <Text style={styles.deptValue}>{displayDept}</Text>
             </View>
           </View>
+        </View>
+
+        {/* Card Cài đặt Bảo mật & Sinh trắc học */}
+        <View style={styles.securityCard}>
+          <View style={styles.securityHeaderRow}>
+            <View style={styles.securityIconBadge}>
+              {biometricType === 'FaceID' ? (
+                <FaceIdIcon size={24} color="#0090e7" />
+              ) : (
+                <FingerprintIcon size={24} color="#0090e7" />
+              )}
+            </View>
+            <View style={styles.securityTitleContainer}>
+              <Text style={styles.securityTitle}>
+                {biometricType === 'FaceID' ? 'Face ID' : 'Vân tay'}
+              </Text>
+              <Text style={styles.securitySub}>
+                {biometricActive ? 'Đang bật' : 'Đã tắt'}
+              </Text>
+            </View>
+            <Switch
+              value={biometricActive}
+              onValueChange={handleToggleBiometric}
+              disabled={switchingBiometric || !biometricAvailable}
+              trackColor={{ false: '#cbd5e1', true: '#bae6fd' }}
+              thumbColor={biometricActive ? '#0090e7' : '#f8fafc'}
+            />
+          </View>
+          <Text style={styles.securityDesc}>
+            {biometricAvailable
+              ? 'Đăng nhập nhanh không cần nhập mật khẩu.'
+              : 'Thiết bị không hỗ trợ sinh trắc học.'}
+          </Text>
         </View>
 
         {/* Card Cập nhật trực tuyến (OTA Hot Update) */}
@@ -403,6 +487,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#94a3b8',
+  },
+  securityCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  securityHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  securityIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#f0f7ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  securityTitleContainer: {
+    flex: 1,
+  },
+  securityTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  securitySub: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0284c7',
+    marginTop: 2,
+  },
+  securityDesc: {
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 18,
   },
   logoutButton: {
     marginHorizontal: 16,

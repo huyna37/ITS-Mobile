@@ -3,6 +3,7 @@ import { User, LoginCredentials } from '../types/auth';
 import { loginApi, logoutApi } from '../api/authApi';
 import { storage } from '../utils/storage';
 import { parseApiError } from '../utils/apiError';
+import { getBiometricSession, syncBiometricSessionIfEnabled } from '../services/biometricService';
 
 interface AuthState {
   user: User | null;
@@ -12,6 +13,7 @@ interface AuthState {
   error: string | null;
 
   login: (credentials: LoginCredentials) => Promise<boolean>;
+  loginWithBiometrics: () => boolean;
   logout: () => Promise<void>;
   restoreSession: () => void;
   handleSessionExpired: () => void;
@@ -31,6 +33,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await loginApi(credentials);
       storage.setItem('auth_token', res.token);
       storage.setJSON('auth_user', res.user);
+      syncBiometricSessionIfEnabled(res.token, res.user);
       set({
         user: res.user,
         token: res.token,
@@ -44,6 +47,23 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ error: msg, isLoading: false, isAuthenticated: false });
       return false;
     }
+  },
+
+  loginWithBiometrics: () => {
+    const session = getBiometricSession();
+    if (!session || !session.token || !session.user) {
+      return false;
+    }
+    storage.setItem('auth_token', session.token);
+    storage.setJSON('auth_user', session.user);
+    set({
+      user: session.user,
+      token: session.token,
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    });
+    return true;
   },
 
   clearError: () => {

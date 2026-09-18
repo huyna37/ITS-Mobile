@@ -53,7 +53,74 @@ public class AuthService
         if (!isPasswordValid)
             throw new InvalidOperationException("Mật khẩu không đúng");
 
-        return BuildLoginResponse(user, extension);
+        // Validate số máy nhánh PBX: Bắt buộc đúng với tài khoản
+        var cleanExt = extension?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(cleanExt))
+        {
+            throw new InvalidOperationException("Vui lòng nhập số Extension PBX");
+        }
+
+        var isExtensionValid = await ValidateUserExtensionAsync(user, cleanExt);
+        if (!isExtensionValid)
+        {
+            throw new InvalidOperationException($"Số Extension PBX ({cleanExt}) không khớp với tài khoản {user.UserName}");
+        }
+
+        return BuildLoginResponse(user, cleanExt);
+    }
+
+    private async Task<bool> ValidateUserExtensionAsync(AbpUser user, string cleanExt)
+    {
+        // 1. Khớp trực tiếp với SipNumber hoặc SipNumberSOS trong AbpUsers
+        if (!string.IsNullOrEmpty(user.SipNumber))
+        {
+            var sip = user.SipNumber.Trim();
+            if (sip.Equals(cleanExt, StringComparison.OrdinalIgnoreCase) ||
+                sip.EndsWith(cleanExt, StringComparison.OrdinalIgnoreCase) ||
+                cleanExt.EndsWith(sip, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(user.SipNumberSOS))
+        {
+            var sos = user.SipNumberSOS.Trim();
+            if (sos.Equals(cleanExt, StringComparison.OrdinalIgnoreCase) ||
+                sos.EndsWith(cleanExt, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        // 2. Khớp theo danh mục tài khoản tiêu chuẩn hệ thống ITS Mobile VEC
+        var standardAllowed = user.UserName?.ToLower() switch
+        {
+            "admin" => new[] { "9901", "100104", "1001", "0104" },
+            "van_hanh" => new[] { "2011" },
+            "trien_khai" => new[] { "1001" },
+            _ => Array.Empty<string>()
+        };
+
+        if (standardAllowed.Contains(cleanExt))
+        {
+            return true;
+        }
+
+        // 3. Khớp từ danh bạ tổng đài Extensions trong CSDL
+        var isExtensionInDb = await _db.Extensions.AnyAsync(e =>
+            !e.IsDeleted &&
+            e.ExtensionNumber == cleanExt &&
+            (
+                (!string.IsNullOrEmpty(e.ExtensionName) && (
+                    (!string.IsNullOrEmpty(user.UserName) && e.ExtensionName.Contains(user.UserName)) ||
+                    (!string.IsNullOrEmpty(user.Name) && e.ExtensionName.Contains(user.Name)) ||
+                    (!string.IsNullOrEmpty(user.Surname) && e.ExtensionName.Contains(user.Surname))
+                )) ||
+                (!string.IsNullOrEmpty(user.SipNumber) && e.ExtensionNumber == user.SipNumber)
+            ));
+
+        return isExtensionInDb;
     }
 
     private LoginResponse? BuildLoginResponse(AbpUser user, string extension)
@@ -66,7 +133,9 @@ public class AuthService
         var workerInfo = _db.WorkerInfos
             .FirstOrDefault(w => w.UserId == user.Id && !w.IsDeleted);
 
-        var token = GenerateJwtToken(user, role);
+        var effectiveExtension = !string.IsNullOrEmpty(extension) ? extension : (user.SipNumber ?? "N/A");
+
+        var token = GenerateJwtToken(user, role, effectiveExtension);
 
         var refreshToken = GenerateRefreshToken();
 
@@ -76,7 +145,7 @@ public class AuthService
             TenNhanVien: $"{user.Name} {user.Surname}",
             ChucVu: GetRoleDisplay(role),
             DonVi: workerInfo != null ? "Đội vận hành" : (role.Contains("ADMIN") ? "Quản trị hệ thống" : "Đội vận hành"),
-            Extension: user.SipNumber ?? extension,
+            Extension: effectiveExtension,
             Username: user.UserName,
             ExpiresIn: 43200
         );
@@ -173,7 +242,7 @@ public class AuthService
         return Convert.ToBase64String(bytes);
     }
 
-    public string GenerateJwtToken(AbpUser user, string role)
+    public string GenerateJwtToken(AbpUser user, string role, string? extension = null)
     {
         var key = _config["JwtKey"] ?? "its-mobile-secret-key-change-in-production";
         var issuer = _config["JwtIssuer"] ?? "ITS-Mobile-API";
@@ -182,13 +251,15 @@ public class AuthService
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+        var effectiveExt = !string.IsNullOrEmpty(extension) ? extension : (user.SipNumber ?? "");
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim("username", user.UserName),
             new Claim("email", user.EmailAddress ?? ""),
             new Claim("role", role),
-            new Claim("extension", user.SipNumber ?? ""),
+            new Claim("extension", effectiveExt),
             new Claim("name", $"{user.Name} {user.Surname}"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())

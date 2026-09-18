@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -10,11 +11,23 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { EyeIcon, EyeOffIcon, PaperPlaneIcon } from '../../components/icons/SvgIcons';
+import {
+  EyeIcon,
+  EyeOffIcon,
+  FaceIdIcon,
+  FingerprintIcon,
+  PaperPlaneIcon,
+} from '../../components/icons/SvgIcons';
 import { APP_CONFIG } from '../../config';
+import { FONT_FAMILY } from '../../constants';
+import {
+  authenticateWithBiometrics,
+  BiometricType,
+  checkBiometricAvailable,
+  isBiometricEnabled,
+} from '../../services/biometricService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showAppToast } from '../../store/useToastStore';
-import { FONT_FAMILY } from '../../constants';
 
 export const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -26,11 +39,49 @@ export const LoginScreen: React.FC = () => {
     extension?: string;
     password?: string;
   }>({});
+  const [biometricType, setBiometricType] = useState<BiometricType>(null);
+  const [showBiometric, setShowBiometric] = useState<boolean>(false);
+  const biometricScale = useRef(new Animated.Value(1)).current;
 
   const extensionInputRef = useRef<any>(null);
   const passwordInputRef = useRef<any>(null);
 
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, loginWithBiometrics, isLoading, error, clearError } = useAuthStore();
+
+  // Kiểm tra biometric và trạng thái kích hoạt trong cài đặt khi mở màn hình
+  useEffect(() => {
+    checkBiometricAvailable().then(({ available, type }) => {
+      setBiometricType(type);
+      const enabled = isBiometricEnabled();
+      setShowBiometric(available && enabled);
+    });
+  }, []);
+
+  // Xử lý đăng nhập bằng Face ID / vân tay
+  const handleBiometricLogin = useCallback(async () => {
+    // Hiệu ứng nhấn
+    Animated.sequence([
+      Animated.timing(biometricScale, { toValue: 0.92, duration: 100, useNativeDriver: true }),
+      Animated.timing(biometricScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+
+    const label = biometricType === 'FaceID' ? 'Face ID' : 'vân tay';
+    const success = await authenticateWithBiometrics(`Đăng nhập bằng ${label}`);
+    if (success) {
+      const loggedIn = loginWithBiometrics();
+      if (loggedIn) {
+        showAppToast('success', 'Thành công', 'Đăng nhập thành công');
+      } else {
+        showAppToast(
+          'warning',
+          'Chưa kích hoạt',
+          'Vui lòng đăng nhập mật khẩu và bật sinh trắc học'
+        );
+      }
+    } else {
+      showAppToast('error', 'Thất bại', `Không nhận diện được ${label}`);
+    }
+  }, [biometricType, biometricScale, loginWithBiometrics]);
 
   const validateForm = (): boolean => {
     const errors: { username?: string; extension?: string; password?: string } = {};
@@ -60,11 +111,7 @@ export const LoginScreen: React.FC = () => {
 
   const handleLogin = async () => {
     if (!validateForm()) {
-      showAppToast(
-        'warning',
-        'Yêu cầu thông tin',
-        'Vui lòng kiểm tra và nhập đúng các trường bắt buộc'
-      );
+      showAppToast('warning', 'Thiếu thông tin', 'Vui lòng điền đúng và đủ các trường bắt buộc');
       return;
     }
 
@@ -228,6 +275,35 @@ export const LoginScreen: React.FC = () => {
                 {isLoading ? 'ĐANG KẾT NỐI MÁY CHỦ...' : 'ĐĂNG NHẬP'}
               </Text>
             </TouchableOpacity>
+
+            {/* Nút đăng nhập sinh trắc học (chỉ hiện khi thiết bị hỗ trợ VÀ đã bật trong Hồ sơ) */}
+            {showBiometric ? (
+              <View style={styles.biometricRow}>
+                <View style={styles.biometricDivider} />
+                <Text style={styles.biometricDividerText}>HOẶC</Text>
+                <View style={styles.biometricDivider} />
+              </View>
+            ) : null}
+            {showBiometric ? (
+              <Animated.View style={{ transform: [{ scale: biometricScale }] }}>
+                <TouchableOpacity
+                  style={styles.biometricButton}
+                  activeOpacity={0.8}
+                  onPress={handleBiometricLogin}
+                >
+                  {biometricType === 'FaceID' ? (
+                    <FaceIdIcon size={28} color="#0090e7" />
+                  ) : (
+                    <FingerprintIcon size={28} color="#0090e7" />
+                  )}
+                  <Text style={styles.biometricButtonText}>
+                    {biometricType === 'FaceID'
+                      ? 'Đăng nhập bằng Face ID'
+                      : 'Đăng nhập bằng vân tay'}
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ) : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -394,5 +470,41 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#b91c1c',
     lineHeight: 18,
+  },
+  biometricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  biometricDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e2e8f0',
+  },
+  biometricDividerText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginHorizontal: 12,
+    letterSpacing: 0.5,
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    backgroundColor: '#f0f9ff',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#bae6fd',
+    gap: 10,
+  },
+  biometricButtonText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0090e7',
   },
 });

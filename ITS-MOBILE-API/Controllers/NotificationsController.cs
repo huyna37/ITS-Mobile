@@ -19,11 +19,13 @@ public class NotificationsController : ControllerBase
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<List<NotificationResponse>>> GetNotifications()
+    public async Task<ActionResult<List<NotificationResponse>>> GetNotifications(
+        [FromQuery] int skipCount = 0,
+        [FromQuery] int maxResultCount = 10)
     {
         try
         {
-            var notifications = await _notificationService.GetNotifications();
+            var notifications = await _notificationService.GetNotifications(skipCount, maxResultCount);
             return Ok(notifications);
         }
         catch (Exception ex)

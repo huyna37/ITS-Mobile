@@ -13,11 +13,12 @@ public class NotificationService
         _db = db;
     }
 
-    public async Task<List<NotificationResponse>> GetNotifications()
+    public async Task<List<NotificationResponse>> GetNotifications(int skipCount = 0, int maxResultCount = 10)
     {
         var notifications = await _db.AbpNotifications
             .OrderByDescending(n => n.CreationTime)
-            .Take(20)
+            .Skip(skipCount)
+            .Take(maxResultCount)
             .ToListAsync();
 
         return notifications.Select(n => new NotificationResponse(

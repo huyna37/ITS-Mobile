@@ -20,9 +20,14 @@ function mapNotification(n: BackendNotificationResponse): NotificationItem {
   };
 }
 
-export async function getNotificationsApi(): Promise<NotificationItem[]> {
+export async function getNotificationsApi(
+  skipCount: number = 0,
+  maxResultCount: number = 10
+): Promise<NotificationItem[]> {
   try {
-    const res = await apiClient.get<BackendNotificationResponse[]>('/api/notifications');
+    const res = await apiClient.get<BackendNotificationResponse[]>('/api/notifications', {
+      params: { skipCount, maxResultCount },
+    });
     if (res.data && Array.isArray(res.data)) {
       return res.data.map(mapNotification);
     }

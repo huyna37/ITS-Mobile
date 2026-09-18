@@ -41,9 +41,9 @@ public class ProfileService
             ? "Đội vận hành" 
             : (role.Contains("ADMIN") ? "Quản trị hệ thống" : "Đội vận hành");
 
-        var extension = !string.IsNullOrEmpty(user.SipNumber)
-            ? user.SipNumber
-            : (!string.IsNullOrEmpty(extensionClaim) ? extensionClaim : "1001");
+        var extension = !string.IsNullOrEmpty(extensionClaim)
+            ? extensionClaim
+            : (!string.IsNullOrEmpty(user.SipNumber) ? user.SipNumber : "1001");
 
         return new ProfileResponse(
             TenNhanVien: $"{user.Name} {user.Surname}".Trim(),
